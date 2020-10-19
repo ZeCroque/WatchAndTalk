@@ -9,7 +9,6 @@ public class watTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "wat" } );
-		
+		ExtraModuleNames.AddRange( new string[] { "wat" } );		
 	}
 }
