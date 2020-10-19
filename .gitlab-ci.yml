@@ -1,0 +1,20 @@
+image: zecroque/git_n_svn:latest
+
+svn-deployment:
+  tags:
+    - docker
+    - gce
+  only:
+    - master
+  before_script:
+    - curl --output shared-vars.sh --header Private-Token:$PRIVATE_ACCESS_KEY https://gitlab.com/api/v4/projects/21878653/jobs/artifacts/master/raw/shared-vars.sh?job=svn-deployment
+    - if expr match "$(cat shared-vars.sh)" '.*404 Not found'; then LAST_PROCESSED_COMMIT=$DEFAULT_COMMIT; else source shared-vars.sh; fi
+  script:
+    - chmod +x ./svn.sh
+    - ./svn.sh $CI_COMMIT_SHORT_SHA $LAST_PROCESSED_COMMIT $CROQUEFER_EMAIL $CROQUEFER_PASSWORD
+  after_script:
+    - rm -f shared-vars.sh
+    - echo "export LAST_PROCESSED_COMMIT=$CI_COMMIT_SHORT_SHA;" >> shared-vars.sh
+  artifacts:
+    paths:
+      - shared-vars.sh
