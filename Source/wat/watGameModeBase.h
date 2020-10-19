@@ -13,6 +13,4 @@ UCLASS()
 class WAT_API AwatGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-
 };
