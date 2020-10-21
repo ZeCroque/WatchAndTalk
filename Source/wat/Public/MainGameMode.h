@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/SceneCapture2D.h"
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.generated.h"
 
