@@ -73,7 +73,6 @@ Plugins/*/Intermediate/*
 Content/*
 .svn/*
 Config/*
-*.uproject
 *.png
 
 
