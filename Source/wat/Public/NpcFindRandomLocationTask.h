@@ -11,11 +11,11 @@
  * 
  */
 UCLASS(Blueprintable)
-class WAT_API UNpcFindRandomLocationTask : public UBTTask_BlackboardBase
+class WAT_API UNpcFindRandomLocationTask final : public UBTTask_BlackboardBase
 {
     GENERATED_BODY()
 public:
-    UNpcFindRandomLocationTask(const FObjectInitializer& ObjectInitializer);
+    explicit UNpcFindRandomLocationTask(const FObjectInitializer& ObjectInitializer);
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Search", meta= (AllowPrivateAccess = "true"))

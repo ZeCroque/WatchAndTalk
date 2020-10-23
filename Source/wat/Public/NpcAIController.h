@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include  "Perception/AIPerceptionTypes.h"
 #include "NpcAIController.generated.h"
 
 /**
@@ -15,11 +16,11 @@ class WAT_API ANpcAIController final : public AAIController
     GENERATED_BODY()
 
 public:
-    ANpcAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    explicit ANpcAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     virtual void BeginPlay() override;
     virtual void OnPossess(APawn* InPawn) override;
-    class UBlackboardComponent* Get_Blackboard() const;
+    class UBlackboardComponent* GetBlackboard() const;
 private:
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category= "AI", meta = (AllowPrivateAccess = "true"))
     class UBehaviorTreeComponent* BehaviorTreeComponent;
@@ -28,4 +29,11 @@ private:
     class UBehaviorTree* BTree;
 
     class UBlackboardComponent* Blackboard;
+
+    class UAISenseConfig_Sight* SightConfig;
+
+    UFUNCTION()
+    void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);
+
+    void SetupPerceptionSystem();
 };
