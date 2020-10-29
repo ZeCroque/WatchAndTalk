@@ -74,8 +74,6 @@ Content/*
 !Content/Developers/
 
 .svn/*
-Config/*
-*.uproject
 *.png
 
 
