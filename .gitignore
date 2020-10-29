@@ -71,6 +71,7 @@ Intermediate/*
 Plugins/*/Intermediate/*
 
 Content/*
+!Content/Developers/
 .svn/*
 Config/*
 *.png
