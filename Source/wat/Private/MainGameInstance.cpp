@@ -9,7 +9,7 @@
 UMainGameInstance::UMainGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnCreateSessionComplete);
-    OnStartSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnStartOnlineGameComplete);
+    OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnStartOnlineGameComplete);
     OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnFindSessionsComplete);
     OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnJoinSessionComplete);
     OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnDestroySessionComplete);
@@ -29,7 +29,6 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
         {
             //Here we set all the settings for the session according to the parameters
             SessionSettings = MakeShareable(new FOnlineSessionSettings());
-            GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("HostSession"));
             SessionSettings->bIsLANMatch = bIsLAN;
             SessionSettings->bUsesPresence = bIsPresence;
             SessionSettings->NumPublicConnections = MaxNumPlayers;
@@ -226,10 +225,10 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
     }
 }
 
-void UMainGameInstance::StartOnlineGame()
+void UMainGameInstance::StartOnlineGame(FName GameSessionName, bool IsLan)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-	HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, true, true, 4);
+	HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, IsLan, true, 2);
 }
 
 void UMainGameInstance::FindOnlineGames()
@@ -238,7 +237,7 @@ void UMainGameInstance::FindOnlineGames()
     FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), true, true);
 }
 
-void UMainGameInstance::JoinOnlineGame()
+void UMainGameInstance::JoinOnlineGame(FName GameSessionName)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
 

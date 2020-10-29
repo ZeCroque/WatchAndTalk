@@ -54,11 +54,11 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-	void StartOnlineGame();
+	void StartOnlineGame(FName GameSessionName, bool IsLan);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void FindOnlineGames();
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-	void JoinOnlineGame();
+	void JoinOnlineGame(FName GameSessionName);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
     void DestroySessionAndLeaveGame() const;
 	
