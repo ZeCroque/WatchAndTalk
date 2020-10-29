@@ -29,7 +29,7 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
         {
             //Here we set all the settings for the session according to the parameters
             SessionSettings = MakeShareable(new FOnlineSessionSettings());
-
+            GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("HostSession"));
             SessionSettings->bIsLANMatch = bIsLAN;
             SessionSettings->bUsesPresence = bIsPresence;
             SessionSettings->NumPublicConnections = MaxNumPlayers;
