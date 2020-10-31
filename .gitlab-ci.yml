@@ -18,3 +18,22 @@ svn-deployment:
   artifacts:
     paths:
       - shared-vars.sh
+
+dev-merge:
+  tags:
+    - docker
+    - gce
+  only:
+    - dev
+  before_script:
+    - curl --output shared-vars.sh --header Private-Token:$PRIVATE_ACCESS_KEY https://gitlab.com/api/v4/projects/21878653/jobs/artifacts/dev/raw/shared-vars.sh?job=dev-merge
+    - if expr match "$(cat shared-vars.sh)" '.*404 Not found'; then LAST_PROCESSED_COMMIT=$DEFAULT_COMMIT; else source shared-vars.sh; fi
+  script:
+    - chmod +x ./dev_merge.sh
+    - ./dev_merge.sh $CI_COMMIT_SHORT_SHA $LAST_PROCESSED_COMMIT $GITLAB_USER_EMAIL $PRIVATE_ACCESS_KEY
+  after_script:
+    - rm -f shared-vars.sh
+    - echo "export LAST_PROCESSED_COMMIT=$CI_COMMIT_SHORT_SHA;" >> shared-vars.sh
+  artifacts:
+    paths:
+      - shared-vars.sh
