@@ -1,6 +1,7 @@
 git diff-tree --no-commit-id --name-only -r $1 $2 | while read -r line; 
-do echo "Traitement du fichier $line ..."; 
-	if [ -f "$line" ]; then 
+do
+	if [ -f "$line" ]; then
+		echo "Traitement du fichier $line ...";  
 		if expr match "$line" '\..*' || expr match "$line" '.*\.sh'; then 
 			echo "Fichier ignoré."; 
 		else 
@@ -23,7 +24,5 @@ do echo "Traitement du fichier $line ...";
 				echo "Fichier ignoré.";
 			fi; 
 		fi;
-	else
-		echo "Fichier supprimé."; 
 	fi; 
 done;

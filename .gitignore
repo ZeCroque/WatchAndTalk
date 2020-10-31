@@ -71,14 +71,11 @@ Intermediate/*
 Plugins/*/Intermediate/*
 
 Content/*
+!Content/Developers/
+.idea/*
 .svn/*
-Config/*
-*.uproject
 *.png
 
 
 # Cache files for the editor to use
 DerivedDataCache/*
-
-
-.idea/*
