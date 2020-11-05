@@ -15,6 +15,10 @@ public:
     // Sets default values for this character's properties
     ANpcCharacter();
 
+    static void MeleeAttack();
+
+    UAnimMontage* GetMontage() const;
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -25,4 +29,8 @@ public:
 
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+    UAnimMontage* Montage;
 };

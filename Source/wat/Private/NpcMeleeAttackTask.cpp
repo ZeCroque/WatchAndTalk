@@ -2,11 +2,7 @@
 
 
 #include "NpcMeleeAttackTask.h"
-//#include "CombatInterface.h"
 #include "AIController.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Runtime/Engine/Classes/Engine/World.h"
-#include "Engine/LatentActionManager.h"
 
 UNpcMeleeAttackTask::UNpcMeleeAttackTask(FObjectInitializer const& ObjectInitializer)
 {
@@ -15,19 +11,15 @@ UNpcMeleeAttackTask::UNpcMeleeAttackTask(FObjectInitializer const& ObjectInitial
 
 EBTNodeResult::Type UNpcMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    // AAIController* const Controller = OwnerComp.GetAIOwner();
-    // ANpcCharacter* const Npc = Cast<ANpcCharacter>(Controller->GetPawn());
-    // if (ICombatInterface* const ICombat = Cast<ICombatInterface>(Npc))
-    // {
-    //     if (MontageHasFinished(Npc))
-    //     {
-    //         ICombat->ExecuteMeleeAttack(Npc);
-    //     }
-    // }
+    //get NPC
+    AAIController* const Controller = OwnerComp.GetAIOwner();
 
-    if (GEngine)
+    if (ANpcCharacter* const Npc = Cast<ANpcCharacter>(Controller->GetPawn()))
     {
-        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
+        if (MontageHasFinished(Npc))
+        {
+            Npc->MeleeAttack();
+        }
     }
 
     FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
@@ -36,6 +28,5 @@ EBTNodeResult::Type UNpcMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& Own
 
 bool UNpcMeleeAttackTask::MontageHasFinished(ANpcCharacter* const Npc)
 {
-    return true;
-    // return Npc->GetMesh()->GetAnimInstance()->Montage_GetIsStopped(Npc->GetMontage());
+    return Npc->GetMesh()->GetAnimInstance()->Montage_GetIsStopped(Npc->GetMontage());
 }

@@ -13,6 +13,21 @@ ANpcCharacter::ANpcCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
+void ANpcCharacter::MeleeAttack()
+{
+    //todo : Execute Melee Attack Animation
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
+    }
+}
+
+UAnimMontage* ANpcCharacter::GetMontage() const
+{
+    return Montage;
+}
+
 // Called when the game starts or when spawned
 void ANpcCharacter::BeginPlay()
 {

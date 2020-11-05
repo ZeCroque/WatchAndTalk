@@ -5,8 +5,6 @@
 #include "NpcAIController.h"
 #include "NpcCharacter.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/Character.h"
-#include "Runtime/Engine/Classes/Engine/World.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BlackboardKeys.h"
 
