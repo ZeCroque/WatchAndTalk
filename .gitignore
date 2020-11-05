@@ -72,10 +72,12 @@ Plugins/*/Intermediate/*
 
 Content/*
 !Content/Developers/
-.idea/*
 .svn/*
 *.png
 
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+
+.idea/*
