@@ -2,7 +2,9 @@
 
 
 #include "PlayerCharacter.h"
+#include "Interactable.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -32,6 +34,48 @@ APlayerCharacter::APlayerCharacter()
 
 }
 
+bool APlayerCharacter::AddInteractable(AInteractable* Interactable)
+{
+	InteractablesSet.Add(Interactable);
+	return IsClosestInteractable(Interactable);
+}
+
+void APlayerCharacter::RemoveInteractable(AInteractable* Interactable)
+{
+	InteractablesSet.Remove(Interactable);
+}
+
+AInteractable* APlayerCharacter::GetClosestInteractable()
+{
+	const FVector PlayerLocation = GetActorLocation();
+	TPair<float, AInteractable*> ClosestInteractable(-1.0f, nullptr);
+
+	for (auto InteractableSetItem : InteractablesSet)
+	{
+		if (InteractableSetItem)
+		{
+			const float Distance = UKismetMathLibrary::Vector_Distance2D(PlayerLocation, InteractableSetItem->GetActorLocation());
+			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
+			{
+				ClosestInteractable.Key = Distance;
+				ClosestInteractable.Value = InteractableSetItem;
+			}
+		}
+	}
+	return ClosestInteractable.Value;
+}
+
+bool APlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
+{
+	
+	if (GetClosestInteractable() == Interactable)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
@@ -54,7 +98,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	// Bind jump events
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+	
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
@@ -97,5 +142,14 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void APlayerCharacter::Interact()
+{
+	auto* ClosestInteractable = GetClosestInteractable();
+	if(ClosestInteractable)
+	{
+		ClosestInteractable->Interact();
+	}
 }
 
