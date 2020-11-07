@@ -17,7 +17,7 @@
 ANpcAIController::ANpcAIController(const FObjectInitializer& ObjectInitializer)
 {
     static ConstructorHelpers::FObjectFinder<UBehaviorTree> OBJ(
-        TEXT("BehaviorTree'/Game/Developers/VRELIN/AI/NpcBT.NpcBT'"));
+        TEXT("BehaviorTree'/Game/AI/NpcBT.NpcBT'"));
     if (OBJ.Succeeded())
     {
         BTree = OBJ.Object;

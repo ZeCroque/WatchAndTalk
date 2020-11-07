@@ -28,7 +28,7 @@ private:
 
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category= "AI", meta = (AllowPrivateAccess = "true"))
     class UBehaviorTree* BTree;
-
+    
     class UBlackboardComponent* Blackboard;
 
     class UAISenseConfig_Sight* SightConfig;
