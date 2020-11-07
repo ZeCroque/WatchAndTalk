@@ -9,14 +9,10 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "UObject/ConstructorHelpers.h"
-#include "PlayerCharacter.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
-#include "GameFramework/Character.h"
-#include "Kismet/GameplayStatics.h"
-#include "Engine/Engine.h"
 
 ANpcAIController::ANpcAIController(const FObjectInitializer& ObjectInitializer)
 {
@@ -53,15 +49,6 @@ UBlackboardComponent* ANpcAIController::GetBlackboard() const
     return Blackboard;
 }
 
-// ReSharper disable once CppMemberFunctionMayBeConst
-void ANpcAIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
-{
-    if (Cast<APlayerCharacter>(Actor))
-    {
-        GetBlackboard()->SetValueAsBool(BBKeys::CanSeePlayer, Stimulus.WasSuccessfullySensed());
-    }
-}
-
 void ANpcAIController::OnUpdated(TArray<AActor*> const& UpdatedActors)
 {
     for (size_t x = 0; x < UpdatedActors.Num(); ++x)
@@ -76,7 +63,7 @@ void ANpcAIController::OnUpdated(TArray<AActor*> const& UpdatedActors)
                 GetBlackboard()->SetValueAsBool(BBKeys::IsInvestigating, Stimulus.WasSuccessfullySensed());
                 GetBlackboard()->SetValueAsVector(BBKeys::TargetLocation, Stimulus.StimulusLocation);
             }
-            else
+            else if (Stimulus.Type.Name == "Default__AISense_Sight")
             {
                 GetBlackboard()->SetValueAsBool(BBKeys::CanSeePlayer, Stimulus.WasSuccessfullySensed());
             }
@@ -102,7 +89,6 @@ void ANpcAIController::SetupPerceptionSystem()
 
         // add sight configuration component to perception component
         GetPerceptionComponent()->SetDominantSense(*SightConfig->GetSenseImplementation());
-        GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &ANpcAIController::OnTargetDetected);
         GetPerceptionComponent()->ConfigureSense(*SightConfig);
     }
 
@@ -116,8 +102,11 @@ void ANpcAIController::SetupPerceptionSystem()
         HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 
         // add hearing configuration component to perception component
-        GetPerceptionComponent()->SetDominantSense(*HearingConfig->GetSenseImplementation());
-        GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &ANpcAIController::OnUpdated);
         GetPerceptionComponent()->ConfigureSense(*HearingConfig);
+    }
+
+    if (HearingConfig || SightConfig)
+    {
+        GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &ANpcAIController::OnUpdated);
     }
 }

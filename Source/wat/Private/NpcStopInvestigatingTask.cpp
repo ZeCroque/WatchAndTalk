@@ -17,7 +17,6 @@ EBTNodeResult::Type UNpcStopInvestigatingTask::ExecuteTask(UBehaviorTreeComponen
     const auto Controller = Cast<ANpcAIController>(OwnerComp.GetAIOwner());
     Controller->GetBlackboard()->SetValueAsBool(BBKeys::IsInvestigating, false);
 
-
     //finish with success
     FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
     return EBTNodeResult::Succeeded;
