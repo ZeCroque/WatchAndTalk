@@ -54,7 +54,7 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-	void StartOnlineGame(FName GameSessionName, bool IsLan);
+	void StartOnlineGame(FName GameSessionName, bool bIsLan);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void FindOnlineGames();
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")

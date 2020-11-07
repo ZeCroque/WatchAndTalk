@@ -21,6 +21,9 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
 {
     //Get subsystem
     IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, (TEXT("UserID : %s"), UserId->ToString()));
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, (TEXT("SessionName: %s"), SessionName.ToString()));
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "SessionNameqsdkl:fbqsl,dbvflqjshdvbfolqkvsdmfklqbdslfbqmsdkfbqskjhbfmq");
 
     if (OnlineSub)
     {
@@ -225,16 +228,16 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
     }
 }
 
-void UMainGameInstance::StartOnlineGame(FName GameSessionName, bool IsLan)
+void UMainGameInstance::StartOnlineGame(FName GameSessionName, bool bIsLan)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-	HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, IsLan, true, 2);
+	HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
 }
 
 void UMainGameInstance::FindOnlineGames()
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), true, true);
+    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), false, true);
 }
 
 void UMainGameInstance::JoinOnlineGame(FName GameSessionName)
