@@ -4,6 +4,13 @@
 #include "PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "Perception/AISense_Hearing.h"
+#include "AITags.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Runtime/Engine/Classes/Engine/World.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -66,6 +73,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
     PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
     PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
+
+    PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
 }
 
 void APlayerCharacter::SetupStimulus()
@@ -73,6 +82,16 @@ void APlayerCharacter::SetupStimulus()
     Stimulus = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
     Stimulus->RegisterForSense(TSubclassOf<UAISense_Sight>());
     Stimulus->RegisterWithPerceptionSystem();
+}
+
+void APlayerCharacter::OnDistract()
+{
+    if (DistractionSound)
+    {
+        FVector const Location = GetActorLocation();
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), DistractionSound, Location);
+        UAISense_Hearing::ReportNoiseEvent(GetWorld(), Location, 1.0f, this, 0.0f, AITags::NoiseTag);
+    }
 }
 
 void APlayerCharacter::MoveForward(float Value)

@@ -21,6 +21,7 @@ public:
     virtual void BeginPlay() override;
     virtual void OnPossess(APawn* InPawn) override;
     class UBlackboardComponent* GetBlackboard() const;
+
 private:
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category= "AI", meta = (AllowPrivateAccess = "true"))
     class UBehaviorTreeComponent* BehaviorTreeComponent;
@@ -32,8 +33,13 @@ private:
 
     class UAISenseConfig_Sight* SightConfig;
 
+    class UAISenseConfig_Hearing* HearingConfig;
+
     UFUNCTION()
     void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);
 
+    UFUNCTION()
+    void OnUpdated(TArray<AActor*> const& UpdatedActors);
+    
     void SetupPerceptionSystem();
 };

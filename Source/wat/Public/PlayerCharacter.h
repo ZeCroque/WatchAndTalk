@@ -49,5 +49,10 @@ private:
     UPROPERTY()
     class UAIPerceptionStimuliSourceComponent* Stimulus;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound", meta=(AllowPrivateAccess = "true"))
+    USoundBase* DistractionSound;
+    
     void SetupStimulus();
+
+    void OnDistract();
 };
