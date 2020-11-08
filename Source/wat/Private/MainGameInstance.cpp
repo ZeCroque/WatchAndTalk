@@ -2,28 +2,35 @@
 
 
 #include "MainGameInstance.h"
-
 #include "OnlineSessionSettings.h"
 #include "Kismet/GameplayStatics.h"
 
 UMainGameInstance::UMainGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnCreateSessionComplete);
-    OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnStartOnlineGameComplete);
+    OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnStartSessionComplete);
     OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnFindSessionsComplete);
     OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnJoinSessionComplete);
     OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnDestroySessionComplete);
 
 }
 
+void UMainGameInstance::BeginDestroy()
+{
+    Super::BeginDestroy();
+    DestroySessionAndLeaveGame();
+}
+
 bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, bool bIsLAN,
-    bool bIsPresence, int32 MaxNumPlayers)
+                                    bool bIsPresence, int32 MaxNumPlayers)
 {
     //Get subsystem
     IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, (TEXT("UserID : %s"), UserId->ToString()));
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, (TEXT("SessionName: %s"), SessionName.ToString()));
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "SessionNameqsdkl:fbqsl,dbvflqjshdvbfolqkvsdmfklqbdslfbqmsdkfbqskjhbfmq");
+
+	
+	
+    UE_LOG(LogTemp, Warning, TEXT("UserId: %s"), *(UserId->ToDebugString()));
+    UE_LOG(LogTemp, Warning, TEXT("SessionName: %s"), *(SessionName.ToString()));
 
     if (OnlineSub)
     {
@@ -41,8 +48,7 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
             SessionSettings-> bShouldAdvertise = true;
             SessionSettings->bAllowJoinViaPresence = true;
             SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
-
-            SessionSettings->Set(SETTING_MAPNAME, FString("MainMap"), EOnlineDataAdvertisementType::ViaOnlineService);
+            SessionSettings->Set(SETTING_MAPNAME, FString("Test_Level_Design"), EOnlineDataAdvertisementType::ViaOnlineService);
 
             OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
             return Sessions->CreateSession(*UserId, SessionName, *SessionSettings);
@@ -50,7 +56,7 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
     }
     else
     {
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("No OnlineSubsytem found!"));
+        UE_LOG(LogTemp, Error, TEXT("No OnlineSubsytem found!"));
     }
     return false;
 }
@@ -79,7 +85,7 @@ void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool
                 SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, bIsPresence, EOnlineComparisonOp::Equals);
             }
 
-            TSharedRef<FOnlineSessionSearch> SearchSettingRef = SessionSearch.ToSharedRef();
+            const TSharedRef<FOnlineSessionSearch> SearchSettingRef = SessionSearch.ToSharedRef();
 
             OnFindSessionsCompleteDelegateHandle = Sessions->AddOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegate);
             Sessions->FindSessions(*UserId, SearchSettingRef);
@@ -91,7 +97,7 @@ void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool
     }
 }
 
-bool UMainGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName,
+bool UMainGameInstance::ConnectToSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName,
     const FOnlineSessionSearchResult& SearchResult)
 {
     bool bSuccessful = false;
@@ -116,7 +122,7 @@ bool UMainGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName
 void UMainGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
     {
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+        UE_LOG(LogTemp, Warning, TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
         IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
         if (OnlineSub)
@@ -139,7 +145,7 @@ void UMainGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucc
 
 void UMainGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OFindSessionsComplete bSuccess: %d"), bWasSuccessful));
+    UE_LOG(LogTemp, Warning, TEXT("OFindSessionsComplete bSuccess: %d"), bWasSuccessful);
 
     IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
     if (OnlineSub)
@@ -151,22 +157,22 @@ void UMainGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 
             Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
 
-            GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
-		
+            UE_LOG(LogTemp, Warning, TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num());
+            OnHostListUpdate.Broadcast();
             if (SessionSearch->SearchResults.Num() > 0)
             {
                 for (int32 SearchIdx = 0; SearchIdx < SessionSearch->SearchResults.Num(); SearchIdx++)
                 {
-                    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx+1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
+                    UE_LOG(LogTemp, Warning, TEXT("Session Number: %d | Sessionname: %s "), SearchIdx+1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName));
                 }
             }
         }
     }
 }
 
-void UMainGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful)
+void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnStartSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+    UE_LOG(LogTemp, Warning, TEXT("OnStartSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
     IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
     if (OnlineSub)
@@ -179,13 +185,13 @@ void UMainGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSu
     }
     if (bWasSuccessful)
     {
-        UGameplayStatics::OpenLevel(GetWorld(), "MainMap", true, "listen");
+        UGameplayStatics::OpenLevel(GetWorld(), "Test_Level_Design", true, "listen");
     }
 }
 
 void UMainGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result)));
+    UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result));
 
     IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
     if (OnlineSub)
@@ -210,7 +216,7 @@ void UMainGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 
 void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+    UE_LOG(LogTemp, Warning, TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
     IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
     if (OnlineSub)
@@ -222,25 +228,47 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
             Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
             if (bWasSuccessful)
             {
-                UGameplayStatics::OpenLevel(GetWorld(), "ThirdPersonExampleMap", true);
+                auto* World = GetWorld();
+            	if(World)
+                { 
+					UGameplayStatics::OpenLevel(World, "Main_Menu_Level", true);
+				}
             }
         }
     }
 }
 
-void UMainGameInstance::StartOnlineGame(FName GameSessionName, bool bIsLan)
+bool UMainGameInstance::StartOnlineGame(FName GameSessionName, bool bIsLan)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-	HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
+	return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
 }
 
 void UMainGameInstance::FindOnlineGames()
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), false, true);
+    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), true, true);
 }
 
-void UMainGameInstance::JoinOnlineGame(FName GameSessionName)
+TArray<FBlueprintSessionResult> UMainGameInstance::GetActiveSession()
+{
+
+    TArray<FBlueprintSessionResult> Result;
+    const int Length = SessionSearch->SearchResults.Num();
+
+    Result.Reserve(Length);
+    Result.SetNum(Length);
+
+	for(int i = 0; i < Length; i++)
+	{
+        FBlueprintSessionResult Item;
+        Item.OnlineResult = SessionSearch->SearchResults[i];
+        Result[i] = Item;
+	}
+    return Result;
+}
+
+void UMainGameInstance::JoinOnlineGame(FName SessionName)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
 
@@ -253,7 +281,7 @@ void UMainGameInstance::JoinOnlineGame(FName GameSessionName)
             if (SessionSearch->SearchResults[i].Session.OwningUserId != Player->GetPreferredUniqueNetId())
             {
                 SearchResult = SessionSearch->SearchResults[i];
-                JoinSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, SearchResult);
+                ConnectToSession(Player->GetPreferredUniqueNetId()->AsShared(), SessionName, SearchResult);
                 break;
             }
         }
@@ -269,9 +297,8 @@ void UMainGameInstance::DestroySessionAndLeaveGame() const
 
         if (Sessions.IsValid())
         {
-            Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
-
-            Sessions->DestroySession(GameSessionName);
+           // Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
+            Sessions->DestroySession(GameSessionName, OnDestroySessionCompleteDelegate);
         }
     }
 }
