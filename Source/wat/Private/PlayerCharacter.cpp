@@ -8,6 +8,7 @@
 #include "Perception/AISense_Hearing.h"
 #include "AITags.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"

@@ -22,14 +22,17 @@ void AMainGameMode::PostInitializeComponents()
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
 
-	MainGameState->Player1Cameras.Reserve(FoundActors.Num());
-	MainGameState->Player1Cameras.SetNum(FoundActors.Num());
-	for (auto* FoundActor : FoundActors)
+	if (FoundActors.Num() != 0)
 	{
-		auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
-		if (FoundCameraActor)
+		MainGameState->Player1Cameras.Reserve(FoundActors.Num());
+		MainGameState->Player1Cameras.SetNum(FoundActors.Num());
+		for (auto* FoundActor : FoundActors)
 		{
-			MainGameState->Player1Cameras[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
+			auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
+			if (FoundCameraActor)
+			{
+				MainGameState->Player1Cameras[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
+			}
 		}
 	}
 	

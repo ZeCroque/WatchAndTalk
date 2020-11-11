@@ -40,28 +40,28 @@ void ACameraDesk::MoveForward(float Value)
 	}
 	else if(Value < 0.0f)
 	{
-		PlayerController->SetViewTargetWithBlend(Monitors[CurrentIndex]->GetChildActor(), BlendTime);
+		PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 	}
 }
 
 void ACameraDesk::MoveRight(float Value)
 {	
-	if (Value < 0.0f && !bToggle)
+	if (Value > 0.0f && !bToggle)
 	{
 		bToggle = true;
 		if (CurrentIndex < Monitors.Num() - 1)
 		{
 			CurrentIndex++;
-			PlayerController->SetViewTargetWithBlend(Monitors[CurrentIndex]->GetChildActor(), BlendTime);
+			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 		}
 	}
-	else if (Value > 0.0f && !bToggle)
+	else if (Value < 0.0f && !bToggle)
 	{
 		bToggle = true;
 		if (CurrentIndex > 0)
 		{
 			CurrentIndex--;
-			PlayerController->SetViewTargetWithBlend(Monitors[CurrentIndex]->GetChildActor(), BlendTime);
+			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 		}
 	}
 	else if(Value == 0.0f && bToggle)
