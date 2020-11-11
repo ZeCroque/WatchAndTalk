@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "PlayerCharacter.generated.h"
 
+class AInteractable;
 UCLASS()
 class WAT_API APlayerCharacter : public ACharacter
 {
@@ -29,13 +30,20 @@ public:
     UPROPERTY(EditAnywhere, Category = Camera)
     float BaseLookUpRate;
 
+	bool AddInteractable(AInteractable* Interactable);
+	void RemoveInteractable(AInteractable* Interactable);
+	AInteractable* GetClosestInteractable();
+	bool IsClosestInteractable(AInteractable* Interactable);
+		
+
 protected:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    void TurnAtRate(float Rate);
-    void LookUpAtRate(float Rate);
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	void TurnAtRate(float Rate);
+	void LookUpAtRate(float Rate);
+	void Interact();
 
 public:
     // Called every frame
@@ -52,7 +60,11 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound", meta=(AllowPrivateAccess = "true"))
     USoundBase* DistractionSound;
 
+    UPROPERTY()
+    TSet<AInteractable*> InteractablesSet;
+
     void SetupStimulus();
 
     void OnDistract();
+
 };
