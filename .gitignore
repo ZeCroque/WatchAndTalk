@@ -70,6 +70,9 @@ Saved/*
 Intermediate/*
 Plugins/*/Intermediate/*
 
+Content/*
+Config/*
+
 .svn/*
 
 
