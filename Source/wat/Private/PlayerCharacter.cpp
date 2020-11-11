@@ -89,6 +89,11 @@ bool APlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
 void APlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+	if(!IsLocallyControlled())
+	{
+        GetMesh()->SetVisibility(true);
+	}
 }
 
 // Called every frame

@@ -16,11 +16,14 @@ public class wat : ModuleRules
             "InputCore",
             "AIModule",
             "GameplayTasks",
-            "NavigationSystem"
+            "NavigationSystem",
+            "UMG",
+            "OnlineSubsystem", 
+            "OnlineSubsystemUtils"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
-
+        DynamicallyLoadedModuleNames.Add("OnlineSubsystemNull");    
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
