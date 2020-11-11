@@ -70,11 +70,7 @@ Saved/*
 Intermediate/*
 Plugins/*/Intermediate/*
 
-Content/*
 .svn/*
-Config/*
-*.uproject
-*.png
 
 
 # Cache files for the editor to use
