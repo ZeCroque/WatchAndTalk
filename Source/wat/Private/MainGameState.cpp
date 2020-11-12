@@ -7,4 +7,5 @@ void AMainGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AMainGameState, Player1Cameras);
+	DOREPLIFETIME(AMainGameState, Player2Cameras);
 }

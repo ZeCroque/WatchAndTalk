@@ -42,38 +42,46 @@ AInteractable::AInteractable()
 void AInteractable::BeginPlay()
 {
 	Super::BeginPlay();
-
-	PlayerCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	PlayerController = UGameplayStatics::GetPlayerController(this, 0);
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor == PlayerCharacter)
+	if (!PlayerCharacter)
 	{
-		if(PlayerCharacter->AddInteractable(this))
+		PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+		if (PlayerCharacter)
 		{
-			InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+			if (PlayerCharacter->AddInteractable(this))
+			{
+				InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+			}
+			bIsOverlappingWithPlayer = true;
 		}
-		bIsOverlappingWithPlayer = true;
 	}
-
 }
 
 void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{	
-	if (OtherActor == PlayerCharacter)
+{
+	if (PlayerCharacter == OtherActor)
 	{
-		PlayerCharacter->RemoveInteractable(this);
-		InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
-		bIsOverlappingWithPlayer = false;
+			PlayerCharacter->RemoveInteractable(this);
+			InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
+			bIsOverlappingWithPlayer = false;
+			PlayerCharacter = nullptr;
+			PlayerController = nullptr;
 	}
 }
 
 void AInteractable::Interact()
 {
-	APlayerController* OurPlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	OurPlayerController->SetViewTargetWithBlend(this, BlendTime);
+	if (PlayerCharacter)
+	{
+		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
+		if (PlayerController)
+		{
+			PlayerController->SetViewTargetWithBlend(this, BlendTime);
+		}
+	}
 }
 
 // Called every frame
@@ -81,7 +89,7 @@ void AInteractable::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(bIsOverlappingWithPlayer)
+	if(bIsOverlappingWithPlayer && PlayerCharacter)
 	{
 		if(PlayerCharacter->IsClosestInteractable(this))
 		{

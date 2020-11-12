@@ -33,8 +33,13 @@ public:
 	UCameraComponent* InteractableCamera;
 
 protected:
+
+	UPROPERTY()
 	class APlayerCharacter* PlayerCharacter;
-	class APlayerController* PlayerController;
+
+	UPROPERTY()
+	APlayerController* PlayerController;
+	
 	bool bIsOverlappingWithPlayer;
 	
 public:	

@@ -34,46 +34,55 @@ AMonitor* ACameraDesk::GetMonitorByIndex(const int Index)
 
 void ACameraDesk::MoveForward(float Value)
 {
-	if(Value > 0.0f)
+	if (PlayerController)
 	{
-		PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
-	}
-	else if(Value < 0.0f)
-	{
-		PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+		if (Value > 0.0f)
+		{
+			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
+		}
+		else if (Value < 0.0f)
+		{
+			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+		}
 	}
 }
 
 void ACameraDesk::MoveRight(float Value)
-{	
-	if (Value > 0.0f && !bToggle)
+{
+	if (PlayerController)
 	{
-		bToggle = true;
-		if (CurrentIndex < Monitors.Num() - 1)
+		if (Value > 0.0f && !bToggle)
 		{
-			CurrentIndex++;
-			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+			bToggle = true;
+			if (CurrentIndex < Monitors.Num() - 1)
+			{
+				CurrentIndex++;
+				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+			}
 		}
-	}
-	else if (Value < 0.0f && !bToggle)
-	{
-		bToggle = true;
-		if (CurrentIndex > 0)
+		else if (Value < 0.0f && !bToggle)
 		{
-			CurrentIndex--;
-			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+			bToggle = true;
+			if (CurrentIndex > 0)
+			{
+				CurrentIndex--;
+				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+			}
 		}
-	}
-	else if(Value == 0.0f && bToggle)
-	{
-		bToggle = false;
+		else if (Value == 0.0f && bToggle)
+		{
+			bToggle = false;
+		}
 	}
 }
 
 void ACameraDesk::Return()
 {
-	PlayerController->Possess(Cast<APawn>(PlayerCharacter));
-	bIsOverlappingWithPlayer = true;
+		if(PlayerCharacter && PlayerController)
+		{
+			//Possess(PlayerController, PlayerCharacter);
+			bIsOverlappingWithPlayer = true;
+		}
 }
 
 // Called when the game starts or when spawned
@@ -96,15 +105,22 @@ void ACameraDesk::BeginPlay()
 			Monitors[i] = Monitor;
 		}
 	}
-	
 }
 
 void ACameraDesk::Interact()
 {
 	InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
 	bIsOverlappingWithPlayer = false;
-	PlayerController->Possess(this);
-	PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
+	
+	if (PlayerCharacter)
+	{
+		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
+		if (PlayerController)
+		{
+			//Possess(PlayerController, this);
+			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
+		}
+	}
 
 }
 
