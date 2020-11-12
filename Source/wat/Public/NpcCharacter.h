@@ -15,7 +15,7 @@ public:
     // Sets default values for this character's properties
     ANpcCharacter();
 
-    static void MeleeAttack();
+    void MeleeAttack() const;
 
     UAnimMontage* GetMontage() const;
 

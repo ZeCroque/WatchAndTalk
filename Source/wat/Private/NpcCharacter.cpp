@@ -3,6 +3,8 @@
 
 #include "NpcCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "MainPlayerState.h"
 
 // Sets default values
 ANpcCharacter::ANpcCharacter()
@@ -13,7 +15,7 @@ ANpcCharacter::ANpcCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
-void ANpcCharacter::MeleeAttack()
+void ANpcCharacter::MeleeAttack() const
 {
     //todo : Execute Melee Attack Animation
 
@@ -21,6 +23,8 @@ void ANpcCharacter::MeleeAttack()
     {
         GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
     }
+    
+    Cast<AMainPlayerState>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetPlayerState())->KillPlayer();
 }
 
 UAnimMontage* ANpcCharacter::GetMontage() const

@@ -185,7 +185,7 @@ void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucce
     }
     if (bWasSuccessful)
     {
-        UGameplayStatics::OpenLevel(GetWorld(), "Test_Level_Design", true, "listen");
+        UGameplayStatics::OpenLevel(GetWorld(), "Level_POC", true, "listen");
     }
 }
 
