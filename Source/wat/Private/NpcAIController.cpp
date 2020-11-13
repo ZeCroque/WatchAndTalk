@@ -49,28 +49,6 @@ UBlackboardComponent* ANpcAIController::GetBlackboard() const
     return Blackboard;
 }
 
-void ANpcAIController::OnUpdated(TArray<AActor*> const& UpdatedActors)
-{
-    for (size_t x = 0; x < UpdatedActors.Num(); ++x)
-    {
-        FActorPerceptionBlueprintInfo Info;
-        GetPerceptionComponent()->GetActorsPerception(UpdatedActors[x], Info);
-        for (size_t k = 0; k < Info.LastSensedStimuli.Num(); ++k)
-        {
-            FAIStimulus const Stimulus = Info.LastSensedStimuli[k];
-            if (Stimulus.Tag == AITags::NoiseTag)
-            {
-                GetBlackboard()->SetValueAsBool(BBKeys::IsInvestigating, Stimulus.WasSuccessfullySensed());
-                GetBlackboard()->SetValueAsVector(BBKeys::TargetLocation, Stimulus.StimulusLocation);
-            }
-            else if (Stimulus.Type.Name == "Default__AISense_Sight")
-            {
-                GetBlackboard()->SetValueAsBool(BBKeys::CanSeePlayer, Stimulus.WasSuccessfullySensed());
-            }
-        }
-    }
-}
-
 void ANpcAIController::SetupPerceptionSystem()
 {
     // create and initialise sight configuration object
@@ -103,10 +81,5 @@ void ANpcAIController::SetupPerceptionSystem()
 
         // add hearing configuration component to perception component
         GetPerceptionComponent()->ConfigureSense(*HearingConfig);
-    }
-
-    if (HearingConfig || SightConfig)
-    {
-        GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &ANpcAIController::OnUpdated);
     }
 }

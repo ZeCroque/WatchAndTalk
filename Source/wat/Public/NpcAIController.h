@@ -28,15 +28,12 @@ private:
 
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category= "AI", meta = (AllowPrivateAccess = "true"))
     class UBehaviorTree* BTree;
-    
+
     class UBlackboardComponent* Blackboard;
 
     class UAISenseConfig_Sight* SightConfig;
 
     class UAISenseConfig_Hearing* HearingConfig;
-
-    UFUNCTION()
-    void OnUpdated(TArray<AActor*> const& UpdatedActors);
 
     void SetupPerceptionSystem();
 };
