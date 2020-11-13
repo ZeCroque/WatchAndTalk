@@ -23,8 +23,16 @@ void ANpcCharacter::MeleeAttack() const
     {
         GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
     }
-    
-    Cast<AMainPlayerState>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetPlayerState())->KillPlayer();
+
+    auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (PlayerController)
+    {
+        auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
+        if (ClientState)
+        {
+            ClientState->KillPlayer();
+        }
+    }
 }
 
 UAnimMontage* ANpcCharacter::GetMontage() const

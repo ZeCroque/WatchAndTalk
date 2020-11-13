@@ -3,6 +3,7 @@
 
 #include "CameraDesk.h"
 #include "Kismet/GameplayStatics.h"
+#include "MainPlayerState.h"
 #include "PlayerCharacter.h"
 #include "Monitor.h"
 
@@ -80,7 +81,8 @@ void ACameraDesk::Return()
 {
 		if(PlayerCharacter && PlayerController)
 		{
-			//Possess(PlayerController, PlayerCharacter);
+			auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
+			ClientState->Possess(PlayerController, PlayerCharacter);
 			bIsOverlappingWithPlayer = true;
 		}
 }
@@ -116,8 +118,9 @@ void ACameraDesk::Interact()
 	{
 		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
 		if (PlayerController)
-		{
-			//Possess(PlayerController, this);
+		{	
+			auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
+			ClientState->Possess(PlayerController, this);
 			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
 		}
 	}

@@ -17,4 +17,7 @@ class WAT_API AMainPlayerState final : public APlayerState
 public:
     UFUNCTION(NetMulticast, Reliable, WithValidation)
     void KillPlayer();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Possess(class APlayerController* ClientController, APawn* Pawn);
 };
