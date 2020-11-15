@@ -16,8 +16,16 @@ class WAT_API UIsPlayerInMeleeRangeBTS final : public UBTService_BlackboardBase
 public:
     UIsPlayerInMeleeRangeBTS();
     virtual void OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+    virtual void OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 private:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
+    FBlackboardKeySelector PlayerKey;
+
+    UPROPERTY()
+    AActor* Player;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, meta = (AllowPrivateAccess = "true"))
     float MeleeRange = 100.0f;
 };
+

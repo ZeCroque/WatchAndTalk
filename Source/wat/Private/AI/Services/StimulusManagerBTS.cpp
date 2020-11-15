@@ -48,10 +48,12 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
                 Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
                 Blackboard->ClearValue(RandomLocation.SelectedKeyName);
                 Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
+                Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
                 return;
             }
         }
 
+        Blackboard->ClearValue(Player.SelectedKeyName);
         Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
         Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
         PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
@@ -70,9 +72,9 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
                         Blackboard->ClearValue(RandomLocation.SelectedKeyName);
                     }
                 }
-            	if (Stimulus.Type.Name == "Default__AISense_Sight")
+                if (Stimulus.Type.Name == "Default__AISense_Sight")
                 {
-                    //TODO consider stimulus age
+                    //TODO consider stimulus age. ok mec
                     Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
                 }
             }

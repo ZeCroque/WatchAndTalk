@@ -9,7 +9,7 @@
 UChasePlayerTask::UChasePlayerTask(FObjectInitializer const& ObjectInitializer)
 {
     bNotifyTaskFinished = true;
-    NodeName = TEXT("Smart Move To");
+    NodeName = TEXT("Chase Player");
 }
 
 EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -19,29 +19,9 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
     UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
     FVector const TargetLocation = Blackboard->GetValueAsVector(BlackboardKey.SelectedKeyName);
 
-
-    if (Controller->GetPawn()->GetActorLocation() != TargetLocation)
-    {
-        // move to location
-        UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, TargetLocation);
-        FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
-        return EBTNodeResult::InProgress;
-    }
+    UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, TargetLocation);
 
     // finish with success
-    Blackboard->ClearValue(BlackboardKey.SelectedKeyName);
     FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
     return EBTNodeResult::Succeeded;
-}
-
-void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
-                                         EBTNodeResult::Type TaskResult)
-{
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 60.0f, FColor::Yellow, "Finish !");
-    }
-
-    UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
-
 }
