@@ -11,9 +11,10 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Perception/AISense_Sight.h"
 
 class UNavigationSystemV1;
-class ANpcAIController;
+class AMonsterAIController;
 
 UStimulusManagerBTS::UStimulusManagerBTS()
 {
@@ -35,7 +36,7 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
     {
         TArray<AActor*> Actors;
         UAIPerceptionComponent* PerceptionComponent = Controller->GetPerceptionComponent();
-        PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
+        PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Actors);
 
         for (AActor* Actor : Actors)
         {
@@ -44,44 +45,44 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
             for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
             {
-                if (Stimulus.Type.Name == "Default__AISense_Sight")
-                {
-                    Blackboard->SetValueAsVector(SightLocation.SelectedKeyName, Stimulus.StimulusLocation);
-                    Blackboard->ClearValue(HearingLocation.SelectedKeyName);
-                    Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-                    break;
-                }
+                Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+                Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
+                Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+                Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
+                return;
+            }
+        }
+
+        Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
+        Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
+        PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
+        for (AActor* Actor : Actors)
+        {
+            FActorPerceptionBlueprintInfo Infos;
+            PerceptionComponent->GetActorsPerception(Actor, Infos);
+
+            for (FAIStimulus const& Stimulus : Infos.LastSensedStimuli)
+            {
                 if (Stimulus.Type.Name == "Default__AISense_Hearing")
                 {
                     if (Stimulus.Tag == AITags::NoiseTag)
                     {
-                        Blackboard->SetValueAsVector(HearingLocation.SelectedKeyName, Stimulus.StimulusLocation);
-                        Blackboard->ClearValue(SightLocation.SelectedKeyName);
+                        Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
                         Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-                        break;
                     }
+                }
+            	if (Stimulus.Type.Name == "Default__AISense_Sight")
+                {
+                    //TODO consider stimulus age
+                    Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
                 }
             }
         }
 
-        if (!Blackboard->IsVectorValueSet(RandomLocation.SelectedKeyName) && !Blackboard->
-            IsVectorValueSet(SightLocation.SelectedKeyName) && !Blackboard->IsVectorValueSet(
-                HearingLocation.SelectedKeyName))
+        if (!Blackboard->IsVectorValueSet(LastSeenLocation.SelectedKeyName))
         {
-            auto const NPC = Controller->GetPawn();
-
-            // obtain npc location to use as an origin location
-            FVector const Origin = NPC->GetActorLocation();
-            FNavLocation NavLocation;
-
-            // get the navigation system and generate a random location on the navMesh
-            UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
-            if (NavSys->GetRandomPointInNavigableRadius(Origin, SearchRadius, NavLocation, nullptr))
-            {
-                Blackboard->SetValueAsVector(RandomLocation.SelectedKeyName, NavLocation.Location);
-            }
-            Blackboard->ClearValue(SightLocation.SelectedKeyName);
-            Blackboard->ClearValue(HearingLocation.SelectedKeyName);
+            Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, false);
+            Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
         }
     }
 }

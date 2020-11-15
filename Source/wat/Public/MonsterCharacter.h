@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "NpcCharacter.generated.h"
+#include "MonsterCharacter.generated.h"
 
 UCLASS()
-class WAT_API ANpcCharacter final : public ACharacter
+class WAT_API AMonsterCharacter final : public ACharacter
 {
     GENERATED_BODY()
 
 public:
     // Sets default values for this character's properties
-    ANpcCharacter();
+    AMonsterCharacter();
 
     void MeleeAttack() const;
 

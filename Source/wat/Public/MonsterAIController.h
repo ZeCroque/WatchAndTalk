@@ -5,18 +5,18 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include  "Perception/AIPerceptionTypes.h"
-#include "NpcAIController.generated.h"
+#include "MonsterAIController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API ANpcAIController final : public AAIController
+class WAT_API AMonsterAIController final : public AAIController
 {
     GENERATED_BODY()
 
 public:
-    explicit ANpcAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    explicit AMonsterAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     virtual void BeginPlay() override;
     virtual void OnPossess(APawn* InPawn) override;

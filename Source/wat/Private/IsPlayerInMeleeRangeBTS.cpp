@@ -2,8 +2,8 @@
 
 
 #include "IsPlayerInMeleeRangeBTS.h"
-#include "NpcAIController.h"
-#include "NpcCharacter.h"
+#include "MonsterAIController.h"
+#include "MonsterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BlackboardKeys.h"
@@ -19,8 +19,8 @@ void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCom
     Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
     // get NPC
-    ANpcAIController* const Controller = Cast<ANpcAIController>(OwnerComp.GetAIOwner());
-    ANpcCharacter* const Npc = Cast<ANpcCharacter>(Controller->GetPawn());
+    AMonsterAIController* const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+    AMonsterCharacter* const Npc = Cast<AMonsterCharacter>(Controller->GetPawn());
 
     //get player character
     ACharacter* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
@@ -28,4 +28,7 @@ void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCom
     // write true or false depending on whether the player is withing melee range
     Controller->GetBlackboard()->SetValueAsBool(BBKeys::PlayerIsInMeleeRange,
                                                 Npc->GetDistanceTo(Player) <= MeleeRange);
+    UE_LOG(LogTemp, Warning, TEXT("Distance is %f and I'm able to see you: %d"), Npc->GetDistanceTo(Player), Npc->GetDistanceTo(Player) <= MeleeRange);
+
+	//TODO KeySelector
 }

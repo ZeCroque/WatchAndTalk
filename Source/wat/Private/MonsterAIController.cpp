@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "NpcAIController.h"
+#include "MonsterAIController.h"
 
 #include "AITags.h"
 #include "BlackboardKeys.h"
@@ -14,28 +14,28 @@
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 
-ANpcAIController::ANpcAIController(const FObjectInitializer& ObjectInitializer)
+AMonsterAIController::AMonsterAIController(const FObjectInitializer& ObjectInitializer)
 {
     static ConstructorHelpers::FObjectFinder<UBehaviorTree> OBJ(
-        TEXT("BehaviorTree'/Game/Blueprints/AI/NpcBT.NpcBT'"));
+        TEXT("BehaviorTree'/Game/Blueprints/AI/MonsterBT.MonsterBT'"));
+    
     if (OBJ.Succeeded())
     {
         BTree = OBJ.Object;
     }
-    BehaviorTreeComponent = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(
-        this, TEXT("BehaviorComp"));
+    BehaviorTreeComponent = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorComp"));
     Blackboard = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackboardComp"));
     SetupPerceptionSystem();
 }
 
-void ANpcAIController::BeginPlay()
+void AMonsterAIController::BeginPlay()
 {
     Super::BeginPlay();
     RunBehaviorTree(BTree);
     BehaviorTreeComponent->StartTree(*BTree);
 }
 
-void ANpcAIController::OnPossess(APawn* InPawn)
+void AMonsterAIController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
     if (Blackboard)
@@ -44,12 +44,12 @@ void ANpcAIController::OnPossess(APawn* InPawn)
     }
 }
 
-UBlackboardComponent* ANpcAIController::GetBlackboard() const
+UBlackboardComponent* AMonsterAIController::GetBlackboard() const
 {
     return Blackboard;
 }
 
-void ANpcAIController::SetupPerceptionSystem()
+void AMonsterAIController::SetupPerceptionSystem()
 {
     // create and initialise sight configuration object
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));

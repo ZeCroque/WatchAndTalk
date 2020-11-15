@@ -2,8 +2,8 @@
 
 
 #include "ChangeSpeedBTS.h"
-#include "NpcAIController.h"
-#include "NpcCharacter.h"
+#include "MonsterAIController.h"
+#include "MonsterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UChangeSpeedBTS::UChangeSpeedBTS()
@@ -15,8 +15,8 @@ UChangeSpeedBTS::UChangeSpeedBTS()
 void UChangeSpeedBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     Super::OnBecomeRelevant(OwnerComp, NodeMemory);
-    ANpcAIController* const Controller = Cast<ANpcAIController>(OwnerComp.GetAIOwner());
-    ANpcCharacter* const Npc = Cast<ANpcCharacter>(Controller->GetPawn());
+    AMonsterAIController* const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+    AMonsterCharacter* const Npc = Cast<AMonsterCharacter>(Controller->GetPawn());
     Npc->GetCharacterMovement()->MaxWalkSpeed = Speed;
 }
 

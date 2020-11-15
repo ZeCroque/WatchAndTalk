@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "NpcCharacter.h"
+#include "MonsterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainPlayerState.h"
 
 // Sets default values
-ANpcCharacter::ANpcCharacter()
+AMonsterCharacter::AMonsterCharacter()
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -15,7 +15,7 @@ ANpcCharacter::ANpcCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
-void ANpcCharacter::MeleeAttack() const
+void AMonsterCharacter::MeleeAttack() const
 {
     //todo : Execute Melee Attack Animation
 
@@ -35,25 +35,25 @@ void ANpcCharacter::MeleeAttack() const
     }
 }
 
-UAnimMontage* ANpcCharacter::GetMontage() const
+UAnimMontage* AMonsterCharacter::GetMontage() const
 {
     return Montage;
 }
 
 // Called when the game starts or when spawned
-void ANpcCharacter::BeginPlay()
+void AMonsterCharacter::BeginPlay()
 {
     Super::BeginPlay();
 }
 
 // Called every frame
-void ANpcCharacter::Tick(const float DeltaTime)
+void AMonsterCharacter::Tick(const float DeltaTime)
 {
     Super::Tick(DeltaTime);
 }
 
 // Called to bind functionality to input
-void ANpcCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AMonsterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 }

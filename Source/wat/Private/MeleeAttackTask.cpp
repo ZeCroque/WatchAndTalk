@@ -1,20 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "NpcMeleeAttackTask.h"
+#include "MeleeAttackTask.h"
 #include "AIController.h"
 
-UNpcMeleeAttackTask::UNpcMeleeAttackTask(FObjectInitializer const& ObjectInitializer)
+UMeleeAttackTask::UMeleeAttackTask(FObjectInitializer const& ObjectInitializer)
 {
     NodeName = TEXT("Melee Attack");
 }
 
-EBTNodeResult::Type UNpcMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     //get NPC
     AAIController* const Controller = OwnerComp.GetAIOwner();
 
-    if (ANpcCharacter* const Npc = Cast<ANpcCharacter>(Controller->GetPawn()))
+    if (AMonsterCharacter* const Npc = Cast<AMonsterCharacter>(Controller->GetPawn()))
     {
         if (MontageHasFinished(Npc))
         {
@@ -26,7 +26,7 @@ EBTNodeResult::Type UNpcMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& Own
     return EBTNodeResult::Succeeded;
 }
 
-bool UNpcMeleeAttackTask::MontageHasFinished(ANpcCharacter* const Npc)
+bool UMeleeAttackTask::MontageHasFinished(AMonsterCharacter* const Npc)
 {
     return Npc->GetMesh()->GetAnimInstance()->Montage_GetIsStopped(Npc->GetMontage());
 }

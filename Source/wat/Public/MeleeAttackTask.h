@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "NpcStopInvestigatingTask.generated.h"
+#include "MonsterCharacter.h"
+#include "MeleeAttackTask.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API UNpcStopInvestigatingTask final : public UBTTask_BlackboardBase
+class WAT_API UMeleeAttackTask final : public UBTTask_BlackboardBase
 {
     GENERATED_BODY()
 public:
-    explicit UNpcStopInvestigatingTask(FObjectInitializer const& ObjectInitializer);
-
+    explicit UMeleeAttackTask(FObjectInitializer const& ObjectInitializer);
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+private:
+    static bool MontageHasFinished(AMonsterCharacter* const Npc);
 };

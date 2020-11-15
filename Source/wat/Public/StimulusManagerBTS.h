@@ -25,10 +25,16 @@ private:
     FBlackboardKeySelector RandomLocation;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
-    FBlackboardKeySelector HearingLocation;
+    FBlackboardKeySelector NoiseLocation;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
-    FBlackboardKeySelector SightLocation;
+    FBlackboardKeySelector CurrentSeenLocation;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blackboard key", meta = (AllowPrivateAccess = "true"))
+    FBlackboardKeySelector LastSeenLocation;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blackboard key", meta = (AllowPrivateAccess = "true"))
+    FBlackboardKeySelector HasSightStimulus;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Random Location Tweak", meta=(AllowPrivateAccess="true"))
     float SearchRadius = 1500.0f;
