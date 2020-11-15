@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ScreenMeshComponent.h"
+#include "Interactables/Desk/ScreenMeshComponent.h"
 
 #include "Camera/CameraComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "MainGameState.h"
+#include "Core/MainGameState.h"
 #include "SecurityCamera.h"
 
 UScreenMeshComponent::UScreenMeshComponent()

@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CameraDesk.h"
+#include "Interactables/Desk/CameraDesk.h"
 #include "Kismet/GameplayStatics.h"
-#include "MainPlayerState.h"
-#include "PlayerCharacter.h"
-#include "Monitor.h"
+#include "Core/MainPlayerState.h"
+#include "Characters/PlayerCharacter.h"
+#include "Interactables/Desk/Monitor.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()

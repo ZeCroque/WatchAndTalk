@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ChangeSpeedBTS.h"
-#include "MonsterAIController.h"
-#include "MonsterCharacter.h"
+#include "AI/Services/ChangeSpeedBTS.h"
+#include "AI/MonsterAIController.h"
+#include "Characters/MonsterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UChangeSpeedBTS::UChangeSpeedBTS()

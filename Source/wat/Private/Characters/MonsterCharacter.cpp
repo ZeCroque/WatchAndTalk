@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MonsterCharacter.h"
+#include "Characters/MonsterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "MainPlayerState.h"
+#include "Core/MainPlayerState.h"
 
 // Sets default values
 AMonsterCharacter::AMonsterCharacter()

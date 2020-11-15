@@ -1,10 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MonsterAIController.h"
-
-#include "AITags.h"
-#include "BlackboardKeys.h"
+#include "AI/MonsterAIController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"

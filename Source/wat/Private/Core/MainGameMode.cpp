@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainGameMode.h"
+#include "Core/MainGameMode.h"
 
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
-#include "MainGameState.h"
+#include "Core/MainGameState.h"
 #include "SecurityCamera.h"
 
 AMainGameMode::AMainGameMode() : Super()

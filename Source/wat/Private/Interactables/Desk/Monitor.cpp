@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Monitor.h"
+#include "Interactables/Desk/Monitor.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "MainGameState.h"
+#include "Core/MainGameState.h"
 #include "SecurityCamera.h"
 
 // Sets default values

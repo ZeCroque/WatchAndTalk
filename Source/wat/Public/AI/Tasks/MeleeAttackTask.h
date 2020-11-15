@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "MonsterCharacter.h"
+#include "Characters/MonsterCharacter.h"
 #include "MeleeAttackTask.generated.h"
 
 /**

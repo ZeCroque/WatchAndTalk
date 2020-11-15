@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Interactable.h"
+#include "Interactables/Interactable.h"
 
 
 #include "Kismet/GameplayStatics.h"
-#include "PlayerCharacter.h"
+#include "Characters/PlayerCharacter.h"
 
 // Sets default values
 AInteractable::AInteractable()

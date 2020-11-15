@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interactable.h"
+#include "Interactables/Interactable.h"
 #include "MonitorChildActorComponent.h"
 #include "CameraDesk.generated.h"
 

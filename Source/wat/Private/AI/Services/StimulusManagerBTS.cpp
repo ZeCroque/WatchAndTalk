@@ -1,12 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "StimulusManagerBTS.h"
+#include "AI/Services/StimulusManagerBTS.h"
 
 #include "Perception/AIPerceptionComponent.h"
 #include "AIController.h"
-#include "AITags.h"
-#include "NavigationSystem.h"
+#include "AI/AITags.h"
 #include "Misc/TextFilterExpressionEvaluator.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MeleeAttackTask.h"
+#include "AI/Tasks/MeleeAttackTask.h"
 #include "AIController.h"
 
 UMeleeAttackTask::UMeleeAttackTask(FObjectInitializer const& ObjectInitializer)

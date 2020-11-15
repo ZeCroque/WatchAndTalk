@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainGameInstance.h"
+#include "Core/MainGameInstance.h"
 #include "OnlineSessionSettings.h"
 #include "Kismet/GameplayStatics.h"
 

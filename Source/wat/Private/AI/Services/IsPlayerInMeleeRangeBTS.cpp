@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "IsPlayerInMeleeRangeBTS.h"
-#include "MonsterAIController.h"
-#include "MonsterCharacter.h"
+#include "AI/Services/IsPlayerInMeleeRangeBTS.h"
+#include "AI/MonsterAIController.h"
+#include "Characters/MonsterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "BlackboardKeys.h"
+#include "AI/BlackboardKeys.h"
 
 UIsPlayerInMeleeRangeBTS::UIsPlayerInMeleeRangeBTS()
 {

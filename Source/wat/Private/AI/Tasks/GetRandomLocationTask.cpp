@@ -1,12 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GetRandomLocationTask.h"
+#include "AI/Tasks/GetRandomLocationTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Runtime/NavigationSystem/Public/NavigationSystem.h"
-#include "MonsterAIController.h"
-#include "BlackboardKeys.h"
-
+#include "AI/MonsterAIController.h"
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
 {
