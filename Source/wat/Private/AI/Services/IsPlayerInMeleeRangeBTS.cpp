@@ -11,7 +11,9 @@
 UIsPlayerInMeleeRangeBTS::UIsPlayerInMeleeRangeBTS()
 {
     bNotifyBecomeRelevant = true;
+    bNotifyCeaseRelevant = true;
     NodeName = TEXT("Is Player in Melee Range");
+    Player = nullptr;
 }
 
 void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -19,16 +21,31 @@ void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCom
     Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
     // get NPC
-    AMonsterAIController* const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
-    AMonsterCharacter* const Npc = Cast<AMonsterCharacter>(Controller->GetPawn());
+    auto* const Controller = OwnerComp.GetAIOwner();
+    auto* const Npc = Controller->GetPawn();
 
-    //get player character
-    ACharacter* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+    auto const Target = Controller->GetBlackboardComponent()->GetValueAsObject(PlayerKey.SelectedKeyName);
+    //UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+    if (Target && !Player)
+    {
+        Player = Cast<AActor>(Target);
+    }
 
     // write true or false depending on whether the player is withing melee range
-    Controller->GetBlackboard()->SetValueAsBool(BBKeys::PlayerIsInMeleeRange,
-                                                Npc->GetDistanceTo(Player) <= MeleeRange);
-    UE_LOG(LogTemp, Warning, TEXT("Distance is %f and I'm able to see you: %d"), Npc->GetDistanceTo(Player), Npc->GetDistanceTo(Player) <= MeleeRange);
+    Controller->GetBlackboardComponent()->SetValueAsBool(BBKeys::PlayerIsInMeleeRange,
+                                                         Npc->GetDistanceTo(Player) <= MeleeRange);
 
-	//TODO KeySelector
+    //TODO KeySelector
+}
+
+void UIsPlayerInMeleeRangeBTS::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+    auto* const Controller = OwnerComp.GetAIOwner();
+    auto const Target = Controller->GetBlackboardComponent()->GetValueAsObject(PlayerKey.SelectedKeyName);
+    if (!Target)
+    {
+        Player = nullptr;
+    }
 }
