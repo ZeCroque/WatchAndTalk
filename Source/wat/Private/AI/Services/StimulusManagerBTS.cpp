@@ -71,11 +71,12 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
                         Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
                         Blackboard->ClearValue(RandomLocation.SelectedKeyName);
                     }
+                    break;
                 }
                 if (Stimulus.Type.Name == "Default__AISense_Sight")
                 {
-                    //TODO consider stimulus age. ok mec
                     Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+                    break;
                 }
             }
         }
