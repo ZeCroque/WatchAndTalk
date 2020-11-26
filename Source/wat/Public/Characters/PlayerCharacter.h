@@ -44,6 +44,7 @@ protected:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 	void Interact();
+	void Return();
 
 public:
     // Called every frame
