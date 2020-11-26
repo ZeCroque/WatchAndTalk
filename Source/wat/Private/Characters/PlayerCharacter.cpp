@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -111,6 +112,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+	PlayerInputComponent->BindAction("Return", IE_Pressed, this, &APlayerCharacter::Return);
 	
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
@@ -181,5 +183,10 @@ void APlayerCharacter::Interact()
 	{
 		ClosestInteractable->Interact();
 	}
+}
+
+void APlayerCharacter::Return()
+{
+	Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
 }
 

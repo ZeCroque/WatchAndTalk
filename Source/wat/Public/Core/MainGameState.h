@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "Interactables/EndGameInteractable.h"
 #include "Net/UnrealNetwork.h"
 #include "MainGameState.generated.h"
 
@@ -31,5 +32,10 @@ public:
 	UPROPERTY(Replicated)
 	TArray<FCameraZone> Player2Cameras;
 
+	UPROPERTY(Replicated)
+	TArray<AEndGameInteractable*> EndGameInteractables;
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool AreAllEndGameInteractableClicked() const;
+
 };
