@@ -20,6 +20,7 @@ APlayerCharacter::APlayerCharacter()
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
     // Create a CameraComponent	
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -127,6 +128,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 
     PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouch);
 }
 
 void APlayerCharacter::SetupStimulus()
@@ -188,5 +193,25 @@ void APlayerCharacter::Interact()
 void APlayerCharacter::Return()
 {
 	Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
+}
+
+void APlayerCharacter::Sprint()
+{
+	GetCharacterMovement() -> MaxWalkSpeed *= SprintSpeedMultiplier;
+}
+
+void APlayerCharacter::StopSprinting()
+{
+	GetCharacterMovement() -> MaxWalkSpeed /= SprintSpeedMultiplier;
+}
+
+void APlayerCharacter::StartCrouch()
+{
+	Crouch();
+}
+
+void APlayerCharacter::StopCrouch()
+{
+	UnCrouch();
 }
 
