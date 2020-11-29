@@ -52,17 +52,10 @@ public:
 
 	/** Only the factory makes instances */
 	FOnlineSubsystemWaT() = delete;
-	//FOnlineSubsystemWaT(FName InInstanceName) : FOnlineSubsystemImpl(WAT_SUBSYSTEM, InInstanceName){}
 	FOnlineSubsystemWaT(FName InInstanceName) :
 		FOnlineSubsystemImpl(WAT_SUBSYSTEM, InInstanceName),
 		SessionInterface(nullptr),
 		IdentityInterface(nullptr)/*,
-		VoiceInterface(nullptr),
-		bVoiceInterfaceInitialized(false),
-		LeaderboardsInterface(nullptr),
-
-		AchievementsInterface(nullptr),
-		StoreV2Interface(nullptr),
 		OnlineAsyncTaskThreadRunnable(nullptr),
 		OnlineAsyncTaskThread(nullptr)*/
 	{}
