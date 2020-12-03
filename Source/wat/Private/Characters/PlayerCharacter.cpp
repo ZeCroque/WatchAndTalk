@@ -197,12 +197,12 @@ void APlayerCharacter::Return()
 
 void APlayerCharacter::Sprint()
 {
-	GetCharacterMovement() -> MaxWalkSpeed *= SprintSpeedMultiplier;
+	GetCharacterMovement() -> MaxWalkSpeed += SprintSpeedAdditionner;
 }
 
 void APlayerCharacter::StopSprinting()
 {
-	GetCharacterMovement() -> MaxWalkSpeed /= SprintSpeedMultiplier;
+	GetCharacterMovement() -> MaxWalkSpeed -= SprintSpeedAdditionner;
 }
 
 void APlayerCharacter::StartCrouch()
