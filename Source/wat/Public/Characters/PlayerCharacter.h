@@ -34,6 +34,8 @@ public:
 	void RemoveInteractable(AInteractable* Interactable);
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
+	UPROPERTY(EditAnywhere)
+	float SprintSpeedMultiplier;
 		
 
 protected:
@@ -44,6 +46,12 @@ protected:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 	void Interact();
+	void Return();
+
+	void Sprint();
+	void StopSprinting();
+	void StartCrouch();
+    void StopCrouch();
 
 public:
     // Called every frame

@@ -35,6 +35,21 @@ void AMainGameMode::PostInitializeComponents()
 			}
 		}
 	}
+	TArray<AActor*> FoundEndGameInteractables;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEndGameInteractable::StaticClass(), FoundEndGameInteractables);
+	if (FoundEndGameInteractables.Num() != 0)
+	{
+		MainGameState->EndGameInteractables.Reserve(FoundEndGameInteractables.Num());
+		MainGameState->EndGameInteractables.SetNum(FoundEndGameInteractables.Num());
+		for (AActor* FoundEndGameInteractable : FoundEndGameInteractables)
+		{
+			AEndGameInteractable* Interactable = Cast<AEndGameInteractable>(FoundEndGameInteractable);
+			if (Interactable)
+			{
+				MainGameState->EndGameInteractables.Add(Interactable);
+			}
+		}
+	}
 	
 	//TODO if(Camera->GetLevel() == Player1Level)
 }
