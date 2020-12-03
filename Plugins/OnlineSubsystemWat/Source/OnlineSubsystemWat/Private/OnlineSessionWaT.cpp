@@ -10,8 +10,6 @@
 #include "SocketSubsystem.h"
 #include "NboSerializerWat.h"
 
-
-
 FOnlineSessionInfoWat::FOnlineSessionInfoWat() :
 	HostAddr(NULL),
 	SessionId(TEXT("INVALID"))
@@ -37,7 +35,7 @@ void FOnlineSessionInfoWat::Init(const FOnlineSubsystemWaT& Subsystem)
 	}
 
 	// Now set the port that was configured
-	HostAddr->SetPort(GetPortFromNetDriver(Subsystem.GetInstanceName()));
+	//HostAddr->SetPort(GetPortFromNetDriver(Subsystem.GetInstanceName()));
 
 	FGuid OwnerGuid;
 	FPlatformMisc::CreateGuid(OwnerGuid);
@@ -179,11 +177,11 @@ public:
 
 bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName, const FOnlineSessionSettings& NewSessionSettings)
 {
-	uint32 Result = ONLINE_FAIL;
-
+	bool Success = false;
+	
 	// Check for an existing session
 	FNamedOnlineSession* Session = GetNamedSession(SessionName);
-	if (Session == NULL)
+	if (!Session )
 	{
 		// Create a new session and deep copy the game settings
 		Session = AddNamedSession(SessionName, NewSessionSettings);
@@ -212,27 +210,18 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 		// Unique identifier of this build for compatibility
 		Session->SessionSettings.BuildUniqueId = GetBuildUniqueId();
 
-		// Setup the host session info
-		FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
-		NewSessionInfo->Init(*WatSubsystem);
-		Session->SessionInfo = MakeShareable(NewSessionInfo);
+		FOnValidQueryPacketDelegate QueryPacketDelegate = FOnValidQueryPacketDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidQueryPacketReceived);
+		Success = WLANSessionManager.Host(QueryPacketDelegate);
 
-		Result = UpdateLANStatus();
-
-		if (Result != ONLINE_IO_PENDING)
+		if(Success)
 		{
-			// Set the game state as pending (not started)
-			Session->SessionState = EOnlineSessionState::Pending;
-
-			if (Result != ONLINE_SUCCESS)
-			{
-				// Clean up the session info so we don't get into a confused state
-				RemoveNamedSession(SessionName);
-			}
-			else
-			{
-				RegisterLocalPlayers(Session);
-			}
+			// Setup the host session info
+			//TODO update host session info
+			FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
+			NewSessionInfo->Init(*WatSubsystem);
+			Session->SessionInfo = MakeShareable(NewSessionInfo);
+				
+			RegisterLocalPlayers(Session);
 		}
 	}
 	else
@@ -240,17 +229,13 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Cannot create session '%s': session already exists."), *SessionName.ToString());
 	}
 
-	if (Result != ONLINE_IO_PENDING)
-	{
-		TriggerOnCreateSessionCompleteDelegates(SessionName, (Result == ONLINE_SUCCESS) ? true : false);
-	}
+	TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
 	
-	return Result == ONLINE_IO_PENDING || Result == ONLINE_SUCCESS;
+	return Success;
 }
 
 bool FOnlineSessionWat::CreateSession(const FUniqueNetId& HostingPlayerId, FName SessionName, const FOnlineSessionSettings& NewSessionSettings)
 {
-	// todo: use proper	HostingPlayerId
 	return CreateSession(0, SessionName, NewSessionSettings);
 }
 
@@ -488,7 +473,7 @@ bool FOnlineSessionWat::CancelMatchmaking(const FUniqueNetId& SearchingPlayerId,
 
 bool FOnlineSessionWat::FindSessions(int32 SearchingPlayerNum, const TSharedRef<FOnlineSessionSearch>& SearchSettings)
 {
-	uint32 Return = ONLINE_FAIL;
+	bool Success = false;
 
 	// Don't start another search while one is in progress
 	if (!CurrentSessionSearch.IsValid() && SearchSettings->SearchState != EOnlineAsyncTaskState::InProgress)
@@ -503,20 +488,20 @@ bool FOnlineSessionWat::FindSessions(int32 SearchingPlayerNum, const TSharedRef<
 		SessionSearchStartInSeconds = FPlatformTime::Seconds();
 
 		// Check if its a LAN query
-		Return = FindLANSession();
-
-		if (Return == ONLINE_IO_PENDING)
-		{
-			SearchSettings->SearchState = EOnlineAsyncTaskState::InProgress;
-		}
+		//Return = FindLANSession();
+		FOnValidResponsePacketDelegate ResponseDelegate = FOnValidResponsePacketDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidResponsePacketReceived);
+		FOnSearchingTimeoutDelegate TimeoutDelegate = FOnSearchingTimeoutDelegate::CreateRaw(this, &FOnlineSessionWat::OnLANSearchTimeout);
+		Success = WLANSessionManager.Search(ResponseDelegate, TimeoutDelegate);
+		
+		SearchSettings->SearchState = EOnlineAsyncTaskState::InProgress;
 	}
 	else
 	{
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Ignoring game search request while one is pending"));
-		Return = ONLINE_IO_PENDING;
+		Success = false;
 	}
 
-	return Return == ONLINE_SUCCESS || Return == ONLINE_IO_PENDING;
+	return Success;
 }
 
 bool FOnlineSessionWat::FindSessions(const FUniqueNetId& SearchingPlayerId, const TSharedRef<FOnlineSessionSearch>& SearchSettings)
@@ -958,12 +943,7 @@ bool FOnlineSessionWat::UnregisterPlayers(FName SessionName, const TArray< TShar
 void FOnlineSessionWat::Tick(float DeltaTime)
 {
 	SCOPE_CYCLE_COUNTER(STAT_Session_Interface);
-	TickLanTasks(DeltaTime);
-}
-
-void FOnlineSessionWat::TickLanTasks(float DeltaTime)
-{
-	LANSessionManager.Tick(DeltaTime);
+	WLANSessionManager.Tick(DeltaTime);
 }
 
 void FOnlineSessionWat::AppendSessionToPacket(FNboSerializeToBufferWat& Packet, FOnlineSession* Session)
@@ -1034,6 +1014,7 @@ void FOnlineSessionWat::AppendSessionSettingsToPacket(FNboSerializeToBufferWat& 
 
 void FOnlineSessionWat::OnValidQueryPacketReceived(uint8* PacketData, int32 PacketLength, uint64 ClientNonce)
 {
+	//TODO
 	// Iterate through all registered sessions and respond for each one that can be joinable
 	FScopeLock ScopeLock(&SessionLock);
 	for (int32 SessionIndex = 0; SessionIndex < Sessions.Num(); SessionIndex++)
@@ -1245,7 +1226,7 @@ void FOnlineSessionWat::SetPortFromNetDriver(const FOnlineSubsystemWaT& Subsyste
 	auto SessionInfoWat = StaticCastSharedPtr<FOnlineSessionInfoWat>(SessionInfo);
 	if (SessionInfoWat.IsValid() && SessionInfoWat->HostAddr.IsValid())
 	{
-		SessionInfoWat->HostAddr->SetPort(NetDriverPort);
+		//SessionInfoWat->HostAddr->SetPort(NetDriverPort);
 	}
 }
 

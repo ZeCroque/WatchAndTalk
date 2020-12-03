@@ -9,6 +9,8 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "LANBeacon.h"
 #include "OnlineSubsystemWatPackage.h"
+#include "WLANManager.h"
+
 
 class FOnlineSubsystemWaT;
 
@@ -27,18 +29,15 @@ private:
 	/** Handles advertising sessions over LAN and client searches */
 	FLANSession LANSessionManager;
 
+	FWLANManager WLANSessionManager;
+
+private:
+	
 	/** Hidden on purpose */
 	FOnlineSessionWat() :
 		WatSubsystem(nullptr),
 		CurrentSessionSearch(nullptr)
 	{}
-
-	/**
-	 * Ticks any lan beacon background tasks
-	 *
-	 * @param DeltaTime the time since the last tick
-	 */
-	void TickLanTasks(float DeltaTime);
 
 	/**
 	 * Checks whether there are any sessions that need to be advertised (over LAN)
@@ -177,7 +176,7 @@ PACKAGE_SCOPE:
 
 	FOnlineSessionWat(class FOnlineSubsystemWaT* InSubsystem) :
 		WatSubsystem(InSubsystem),
-		CurrentSessionSearch(NULL),
+		CurrentSessionSearch(nullptr),
 		SessionSearchStartInSeconds(0)
 	{}
 

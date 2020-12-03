@@ -43,6 +43,7 @@ PACKAGE_SCOPE:
 	void Init(const FOnlineSubsystemWaT& Subsystem);
 
 	/** The ip & port that the host is listening on (valid for LAN/GameServer) */
+	//TODO sockaddr_in + socket
 	TSharedPtr<class FInternetAddr> HostAddr;
 	/** Unique Id for this session */
 	FUniqueNetIdWat SessionId;
