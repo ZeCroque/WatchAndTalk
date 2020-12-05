@@ -7,35 +7,11 @@
 #include "OnlineSessionInfoWat.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineAsyncTaskManager.h"
-#include "SocketSubsystem.h"
-#include "NboSerializerWat.h"
 
-FOnlineSessionInfoWat::FOnlineSessionInfoWat() :
-	HostAddr(NULL),
-	SessionId(TEXT("INVALID"))
-{
-}
-
-void FOnlineSessionInfoWat::Init(const FOnlineSubsystemWaT& Subsystem)
+void FOnlineSessionInfoWat::Init(const SOCKADDR_IN& Addr)
 {
 	// Read the IP from the system
-	bool bCanBindAll;
-	HostAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, bCanBindAll);
-
-	// The below is a workaround for systems that set hostname to a distinct address from 127.0.0.1 on a loopback interface.
-	// See e.g. https://www.debian.org/doc/manuals/debian-reference/ch05.en.html#_the_hostname_resolution
-	// and http://serverfault.com/questions/363095/why-does-my-hostname-appear-with-the-address-127-0-1-1-rather-than-127-0-0-1-in
-	// Since we bind to 0.0.0.0, we won't answer on 127.0.1.1, so we need to advertise ourselves as 127.0.0.1 for any other loopback address we may have.
-	uint32 HostIp = 0;
-	HostAddr->GetIp(HostIp); // will return in host order
-	// if this address is on loopback interface, advertise it as 127.0.0.1
-	if ((HostIp & 0xff000000) == 0x7f000000)
-	{
-		HostAddr->SetIp(0x7f000001);	// 127.0.0.1
-	}
-
-	// Now set the port that was configured
-	//HostAddr->SetPort(GetPortFromNetDriver(Subsystem.GetInstanceName()));
+	HostAddr = Addr;
 
 	FGuid OwnerGuid;
 	FPlatformMisc::CreateGuid(OwnerGuid);
@@ -185,7 +161,8 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 	{
 		// Create a new session and deep copy the game settings
 		Session = AddNamedSession(SessionName, NewSessionSettings);
-		check(Session);
+		check(Session);		  
+		WLANSessionManager.SetHostSession(Session);
 		Session->SessionState = EOnlineSessionState::Creating;
 		Session->NumOpenPrivateConnections = NewSessionSettings.NumPrivateConnections;
 		Session->NumOpenPublicConnections = NewSessionSettings.NumPublicConnections;	// always start with full public connections, local player will register later
@@ -215,12 +192,6 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 
 		if(Success)
 		{
-			// Setup the host session info
-			//TODO update host session info
-			FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
-			NewSessionInfo->Init(*WatSubsystem);
-			Session->SessionInfo = MakeShareable(NewSessionInfo);
-				
 			RegisterLocalPlayers(Session);
 		}
 	}
@@ -369,7 +340,6 @@ bool FOnlineSessionWat::UpdateSession(FName SessionName, FOnlineSessionSettings&
 	FNamedOnlineSession* Session = GetNamedSession(SessionName);
 	if (Session)
 	{
-		// @TODO ONLINE update LAN settings
 		Session->SessionSettings = UpdatedSessionSettings;
 		TriggerOnUpdateSessionCompleteDelegates(SessionName, bWasSuccessful);
 	}
@@ -491,7 +461,7 @@ bool FOnlineSessionWat::FindSessions(int32 SearchingPlayerNum, const TSharedRef<
 		//Return = FindLANSession();
 		FOnValidResponsePacketDelegate ResponseDelegate = FOnValidResponsePacketDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidResponsePacketReceived);
 		FOnSearchingTimeoutDelegate TimeoutDelegate = FOnSearchingTimeoutDelegate::CreateRaw(this, &FOnlineSessionWat::OnLANSearchTimeout);
-		Success = WLANSessionManager.Search(ResponseDelegate, TimeoutDelegate);
+		Success = WLANSessionManager.Search(SearchSettings, ResponseDelegate, TimeoutDelegate);
 		
 		SearchSettings->SearchState = EOnlineAsyncTaskState::InProgress;
 	}
@@ -684,7 +654,7 @@ uint32 FOnlineSessionWat::JoinLANSession(int32 PlayerNum, FNamedOnlineSession* S
 		FOnlineSessionInfoWat* SessionInfo = (FOnlineSessionInfoWat*)Session->SessionInfo.Get();
 		SessionInfo->SessionId = SearchSessionInfo->SessionId;
 
-		SessionInfo->HostAddr = SearchSessionInfo->HostAddr->Clone();
+		//SessionInfo->HostAddr = SearchSessionInfo->HostAddr->Clone();
 		Result = ONLINE_SUCCESS;
 	}
 
@@ -697,57 +667,38 @@ bool FOnlineSessionWat::PingSearchResults(const FOnlineSessionSearchResult& Sear
 }
 
 /** Get a resolved connection string from a session info */
-static bool GetConnectStringFromSessionInfo(TSharedPtr<FOnlineSessionInfoWat>& SessionInfo, FString& ConnectInfo, int32 PortOverride=0)
+static void GetConnectStringFromSessionInfo(TSharedPtr<FOnlineSessionInfoWat>& SessionInfo, FString& ConnectInfo)
 {
-	bool bSuccess = false;
 	if (SessionInfo.IsValid())
 	{
-		if (SessionInfo->HostAddr.IsValid() && SessionInfo->HostAddr->IsValid())
-		{
-			if (PortOverride != 0)
-			{
-				ConnectInfo = FString::Printf(TEXT("%s:%d"), *SessionInfo->HostAddr->ToString(false), PortOverride);
-			}
-			else
-			{
-				ConnectInfo = FString::Printf(TEXT("%s"), *SessionInfo->HostAddr->ToString(true));
-			}
-
-			bSuccess = true;
-		}
+		char Ip[16];
+		inet_ntop(AF_INET, reinterpret_cast<void*>(&SessionInfo.Get()->HostAddr.sin_addr), Ip, 16);			
+		ConnectInfo = FString(Ip);
 	}
-
-	return bSuccess;
 }
 
 bool FOnlineSessionWat::GetResolvedConnectString(FName SessionName, FString& ConnectInfo, FName PortType)
 {
-	bool bSuccess = false;
+	bool bSuccess = true;
 	// Find the session
 	FNamedOnlineSession* Session = GetNamedSession(SessionName);
-	if (Session != NULL)
+	if (Session != nullptr)
 	{
 		TSharedPtr<FOnlineSessionInfoWat> SessionInfo = StaticCastSharedPtr<FOnlineSessionInfoWat>(Session->SessionInfo);
-		if (PortType == NAME_BeaconPort)
-		{
-			int32 BeaconListenPort = GetBeaconPortFromSessionSettings(Session->SessionSettings);
-			bSuccess = GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo, BeaconListenPort);
-		}
-		else if (PortType == NAME_GamePort)
-		{
-			bSuccess = GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo);
-		}
 
-		if (!bSuccess)
+		GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo);
+
+
+		if (!ConnectInfo.IsEmpty())
 		{
+			bSuccess = false;
 			UE_LOG_ONLINE_SESSION(Warning, TEXT("Invalid session info for session %s in GetResolvedConnectString()"), *SessionName.ToString());
 		}
 	}
 	else
 	{
-		UE_LOG_ONLINE_SESSION(Warning,
-			TEXT("Unknown session name (%s) specified to GetResolvedConnectString()"),
-			*SessionName.ToString());
+		bSuccess = false;
+		UE_LOG_ONLINE_SESSION(Warning, TEXT("Unknown session name (%s) specified to GetResolvedConnectString()"), *SessionName.ToString());
 	}
 
 	return bSuccess;
@@ -755,25 +706,16 @@ bool FOnlineSessionWat::GetResolvedConnectString(FName SessionName, FString& Con
 
 bool FOnlineSessionWat::GetResolvedConnectString(const FOnlineSessionSearchResult& SearchResult, FName PortType, FString& ConnectInfo)
 {
-	bool bSuccess = false;
+	bool bSuccess = true;
 	if (SearchResult.Session.SessionInfo.IsValid())
 	{
 		TSharedPtr<FOnlineSessionInfoWat> SessionInfo = StaticCastSharedPtr<FOnlineSessionInfoWat>(SearchResult.Session.SessionInfo);
-
-		if (PortType == NAME_BeaconPort)
-		{
-			int32 BeaconListenPort = GetBeaconPortFromSessionSettings(SearchResult.Session.SessionSettings);
-			bSuccess = GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo, BeaconListenPort);
-
-		}
-		else if (PortType == NAME_GamePort)
-		{
-			bSuccess = GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo);
-		}
+		GetConnectStringFromSessionInfo(SessionInfo, ConnectInfo);
 	}
 	
-	if (!bSuccess || ConnectInfo.IsEmpty())
+	if (ConnectInfo.IsEmpty())
 	{
+		bSuccess = false;
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Invalid session info in search result to GetResolvedConnectString()"));
 	}
 
@@ -954,9 +896,6 @@ void FOnlineSessionWat::AppendSessionToPacket(FNboSerializeToBufferWat& Packet, 
 		<< Session->NumOpenPrivateConnections
 		<< Session->NumOpenPublicConnections;
 
-	// Try to get the actual port the netdriver is using
-	SetPortFromNetDriver(*WatSubsystem, Session->SessionInfo);
-
 	// Write host info (host addr, session id, and key)
 	Packet << *StaticCastSharedPtr<FOnlineSessionInfoWat>(Session->SessionInfo);
 
@@ -1005,9 +944,7 @@ void FOnlineSessionWat::AppendSessionSettingsToPacket(FNboSerializeToBufferWat& 
 		{
 			Packet << It.Key();
 			Packet << Setting;
-#if DEBUG_LAN_BEACON
-			UE_LOG_ONLINE_SESSION(Verbose, TEXT("%s"), *Setting.ToString());
-#endif
+			UE_LOG(LogOnline,Warning , TEXT("%s"), *Setting.ToString());
 		}
 	}
 }
@@ -1061,7 +998,6 @@ void FOnlineSessionWat::ReadSessionFromPacket(FNboSerializeFromBufferWat& Packet
 
 	// Allocate and read the connection data
 	FOnlineSessionInfoWat* WatSessionInfo = new FOnlineSessionInfoWat();
-	WatSessionInfo->HostAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
 	Packet >> *WatSessionInfo;
 	Session->SessionInfo = MakeShareable(WatSessionInfo); 
 
@@ -1218,16 +1154,6 @@ void FOnlineSessionWat::RegisterLocalPlayer(const FUniqueNetId& PlayerId, FName 
 void FOnlineSessionWat::UnregisterLocalPlayer(const FUniqueNetId& PlayerId, FName SessionName, const FOnUnregisterLocalPlayerCompleteDelegate& Delegate)
 {
 	Delegate.ExecuteIfBound(PlayerId, true);
-}
-
-void FOnlineSessionWat::SetPortFromNetDriver(const FOnlineSubsystemWaT& Subsystem, const TSharedPtr<FOnlineSessionInfo>& SessionInfo)
-{
-	auto NetDriverPort = GetPortFromNetDriver(Subsystem.GetInstanceName());
-	auto SessionInfoWat = StaticCastSharedPtr<FOnlineSessionInfoWat>(SessionInfo);
-	if (SessionInfoWat.IsValid() && SessionInfoWat->HostAddr.IsValid())
-	{
-		//SessionInfoWat->HostAddr->SetPort(NetDriverPort);
-	}
 }
 
 bool FOnlineSessionWat::IsHost(const FNamedOnlineSession& Session) const

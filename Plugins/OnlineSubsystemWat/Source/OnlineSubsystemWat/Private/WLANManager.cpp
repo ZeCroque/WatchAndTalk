@@ -1,5 +1,8 @@
 #include "WLANManager.h"
+
+#include "NboSerializerWat.h"
 #include "OnlineSubsystemUtils.h"
+#include "OnlineSessionSettings.h"
 
 FWLANManager::~FWLANManager()
 {
@@ -7,7 +10,7 @@ FWLANManager::~FWLANManager()
 }
 
 bool FWLANManager::Init()
-{
+{	
 	if (RelationServerAddr)
 	{
 		UE_LOG(LogOnline, Warning, TEXT("Socket exists already, initialization skipped."));
@@ -43,6 +46,15 @@ bool FWLANManager::Init()
 	return false;
 }
 
+SOCKADDR_IN* FWLANManager::GetHostNATAddress()
+{
+	if(bIsHost && HostsAddresses)
+	{
+		return HostsAddresses;
+	}
+	return nullptr;
+}
+
 bool FWLANManager::Host(FOnValidQueryPacketDelegate& QueryDelegate)
 {
 	bIsHost = true;
@@ -53,12 +65,12 @@ bool FWLANManager::Host(FOnValidQueryPacketDelegate& QueryDelegate)
 		bSuccess = Init();
 	}
 	if (bSuccess)
-	{
+	{	
 		FMessage Message = { MessageType::HostPresentation, {0, 0, {{{0,0,0,0}}}, {0}} };
 		if(sendto(Socket, reinterpret_cast<char*>(&Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(RelationServerAddr), sizeof(*RelationServerAddr)) == SOCKET_ERROR) 
 		{
-                    UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
-                    return false;
+            UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
+            return false;
 		}
 		UE_LOG(LogOnline, Warning, TEXT("Presentation message sent."));
 		AddOnValidQueryPacketDelegate_Handle(QueryDelegate);
@@ -68,11 +80,11 @@ bool FWLANManager::Host(FOnValidQueryPacketDelegate& QueryDelegate)
 	return false;
 }
 
-bool FWLANManager::Search(FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate)
+bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate)
 {
 	bIsHost = false;
 
-        bool bSuccess = false;
+    bool bSuccess = false;
         
 	if (!RelationServerAddr)
 	{
@@ -87,12 +99,13 @@ bool FWLANManager::Search(FOnValidResponsePacketDelegate& ResponseDelegate, FOnS
 	}
 	UE_LOG(LogOnline, Warning, TEXT("Presentation message sent."));
 
-        if(bSuccess)
-        {
-	  AddOnValidResponsePacketDelegate_Handle(ResponseDelegate);
-	  AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
-	}
-	return bIsHost;
+    if(bSuccess)
+    {
+    	ClientSessionSearch = &SearchSettings.Get();
+	AddOnValidResponsePacketDelegate_Handle(ResponseDelegate);
+	AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
+    }
+    return bIsHost;
 }
 
 bool FWLANManager::SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* PunchPacket)
@@ -104,7 +117,6 @@ bool FWLANManager::SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* Pun
 	}
 	UE_LOG(LogOnline, Warning, TEXT("Punch packet sent."));
 
-	//TODO check errors
 	return true;
 }
 
@@ -114,6 +126,172 @@ void FWLANManager::StopWLANProcess()
 	{
 		delete RelationServerAddr;
 		RelationServerAddr = nullptr;
+	}
+	if(HostsAddresses)
+	{
+		if(bIsHost)
+		{
+			delete HostsAddresses;
+		}
+		else
+		{
+			delete[] HostsAddresses;
+		}
+		HostsAddresses = nullptr;
+	}
+	if(ClientSessionSearch)
+	{
+		delete ClientSessionSearch;
+	}
+}
+
+void FWLANManager::SetHostSession(FNamedOnlineSession* Session)
+{
+	this->HostSession = Session;
+}
+
+void FWLANManager::AppendSessionToPacket(FNboSerializeToBufferWat& Packet, FOnlineSession* Session)
+{
+	/** Owner of the session */
+	Packet << *StaticCastSharedPtr<const FUniqueNetIdWat>(Session->OwningUserId)
+		<< Session->OwningUserName
+		<< Session->NumOpenPrivateConnections
+		<< Session->NumOpenPublicConnections;
+
+	// Write host info (host addr, session id, and key)
+	Packet << *StaticCastSharedPtr<FOnlineSessionInfoWat>(Session->SessionInfo);
+
+	// Now append per game settings
+	AppendSessionSettingsToPacket(Packet, &Session->SessionSettings);
+}
+
+void FWLANManager::AppendSessionSettingsToPacket(FNboSerializeToBufferWat& Packet, FOnlineSessionSettings* SessionSettings)
+{
+	UE_LOG_ONLINE_SESSION(Verbose, TEXT("Sending session settings to client")); 
+
+	// Members of the session settings class
+	Packet << SessionSettings->NumPublicConnections
+		<< SessionSettings->NumPrivateConnections
+		<< (uint8)SessionSettings->bShouldAdvertise
+		<< (uint8)SessionSettings->bIsLANMatch
+		<< (uint8)SessionSettings->bIsDedicated
+		<< (uint8)SessionSettings->bUsesStats
+		<< (uint8)SessionSettings->bAllowJoinInProgress
+		<< (uint8)SessionSettings->bAllowInvites
+		<< (uint8)SessionSettings->bUsesPresence
+		<< (uint8)SessionSettings->bAllowJoinViaPresence
+		<< (uint8)SessionSettings->bAllowJoinViaPresenceFriendsOnly
+		<< (uint8)SessionSettings->bAntiCheatProtected
+	    << SessionSettings->BuildUniqueId;
+
+	// First count number of advertised keys
+	int32 NumAdvertisedProperties = 0;
+	for (FSessionSettings::TConstIterator It(SessionSettings->Settings); It; ++It)
+	{	
+		const FOnlineSessionSetting& Setting = It.Value();
+		if (Setting.AdvertisementType >= EOnlineDataAdvertisementType::ViaOnlineService)
+		{
+			NumAdvertisedProperties++;
+		}
+	}
+
+	// Add count of advertised keys and the data
+	Packet << (int32)NumAdvertisedProperties;
+	for (FSessionSettings::TConstIterator It(SessionSettings->Settings); It; ++It)
+	{
+		const FOnlineSessionSetting& Setting = It.Value();
+		if (Setting.AdvertisementType >= EOnlineDataAdvertisementType::ViaOnlineService)
+		{
+			Packet << It.Key();
+			Packet << Setting;
+			UE_LOG(LogOnline,Warning , TEXT("%s"), *Setting.ToString());
+		}
+	}
+}
+
+void FWLANManager::ReadSessionFromPacket(FNboSerializeFromBufferWat& Packet, FOnlineSession* Session)
+{
+	UE_LOG_ONLINE_SESSION(Verbose, TEXT("Reading session information from server"));
+
+	/** Owner of the session */
+	FUniqueNetIdWat* UniqueId = new FUniqueNetIdWat;
+	Packet >> *UniqueId
+		>> Session->OwningUserName
+		>> Session->NumOpenPrivateConnections
+		>> Session->NumOpenPublicConnections;
+
+	Session->OwningUserId = MakeShareable(UniqueId);
+
+	// Allocate and read the connection data
+	FOnlineSessionInfoWat* WatSessionInfo = new FOnlineSessionInfoWat();
+	Packet >> *WatSessionInfo;
+	Session->SessionInfo = MakeShareable(WatSessionInfo); 
+
+	// Read any per object data using the server object
+	ReadSettingsFromPacket(Packet, Session->SessionSettings);
+}
+
+void FWLANManager::ReadSettingsFromPacket(FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings)
+{
+	UE_LOG_ONLINE_SESSION(Verbose, TEXT("Reading game settings from server"));
+
+	// Clear out any old settings
+	SessionSettings.Settings.Empty();
+
+	// Members of the session settings class
+	Packet >> SessionSettings.NumPublicConnections
+		>> SessionSettings.NumPrivateConnections;
+	uint8 Read = 0;
+	// Read all the bools as bytes
+	Packet >> Read;
+	SessionSettings.bShouldAdvertise = !!Read;
+	Packet >> Read;
+	SessionSettings.bIsLANMatch = !!Read;
+	Packet >> Read;
+	SessionSettings.bIsDedicated = !!Read;
+	Packet >> Read;
+	SessionSettings.bUsesStats = !!Read;
+	Packet >> Read;
+	SessionSettings.bAllowJoinInProgress = !!Read;
+	Packet >> Read;
+	SessionSettings.bAllowInvites = !!Read;
+	Packet >> Read;
+	SessionSettings.bUsesPresence = !!Read;
+	Packet >> Read;
+	SessionSettings.bAllowJoinViaPresence = !!Read;
+	Packet >> Read;
+	SessionSettings.bAllowJoinViaPresenceFriendsOnly = !!Read;
+	Packet >> Read;
+	SessionSettings.bAntiCheatProtected = !!Read;
+
+	// BuildId
+	Packet >> SessionSettings.BuildUniqueId;
+
+	// Now read the contexts and properties from the settings class
+	int32 NumAdvertisedProperties = 0;
+	// First, read the number of advertised properties involved, so we can presize the array
+	Packet >> NumAdvertisedProperties;
+	if (Packet.HasOverflow() == false)
+	{
+		FName Key;
+		// Now read each context individually
+		for (int32 Index = 0;
+			Index < NumAdvertisedProperties && Packet.HasOverflow() == false;
+			Index++)
+		{
+			FOnlineSessionSetting Setting;
+			Packet >> Key;
+			Packet >> Setting;
+			SessionSettings.Set(Key, Setting);
+			UE_LOG(LogOnline, Warning, TEXT("%s"), *Setting.ToString());
+		}
+	}
+	
+	// If there was an overflow, treat the string settings/properties as broken
+	if (Packet.HasOverflow())
+	{
+		SessionSettings.Settings.Empty();
+		UE_LOG_ONLINE_SESSION(Verbose, TEXT("Packet overflow detected in ReadGameSettingsFromPacket()"));
 	}
 }
 
@@ -136,9 +314,35 @@ void FWLANManager::Tick(float DeltaTime)
 					UE_LOG(LogOnline, Warning, TEXT("Connection request received."));
 					SendNatPunchThroughPacket(Message->adr, "one");
 					break;
-				case MessageType::TestMessage:
-					UE_LOG(LogOnline, Warning, TEXT("Received message of type:%d\nDone."), static_cast<int>(Message->messageType));
+				case MessageType::HostAddress:
+				{
+					// Setup the host session info				
+					HostsAddresses = new SOCKADDR_IN();
+					HostsAddresses[0] = Message->adr;
+					FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
+					NewSessionInfo->Init(HostsAddresses[0]);
+					HostSession->SessionInfo = MakeShareable(NewSessionInfo);
+						
+					char Ip[16];
+					inet_ntop(AF_INET, reinterpret_cast<void*>(&HostsAddresses[0].sin_addr), Ip, 16);
+					UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%hs:%d"), Ip, ntohs(HostsAddresses[0].sin_port));
 					break;
+				}
+				case MessageType::SessionRequest:
+				{
+					UE_LOG(LogOnline, Warning, TEXT("Session request received."));
+					//TODO get session and append to package
+					FNboSerializeToBufferWat Packet; 
+				    AppendSessionToPacket(Packet, HostSession);		    
+					int PacketLength = Packet.GetByteCount();
+					FMessage Answer = { MessageType::SessionSize, {0, 0, {{{0,0,0,0}}}, {0}} };
+		            Answer.adr = *reinterpret_cast<SOCKADDR_IN *>(&PacketLength);
+			        sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
+					UE_LOG(LogOnline, Warning, TEXT("Session size sent."));			  
+				        sendto(Socket, reinterpret_cast<char*>(Packet.GetRawBuffer(0)), PacketLength, 0,  reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
+					UE_LOG(LogOnline, Warning, TEXT("Session sent."));	
+					break;
+				}
 				default:
 					UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->messageType));
 				}
@@ -151,11 +355,10 @@ void FWLANManager::Tick(float DeltaTime)
 					ExpectedHostsCount = *reinterpret_cast<int*>(&Message->adr);
 					UE_LOG(LogOnline, Warning, TEXT("Host count received: %d"), ExpectedHostsCount);
 					break;
-				case MessageType::TestMessage:
-					UE_LOG(LogOnline, Warning, TEXT("Received message of type:%d"), static_cast<int>(Message->messageType));
-					sendto(Socket, reinterpret_cast<char*>(Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), sizeof(SenderAddr));
-					UE_LOG(LogOnline, Warning, TEXT("Test answer sent.\nDone."));
-					break;
+				case MessageType::SessionSize:
+					ExpectedSessionSize = *reinterpret_cast<int*>(&Message->adr);
+					UE_LOG(LogOnline, Warning, TEXT("Session size received: %d"), ExpectedSessionSize);
+			        break;
 				default:
 					UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->messageType));
 				}
@@ -170,20 +373,16 @@ void FWLANManager::Tick(float DeltaTime)
 				UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));
 				SendNatPunchThroughPacket(SenderAddr, "two");
 			}
-			//DEBUG
-			if (bIsHost)
-			{
-				FMessage Message = { MessageType::TestMessage, {0, 0, {{{0,0,0,0}}}, {0}} };
-				sendto(Socket, reinterpret_cast<char*>(&Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), sizeof(SenderAddr));
-				UE_LOG(LogOnline, Warning, TEXT("Sent test message to client."));
-			}
 			UE_LOG(LogOnline, Warning, TEXT("NAT punch through successful."));
+
+			if (!bIsHost)
+			{
+				FMessage Answer = { MessageType::SessionRequest, {0, 0, {{{0,0,0,0}}}, {0}} };
+				sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), sizeof(SenderAddr));
+				UE_LOG(LogOnline, Warning, TEXT("Sent session request."));
+			}
 		}
-		//Handle Session package
-		//TriggerOnValidResponsePacketDelegates();
-		//TriggerOnValidResponsePacketDelegates(&PacketData[LAN_BEACON_PACKET_HEADER_SIZE], NumRead - LAN_BEACON_PACKET_HEADER_SIZE);
-		//Host addresses
-		else if (ReceivedSize == ExpectedHostsCount * sizeof(SOCKADDR_IN))
+		else if (ReceivedSize == ExpectedHostsCount * sizeof(SOCKADDR_IN) && ReceivedSize != 0)
 		{
 			UE_LOG(LogOnline, Warning, TEXT("Hosts addresses received. Hosts list:"));
 			HostsAddresses = new SOCKADDR_IN[ExpectedHostsCount];
@@ -193,8 +392,7 @@ void FWLANManager::Tick(float DeltaTime)
 				HostsAddresses[i] = *reinterpret_cast<SOCKADDR_IN*>(ReceptionBuffer + i * sizeof(SOCKADDR_IN));
 				char Ip[16];
 				inet_ntop(AF_INET, reinterpret_cast<void*>(&HostsAddresses[i].sin_addr), Ip, 16);
-			    auto IpString = FString(Ip);
-				UE_LOG(LogOnline, Warning, TEXT("%s:%d"), *IpString, ntohs(HostsAddresses[i].sin_port));
+				UE_LOG(LogOnline, Warning, TEXT("%hs:%d"), Ip, ntohs(HostsAddresses[i].sin_port));
 			}
 
 			FMessage Answer = { MessageType::ClientConnectionRequest, HostsAddresses[0] };
@@ -203,7 +401,18 @@ void FWLANManager::Tick(float DeltaTime)
 
 			SendNatPunchThroughPacket(HostsAddresses[0], "one");
 			UE_LOG(LogOnline, Warning, TEXT("NAT Punching package sent to host..."));
-			ExpectedHostsCount = -1;
+			ExpectedHostsCount = 0;
+		}
+		else if(ReceivedSize == ExpectedSessionSize && ReceivedSize != 0) 
+                {
+		    ExpectedSessionSize = 0;
+		    // Add space in the search results array
+		    FOnlineSessionSearchResult* NewResult = new (ClientSessionSearch->SearchResults) FOnlineSessionSearchResult();
+		    FOnlineSession* NewSession = &NewResult->Session;
+		    // Prepare to read data from the packet
+		    FNboSerializeFromBufferWat Packet(reinterpret_cast<uint8*>(ReceptionBuffer), ReceivedSize);
+		    ReadSessionFromPacket(Packet, NewSession);
+                    TriggerOnSearchingTimeoutDelegates();
 		}
 		else if (ReceivedSize > 0)
 		{
@@ -218,152 +427,3 @@ void FWLANManager::Tick(float DeltaTime)
 		delete[] ReceptionBuffer;
 	}
 }
-//
-
-/*enum class MessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, TestMessage = 4};
-
-struct Message
-{
-MessageType messageType;
-SOCKADDR_IN adr;
-};
-
-enum class ProcessMode {None = 0, Host = 1, Client = 2};
-
-void clientRoutine(SOCKET serviceSocket, SOCKADDR_IN& sin);
-void hostRoutine(SOCKET serviceSocket, SOCKADDR_IN& sin);
-void natPunchRoutine(SOCKET serviceSocket, SOCKADDR_IN& sin);
-
-int main(const int argc, char** argv)
-{
-if(argc == 2)
-{
-const ProcessMode mode = !strcmp(argv[1],"-c")? ProcessMode::Client:!strcmp(argv[1],"-h")? ProcessMode::Host: ProcessMode::None;
-
-if(mode != ProcessMode::None)
-{
-WSADATA wsaData;
-if(!WSAStartup(MAKEWORD(2,0), &wsaData))
-{
-SOCKADDR_IN sin;
-InetPton(AF_INET, L"193.250.68.210", &sin.sin_addr.s_addr);
-sin.sin_family = AF_INET;
-sin.sin_port = htons(7777);
-const SOCKET serviceSocket = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
-UE_LOG(LogOnline, Warning, TEXT("Socket created. Done."));
-// ReSharper disable once CppDefaultCaseNotHandledInSwitchStatement
-// ReSharper disable once CppIncompleteSwitchStatement
-switch(mode)  // NOLINT(clang-diagnostic-switch)
-{
-case ProcessMode::Client:
-clientRoutine(serviceSocket, sin);
-break;
-case ProcessMode::Host:
-hostRoutine(serviceSocket, sin);
-break;
-}
-
-closesocket(serviceSocket);
-WSACleanup();
-UE_LOG(LogOnline, Warning, TEXT("Socket closed. Done."));
-return 0;
-}
-UE_LOG(LogOnline, Warning, TEXT("Error:WSA couldn't start"));
-return 0;
-}
-}
-
-UE_LOG(LogOnline, Warning, TEXT("You must specify '-c' to be the client or 'h' to be the host"));
-return 0;
-}
-
-void clientRoutine(const SOCKET serviceSocket, SOCKADDR_IN& sin)
-{
-Message message {MessageType::Error, {0, 0, {{{0,0,0,0}}}, {0}}};
-message.messageType = MessageType::ClientPresentation;
-sendto(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0, reinterpret_cast<SOCKADDR*>(&sin), sizeof(sin));
-UE_LOG(LogOnline, Warning, TEXT("Presentation message sent. Waiting for host count message..."));
-
-memset(&message,0,sizeof(Message));
-recv(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0);
-if(message.messageType != MessageType::HostCount)
-{
-UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message."));
-exit(-1);
-}
-const int hostCount = *reinterpret_cast<int*>(&message.adr);
-UE_LOG(LogOnline, Warning, TEXT("Host count received: %d\nWaiting for host addresses..."), hostCount);
-
-auto* hostsAdr =  new SOCKADDR_IN[hostCount];
-recv(serviceSocket, reinterpret_cast<char*>(hostsAdr), static_cast<int>(sizeof(SOCKADDR_IN))*hostCount, 0);
-UE_LOG(LogOnline, Warning, TEXT("Hosts addresses received. Hosts list:"));
-for(int i=0; i<hostCount; ++i)
-{
-char buffer[16];
-inet_ntop(AF_INET, reinterpret_cast<void*>(&hostsAdr[i].sin_addr), buffer, 16);
-UE_LOG(LogOnline, Warning, TEXT("%s:%d"), buffer, ntohs(hostsAdr[i].sin_port));
-}
-
-message = {MessageType::ClientConnectionRequest, hostsAdr[0]};
-sendto(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0, reinterpret_cast<SOCKADDR*>(&sin), sizeof(sin));
-UE_LOG(LogOnline, Warning, TEXT("Connection request sent to host."));
-
-SOCKADDR_IN& hostAddress = hostsAdr[0];
-natPunchRoutine(serviceSocket, hostAddress);
-
-memset(&message, 0, sizeof(Message));
-UE_LOG(LogOnline, Warning, TEXT("Waiting for host test message..."));
-recv(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message),0);
-UE_LOG(LogOnline, Warning, TEXT("Received message of type:%d"), static_cast<int>(message.messageType));
-
-sendto(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message),0,reinterpret_cast<SOCKADDR*>(&hostAddress), sizeof(hostAddress));
-UE_LOG(LogOnline, Warning, TEXT("Test answer sent."));
-}
-
-void hostRoutine(const SOCKET serviceSocket, SOCKADDR_IN& sin)
-{
-Message message = {MessageType::HostPresentation, {0, 0, {{{0,0,0,0}}}, {0}}};
-sendto(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0, reinterpret_cast<SOCKADDR*>(&sin), sizeof(sin));
-UE_LOG(LogOnline, Warning, TEXT("Presentation message sent. Waiting for connection request..."));
-
-memset(&message,0,sizeof(Message));
-recv(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0);
-if(message.messageType != MessageType::ClientConnectionRequest)
-{
-UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Size:"));
-exit(-1);
-}
-UE_LOG(LogOnline, Warning, TEXT("Connection request received."));
-
-SOCKADDR_IN clientAddress = message.adr;
-natPunchRoutine(serviceSocket, clientAddress);
-
-message = {MessageType::TestMessage, {0, 0, {{{0,0,0,0}}}, {0}}};
-sendto(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0, reinterpret_cast<SOCKADDR*>(&clientAddress), sizeof(clientAddress));
-UE_LOG(LogOnline, Warning, TEXT("Sent test message to client. Waiting for answer..."));
-
-memset(&message,0,sizeof(Message));
-recv(serviceSocket, reinterpret_cast<char*>(&message), sizeof(Message), 0);
-UE_LOG(LogOnline, Warning, TEXT("Received message of type:%d"), static_cast<int>(message.messageType));
-}
-
-void natPunchRoutine(SOCKET serviceSocket, SOCKADDR_IN& sin)
-{
-char buffer[16];
-inet_ntop(AF_INET, reinterpret_cast<void*>(&sin.sin_addr), buffer, 16);
-UE_LOG(LogOnline, Warning, TEXT("Nat punching client %s:%d"),buffer,ntohs(sin.sin_port));
-
-std::string punchMessage = "one";
-char inputPunchBuffer[4] = {'\0'};
-sendto(serviceSocket, punchMessage.c_str(), static_cast<int>(punchMessage.size())+1, 0, reinterpret_cast<SOCKADDR*>(&sin), sizeof(sin));
-UE_LOG(LogOnline, Warning, TEXT("Punch packet sent. Trying to receive peer punch packet..."));
-recv(serviceSocket, inputPunchBuffer, sizeof(char)*4,0);
-if(!strcmp(inputPunchBuffer, punchMessage.c_str()))
-{
-UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));
-punchMessage = "two";
-sendto(serviceSocket, punchMessage.c_str(), static_cast<int>(punchMessage.size())+1, 0, reinterpret_cast<SOCKADDR*>(&sin), sizeof(sin));
-}
-
-UE_LOG(LogOnline, Warning, TEXT("NAT punch through successful."));
-}*/

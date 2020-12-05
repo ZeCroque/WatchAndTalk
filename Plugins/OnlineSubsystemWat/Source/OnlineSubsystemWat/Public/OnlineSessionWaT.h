@@ -149,11 +149,6 @@ private:
 	 * Delegate triggered when the LAN beacon has finished searching (some time after last received host packet)
 	 */
 	void OnLANSearchTimeout();
-	
-	/**
-	 * Attempt to set the host port in the session info based on the actual port the netdriver is using.
-	 */
-	static void SetPortFromNetDriver(const FOnlineSubsystemWaT& Subsystem, const TSharedPtr<FOnlineSessionInfo>& SessionInfo);
 
 	/**
 	 * Returns true if the session owner is also the host.

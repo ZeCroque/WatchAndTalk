@@ -29,10 +29,10 @@ public:
 	 */
  	friend inline FNboSerializeToBufferWat& operator<<(FNboSerializeToBufferWat& Ar, const FOnlineSessionInfoWat& SessionInfo)
  	{
-		check(SessionInfo.HostAddr.IsValid());
+		check(SessionInfo.IsValid());
 		// Skip SessionType (assigned at creation)
 		Ar << SessionInfo.SessionId;
-		Ar << *SessionInfo.HostAddr;
+		Ar << SessionInfo.HostAddr;
 		return Ar;
  	}
 
@@ -42,6 +42,13 @@ public:
 	friend inline FNboSerializeToBufferWat& operator<<(FNboSerializeToBufferWat& Ar, const FUniqueNetIdWat& UniqueId)
 	{
 		Ar << UniqueId.UniqueNetIdStr;
+		return Ar;
+	}
+
+	friend inline FNboSerializeToBufferWat& operator<<(FNboSerializeToBufferWat& Ar, const SOCKADDR_IN& HostAddr)
+	{
+		SOCKADDR_IN Tmp = HostAddr;
+		Ar.WriteBinary(reinterpret_cast<uint8*>(&Tmp), sizeof(SOCKADDR_IN));
 		return Ar;
 	}
 };
@@ -65,10 +72,10 @@ public:
 	 */
  	friend inline FNboSerializeFromBufferWat& operator>>(FNboSerializeFromBufferWat& Ar, FOnlineSessionInfoWat& SessionInfo)
  	{
-		check(SessionInfo.HostAddr.IsValid());
+		check(SessionInfo.IsValid());
 		// Skip SessionType (assigned at creation)
 		Ar >> SessionInfo.SessionId; 
-		Ar >> *SessionInfo.HostAddr;
+		Ar >> SessionInfo.HostAddr;
 		return Ar;
  	}
 
@@ -78,6 +85,16 @@ public:
 	friend inline FNboSerializeFromBufferWat& operator>>(FNboSerializeFromBufferWat& Ar, FUniqueNetIdWat& UniqueId)
 	{
 		Ar >> UniqueId.UniqueNetIdStr;
+		return Ar;
+	}
+
+	friend inline FNboSerializeFromBufferWat& operator>>(FNboSerializeFromBufferWat& Ar, SOCKADDR_IN& HostAddr)
+	{
+		FString StringBuffer;
+		Ar >> StringBuffer;
+		char* Buffer = TCHAR_TO_ANSI(*StringBuffer); 
+		memcpy(&HostAddr, Buffer, StringBuffer.Len());
+		
 		return Ar;
 	}
 };

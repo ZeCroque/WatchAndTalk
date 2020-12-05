@@ -20,7 +20,7 @@
 #define MAX_HOST_COUNT_DEFAULT 25
 #define MAX_BUFFER_LENGTH_DEFAULT MAX_HOST_COUNT_DEFAULT*sizeof(SOCKADDR_IN)
 
-enum class MessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, TestMessage = 4};
+enum class MessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6};
 
 struct FMessage
 {
@@ -48,16 +48,20 @@ private:
 	int MaxBufferLength;
 	int ExpectedHostsCount;
 	SOCKADDR_IN* HostsAddresses;
+	class FOnlineSessionSearch* ClientSessionSearch;
+	class FNamedOnlineSession* HostSession;
+        int ExpectedSessionSize;
 	
 public:
 	
-	FWLANManager() : RelationServerAddr(nullptr), Socket(INVALID_SOCKET), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(-1), HostsAddresses(nullptr){}
+	FWLANManager() : RelationServerAddr(nullptr), Socket(INVALID_SOCKET), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), HostsAddresses(nullptr), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0){}
 
 	virtual ~FWLANManager();
 
-	//TODO addr & port
+	//TODO relation server addr & port
 	bool Init();
 
+	SOCKADDR_IN* GetHostNATAddress();
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
 	 *
@@ -73,15 +77,25 @@ public:
 	 *
 	 * @return true if search was started successfully, false otherwise
 	 */
-	bool Search(FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate);
+	bool Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate);
 
 	//TODO timeout
 	bool SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* PunchPacket);
-	
+
 	/**
 	 * Send the relation server that we're ne longer searching for clients
 	 */
 	void StopWLANProcess();
+
+	void SetHostSession(class FNamedOnlineSession* Session);
+
+	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session);
+
+	void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSessionSettings* SessionSettings);
+
+	void ReadSessionFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSession* Session);
+
+        void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
 
 	void Tick(float DeltaTime);
 
