@@ -92,7 +92,7 @@ public:
 		SOCKADDR_IN Tmp = HostAddr;
 		char Ip[16];
 		inet_ntop(AF_INET, reinterpret_cast<void*>(&Tmp.sin_addr), Ip, 16);	
-		return FString::Printf(TEXT("HostIP: %hs SessionId: %s"), Ip, *SessionId.ToDebugString());
+		return FString::Printf(TEXT("HostIP: %hs:%d SessionId: %s"), Ip, ntohs(HostAddr.sin_port), *SessionId.ToDebugString());
 	}
 
 	virtual const FUniqueNetId& GetSessionId() const override

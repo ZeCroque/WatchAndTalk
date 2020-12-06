@@ -46,9 +46,11 @@ public:
 	}
 
 	friend inline FNboSerializeToBufferWat& operator<<(FNboSerializeToBufferWat& Ar, const SOCKADDR_IN& HostAddr)
-	{
+	{	
 		SOCKADDR_IN Tmp = HostAddr;
-		Ar.WriteBinary(reinterpret_cast<uint8*>(&Tmp), sizeof(SOCKADDR_IN));
+		char* CharBuffer = new char[sizeof(SOCKADDR_IN)];
+		memcpy(CharBuffer, &Tmp, sizeof(SOCKADDR_IN));
+		Ar.AddString(CharBuffer, sizeof(SOCKADDR_IN));
 		return Ar;
 	}
 };
@@ -90,11 +92,11 @@ public:
 
 	friend inline FNboSerializeFromBufferWat& operator>>(FNboSerializeFromBufferWat& Ar, SOCKADDR_IN& HostAddr)
 	{
-		FString StringBuffer;
-		Ar >> StringBuffer;
-		char* Buffer = TCHAR_TO_ANSI(*StringBuffer); 
-		memcpy(&HostAddr, Buffer, StringBuffer.Len());
-		
+		int32 Len;
+		Ar >> Len;		
+		uint8* OutputBuffer = new uint8[Len]; 
+		Ar.ReadBinary(OutputBuffer, Len);
+		HostAddr = *reinterpret_cast<SOCKADDR_IN*>(OutputBuffer);
 		return Ar;
 	}
 };

@@ -69,12 +69,10 @@ bool FWLANManager::Host(FOnValidQueryPacketDelegate& QueryDelegate)
 		FMessage Message = { MessageType::HostPresentation, {0, 0, {{{0,0,0,0}}}, {0}} };
 		if(sendto(Socket, reinterpret_cast<char*>(&Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(RelationServerAddr), sizeof(*RelationServerAddr)) == SOCKET_ERROR) 
 		{
-            UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
-            return false;
+                  UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
+                  return false;
 		}
 		UE_LOG(LogOnline, Warning, TEXT("Presentation message sent."));
-		AddOnValidQueryPacketDelegate_Handle(QueryDelegate);
-		//TODO change host status
 		return true;
 	}
 	return false;
@@ -142,6 +140,7 @@ void FWLANManager::StopWLANProcess()
 	if(ClientSessionSearch)
 	{
 		delete ClientSessionSearch;
+		ClientSessionSearch = nullptr;
 	}
 }
 
@@ -331,16 +330,15 @@ void FWLANManager::Tick(float DeltaTime)
 				case MessageType::SessionRequest:
 				{
 					UE_LOG(LogOnline, Warning, TEXT("Session request received."));
-					//TODO get session and append to package
 					FNboSerializeToBufferWat Packet; 
 				    AppendSessionToPacket(Packet, HostSession);		    
 					int PacketLength = Packet.GetByteCount();
 					FMessage Answer = { MessageType::SessionSize, {0, 0, {{{0,0,0,0}}}, {0}} };
-		            Answer.adr = *reinterpret_cast<SOCKADDR_IN *>(&PacketLength);
-			        sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
+		                        Answer.adr = *reinterpret_cast<SOCKADDR_IN *>(&PacketLength);
+			                sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
 					UE_LOG(LogOnline, Warning, TEXT("Session size sent."));			  
-				        sendto(Socket, reinterpret_cast<char*>(Packet.GetRawBuffer(0)), PacketLength, 0,  reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
-					UE_LOG(LogOnline, Warning, TEXT("Session sent."));	
+				    sendto(Socket, reinterpret_cast<char*>(Packet.GetRawBuffer(0)), PacketLength, 0,  reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
+					UE_LOG(LogOnline, Warning, TEXT("Session sent:%s"),*HostSession->SessionInfo->ToDebugString());	
 					break;
 				}
 				default:
@@ -404,7 +402,7 @@ void FWLANManager::Tick(float DeltaTime)
 			ExpectedHostsCount = 0;
 		}
 		else if(ReceivedSize == ExpectedSessionSize && ReceivedSize != 0) 
-                {
+        {
 		    ExpectedSessionSize = 0;
 		    // Add space in the search results array
 		    FOnlineSessionSearchResult* NewResult = new (ClientSessionSearch->SearchResults) FOnlineSessionSearchResult();
@@ -412,7 +410,8 @@ void FWLANManager::Tick(float DeltaTime)
 		    // Prepare to read data from the packet
 		    FNboSerializeFromBufferWat Packet(reinterpret_cast<uint8*>(ReceptionBuffer), ReceivedSize);
 		    ReadSessionFromPacket(Packet, NewSession);
-                    TriggerOnSearchingTimeoutDelegates();
+			UE_LOG(LogOnline, Warning, TEXT("Received session:%s"), *NewSession->SessionInfo->ToDebugString());	
+            TriggerOnSearchingTimeoutDelegates();
 		}
 		else if (ReceivedSize > 0)
 		{
