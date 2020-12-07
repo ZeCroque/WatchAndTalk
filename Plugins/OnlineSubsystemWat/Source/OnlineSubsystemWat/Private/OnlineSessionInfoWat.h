@@ -7,19 +7,6 @@
 #include "OnlineSubsystemInterface.h"
 #include "OnlineSubsystemWatPackage.h"
 
-#include "Windows/AllowWindowsPlatformTypes.h"
-#include "Windows/prewindowsapi.h"
-
-#include <WinSock2.h>
-#include "WS2tcpip.h"
-#include "iphlpapi.h"
-
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
-#include "Windows/PostWindowsApi.h"
-#include "Windows/HideWindowsPlatformTypes.h"
-
 class FOnlineSubsystemWaT;
 
 // from OnlineSubsystemTypes.h
@@ -46,16 +33,16 @@ protected:
 PACKAGE_SCOPE:
 
 	/** Constructor */
-	FOnlineSessionInfoWat() : HostAddr({0, 0, {{{0,0,0,0}}}, {0}}), SessionId(TEXT("INVALID")){}
+	FOnlineSessionInfoWat() : SessionId(TEXT("INVALID")){}
 
 	/** 
 	 * Initialize a Null session info with the address of this machine
 	 * and an id for the session
 	 */
-	void Init(const SOCKADDR_IN& HostAddr);
+	void Init(TSharedPtr<class FInternetAddr> HostAddr);
 
 	/** The ip & port that the host is listening on*/
-	SOCKADDR_IN HostAddr;
+	TSharedPtr<class FInternetAddr> HostAddr;
 	FUniqueNetIdWat SessionId;
 
 public:
@@ -74,12 +61,12 @@ public:
 
 	virtual int32 GetSize() const override
 	{
-		return sizeof(uint64) + sizeof(SOCKADDR_IN);
+		return sizeof(uint64) + sizeof(TSharedPtr<class FInternetAddr>);
 	}
 
 	virtual bool IsValid() const override
 	{
-		return true;
+		return SessionId.IsValid() && HostAddr->IsValid();
 	}
 
 	virtual FString ToString() const override
@@ -89,10 +76,8 @@ public:
 
 	virtual FString ToDebugString() const override
 	{
-		SOCKADDR_IN Tmp = HostAddr;
-		char Ip[16];
-		inet_ntop(AF_INET, reinterpret_cast<void*>(&Tmp.sin_addr), Ip, 16);	
-		return FString::Printf(TEXT("HostIP: %hs:%d SessionId: %s"), Ip, ntohs(HostAddr.sin_port), *SessionId.ToDebugString());
+		
+		return FString::Printf(TEXT("HostIP: %s SessionId: %s"), *HostAddr->ToString(true), *SessionId.ToDebugString());
 	}
 
 	virtual const FUniqueNetId& GetSessionId() const override

@@ -3,31 +3,25 @@
 #include "CoreMinimal.h"
 #include "OnlineDelegateMacros.h"
 
-#include "Windows/AllowWindowsPlatformTypes.h"
-#include "Windows/prewindowsapi.h"
-
-#include <WinSock2.h>
-#include "WS2tcpip.h"
-#include "iphlpapi.h"
-
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
-#include "Windows/PostWindowsApi.h"
-#include "Windows/HideWindowsPlatformTypes.h"
-
 #define NAT_PUNCHING_PACKET_SIZE 4
 #define MAX_HOST_COUNT_DEFAULT 25
-#define MAX_BUFFER_LENGTH_DEFAULT MAX_HOST_COUNT_DEFAULT*sizeof(SOCKADDR_IN)
+#define MAX_BUFFER_LENGTH_DEFAULT MAX_HOST_COUNT_DEFAULT*sizeof(FBSDAddress)
 
-enum class MessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6};
+enum class EWatMessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6};
+
+struct FBSDAddress
+{
+	uint8 FamilyBytes[sizeof(int16)];
+	uint8 PortBytes[sizeof(int16)];
+	uint8 IpBytes[sizeof(int32)];
+	uint8 Zeros[8];
+};
 
 struct FMessage
 {
-	MessageType messageType;
-	SOCKADDR_IN adr;
+	EWatMessageType MessageType;
+	FBSDAddress BSDAddr;
 };
-
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnValidQueryPacket, uint8*, int32, uint64);
 typedef FOnValidQueryPacket::FDelegate FOnValidQueryPacketDelegate;
@@ -41,27 +35,35 @@ typedef FOnSearchingTimeout::FDelegate FOnSearchingTimeoutDelegate;
 class FWLANManager final
 {
 private:
-	SOCKADDR_IN* RelationServerAddr;
-	SOCKET Socket;
+	class FSocket* Socket;
+	TSharedPtr<class FInternetAddr> RelationServerAddress;
+	TArray<TSharedPtr<class FInternetAddr> > HostsAddresses;
 	bool bIsHost;
 	int MaxHostCount;
 	int MaxBufferLength;
 	int ExpectedHostsCount;
-	SOCKADDR_IN* HostsAddresses;
 	class FOnlineSessionSearch* ClientSessionSearch;
 	class FNamedOnlineSession* HostSession;
-        int ExpectedSessionSize;
+    int ExpectedSessionSize;
 	
 public:
 	
-	FWLANManager() : RelationServerAddr(nullptr), Socket(INVALID_SOCKET), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), HostsAddresses(nullptr), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0){}
+	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0){}
 
 	virtual ~FWLANManager();
 
-	//TODO relation server addr & port
+	//TODO relation server addr & port parameters
 	bool Init();
 
-	SOCKADDR_IN* GetHostNATAddress();
+	bool SendPresentationMessage();
+
+
+	TSharedPtr<class FInternetAddr> ReadAddressFromBSDAddress(FBSDAddress Address) const;
+	
+	TSharedPtr<class FInternetAddr> ReadAddressFromMessage(FMessage Message) const;
+	
+	void WriteAddressIntoMessage(FMessage& Message, TSharedPtr<class FInternetAddr> Address) const;
+
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
 	 *
@@ -80,7 +82,7 @@ public:
 	bool Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate);
 
 	//TODO timeout
-	bool SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* PunchPacket);
+	bool SendNatPunchThroughPacket(TSharedPtr<class FInternetAddr> PeerAddress, uint8* PunchPacket);
 
 	/**
 	 * Send the relation server that we're ne longer searching for clients

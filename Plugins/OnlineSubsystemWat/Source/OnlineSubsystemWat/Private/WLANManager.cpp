@@ -3,6 +3,8 @@
 #include "NboSerializerWat.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
+#include "Sockets.h"
+#include "SocketSubsystem.h"
 
 FWLANManager::~FWLANManager()
 {
@@ -10,107 +12,135 @@ FWLANManager::~FWLANManager()
 }
 
 bool FWLANManager::Init()
-{	
-	if (RelationServerAddr)
+{
+	if (Socket)
 	{
 		UE_LOG(LogOnline, Warning, TEXT("Socket exists already, initialization skipped."));
 		return true;     
 	}
 
-	WSADATA WsaData;
-	if (!WSAStartup(MAKEWORD(2, 0), &WsaData))
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	bool bSuccess = false;
+	// Now the listen address
+	RelationServerAddress = SocketSubsystem->CreateInternetAddr();
+	RelationServerAddress->SetIp(L"193.250.68.210",bSuccess);
+	
+	if(!bSuccess)
 	{
-		RelationServerAddr = new sockaddr_in();
-		InetPton(AF_INET, L"193.250.68.210", &RelationServerAddr->sin_addr.s_addr);
-		RelationServerAddr->sin_family = AF_INET;
-		RelationServerAddr->sin_port = htons(7777);
-		Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-		if (Socket == INVALID_SOCKET)
+		UE_LOG(LogOnline, Warning, TEXT("Address creation failed."));
+		return bSuccess;
+	}
+
+	RelationServerAddress->SetPort(7777);
+
+	// Now create and set up our sockets (no VDP)
+	Socket = SocketSubsystem->CreateSocket(NAME_DGram, TEXT("MainSocket"), RelationServerAddress->GetProtocolType());
+	if (Socket != nullptr)
+	{
+		Socket->SetReuseAddr();
+		Socket->SetNonBlocking();
+		Socket->SetRecvErr();
+		bSuccess = Socket->SetBroadcast();
+		//TODO remove? was failing but connection was working anyway
+		/*// Bind to our listen port
+		if (ListenSocket->Bind(*ListenAddr))
 		{
-			UE_LOG(LogOnline, Error, TEXT("Socket creation failed. Error code:%d"), WSAGetLastError());
+			// Set it to broadcast mode, so we can send on it
+			// NOTE: You must set this to broadcast mode on Xbox 360 or the
+			// secure layer will eat any packets sent
+
+		}
+		else
+		{
+			UE_LOG_ONLINE(Error, TEXT("Failed to bind listen socket to addr (%s) for WLAN beacon"), *ListenAddr->ToString(true));
+		}*/
+	}
+	else
+	{
+		UE_LOG_ONLINE(Error, TEXT("Failed to create listen socket for LAN beacon"));
+	}
+	return bSuccess && Socket;
+}
+
+bool FWLANManager::SendPresentationMessage()
+{
+	bool bSuccess = false;
+	if (!Socket)
+	{
+		bSuccess = Init();
+	}
+	int SentBytes = 0;
+	if(bSuccess)
+	{
+		FMessage PresentationMessage = { bIsHost ? EWatMessageType::HostPresentation : EWatMessageType::ClientPresentation, {{0},{0}, {0}}};
+						
+		bSuccess = Socket->SendTo(reinterpret_cast<uint8*>(&PresentationMessage), sizeof(FMessage), SentBytes, *RelationServerAddress);
+		if(!bSuccess)
+		{
+			ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+			UE_LOG(LogOnline, Warning, TEXT("Send error. Code:%d"), SocketSubsystem->GetLastErrorCode());
 			return false;
 		}
-
-		// 1 to set non-blocking
-		unsigned long Flag = 1;
-		if (ioctlsocket(Socket, FIONBIO, &Flag) == SOCKET_ERROR)
-		{
-			UE_LOG(LogOnline, Error, TEXT("Couldn't set the socket to non-blocking mode. Error code:%d"), WSAGetLastError());
-			return false;
-		}
-
-		UE_LOG(LogOnline, Warning, TEXT("Socket created."));
+		UE_LOG(LogOnline, Warning, TEXT("Sent presentation message : %d bytes to %s"), SentBytes, *RelationServerAddress->ToString(true));
 		return true;
 	}
-	UE_LOG(LogOnline, Warning, TEXT("Error:WSA couldn't start"));
 	return false;
 }
 
-SOCKADDR_IN* FWLANManager::GetHostNATAddress()
+TSharedPtr<FInternetAddr> FWLANManager::ReadAddressFromBSDAddress(FBSDAddress Address) const
 {
-	if(bIsHost && HostsAddresses)
-	{
-		return HostsAddresses;
-	}
-	return nullptr;
+	Algo::Reverse(Address.PortBytes, sizeof(uint16));
+	Algo::Reverse(Address.IpBytes, sizeof(uint32));
+	
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	auto Addr = SocketSubsystem->CreateInternetAddr();								
+	Addr->SetIp(*reinterpret_cast<uint32*>(Address.IpBytes));
+	Addr->SetPort(*reinterpret_cast<uint16*>(Address.PortBytes));
+	
+	return TSharedPtr<FInternetAddr>(Addr);
+}
+
+TSharedPtr<FInternetAddr> FWLANManager::ReadAddressFromMessage(FMessage Message) const
+{
+	return ReadAddressFromBSDAddress(Message.BSDAddr);
+}
+
+void FWLANManager::WriteAddressIntoMessage(FMessage& Message, TSharedPtr<FInternetAddr> Address) const
+{
+	*reinterpret_cast<uint16*>(Message.BSDAddr.PortBytes) = Address->GetPort();
+	Address->GetIp(*reinterpret_cast<uint32*>(Message.BSDAddr.IpBytes));
+	Algo::Reverse(Message.BSDAddr.PortBytes, sizeof(uint16));
+	Algo::Reverse(Message.BSDAddr.IpBytes, sizeof(uint32));
 }
 
 bool FWLANManager::Host(FOnValidQueryPacketDelegate& QueryDelegate)
 {
-	bIsHost = true;
+	bIsHost = true;	
+	return SendPresentationMessage();
+}
 
-	bool bSuccess = true;
-	if (!RelationServerAddr)
+bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate)
+{
+	//TODO remove valid response delegate
+	
+	bIsHost = false;
+	
+	if(SendPresentationMessage())
 	{
-		bSuccess = Init();
-	}
-	if (bSuccess)
-	{	
-		FMessage Message = { MessageType::HostPresentation, {0, 0, {{{0,0,0,0}}}, {0}} };
-		if(sendto(Socket, reinterpret_cast<char*>(&Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(RelationServerAddr), sizeof(*RelationServerAddr)) == SOCKET_ERROR) 
-		{
-                  UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
-                  return false;
-		}
-		UE_LOG(LogOnline, Warning, TEXT("Presentation message sent."));
+    	ClientSessionSearch = &SearchSettings.Get();
+		AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);		
 		return true;
 	}
 	return false;
 }
 
-bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate)
+bool FWLANManager::SendNatPunchThroughPacket(TSharedPtr<FInternetAddr> PeerAddress, uint8* PunchPacket)
 {
-	bIsHost = false;
-
-    bool bSuccess = false;
-        
-	if (!RelationServerAddr)
+	int SentSize = 0;
+	if(!Socket->SendTo(PunchPacket, NAT_PUNCHING_PACKET_SIZE, SentSize, *PeerAddress))
 	{
-		bSuccess = Init();
-	}
-
-	FMessage Message{ MessageType::ClientPresentation, {0, 0, {{{0,0,0,0}}}, {0}} };
-	if(sendto(Socket, reinterpret_cast<char*>(&Message), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(RelationServerAddr), sizeof(*RelationServerAddr)) == SOCKET_ERROR)
-	{
-	    UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
-	    return false;
-	}
-	UE_LOG(LogOnline, Warning, TEXT("Presentation message sent."));
-
-    if(bSuccess)
-    {
-    	ClientSessionSearch = &SearchSettings.Get();
-	AddOnValidResponsePacketDelegate_Handle(ResponseDelegate);
-	AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
-    }
-    return bIsHost;
-}
-
-bool FWLANManager::SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* PunchPacket)
-{
-	if(sendto(Socket, PunchPacket, NAT_PUNCHING_PACKET_SIZE, 0, reinterpret_cast<SOCKADDR*>(&PeerAddress), sizeof(PeerAddress)) == SOCKET_ERROR) 
-	{
-	    UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), WSAGetLastError());
+		ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	    UE_LOG(LogOnline, Warning, TEXT("Sending error. Code:%d"), SocketSubsystem->GetLastErrorCode());
 	    return false;
 	}
 	UE_LOG(LogOnline, Warning, TEXT("Punch packet sent."));
@@ -120,23 +150,9 @@ bool FWLANManager::SendNatPunchThroughPacket(SOCKADDR_IN& PeerAddress, char* Pun
 
 void FWLANManager::StopWLANProcess()
 {
-	if (RelationServerAddr)
-	{
-		delete RelationServerAddr;
-		RelationServerAddr = nullptr;
-	}
-	if(HostsAddresses)
-	{
-		if(bIsHost)
-		{
-			delete HostsAddresses;
-		}
-		else
-		{
-			delete[] HostsAddresses;
-		}
-		HostsAddresses = nullptr;
-	}
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	SocketSubsystem->DestroySocket(Socket);
+	
 	if(ClientSessionSearch)
 	{
 		delete ClientSessionSearch;
@@ -296,133 +312,141 @@ void FWLANManager::ReadSettingsFromPacket(FNboSerializeFromBufferWat& Packet, FO
 
 void FWLANManager::Tick(float DeltaTime)
 {
-	if(RelationServerAddr)
+	if(Socket)
 	{
-		char* ReceptionBuffer = new char[MaxBufferLength];
-		SOCKADDR_IN SenderAddr;
-		int SenderAddrSize = sizeof(SenderAddr);
-		const int ReceivedSize = recvfrom(Socket, ReceptionBuffer, MaxBufferLength, 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), &SenderAddrSize);
-		if (ReceivedSize == sizeof(FMessage))
+		uint8* ReceptionBuffer = new uint8[MaxBufferLength];
+		int ReceivedSize = 0;
+		ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+		const auto SenderAddress = SocketSubsystem->CreateInternetAddr();
+		
+		if(Socket->RecvFrom(ReceptionBuffer, MaxBufferLength, ReceivedSize, *SenderAddress))
+		if (ReceivedSize > 0)
 		{
-			FMessage* Message = reinterpret_cast<FMessage*>(ReceptionBuffer);
-			if (bIsHost)
+			UE_LOG(LogOnline, Warning, TEXT("Received %d bytes from %s"), ReceivedSize, *SenderAddress->ToString(true));
+			if(ReceivedSize == sizeof(FMessage))
 			{
-				switch (Message->messageType)
+				FMessage* Message = reinterpret_cast<FMessage*>(ReceptionBuffer);
+				if(bIsHost)
 				{
-				case MessageType::ClientConnectionRequest:
-					UE_LOG(LogOnline, Warning, TEXT("Connection request received."));
-					SendNatPunchThroughPacket(Message->adr, "one");
-					break;
-				case MessageType::HostAddress:
+					switch (Message->MessageType)
+					{
+						case EWatMessageType::ClientConnectionRequest:
+							UE_LOG(LogOnline, Warning, TEXT("Connection request received."));
+							SendNatPunchThroughPacket(ReadAddressFromMessage(*Message), reinterpret_cast<uint8*>("one"));
+							break;
+						case EWatMessageType::HostAddress:
+						{
+							auto Addr = ReadAddressFromMessage(*Message);
+							HostsAddresses.Add(Addr);
+							UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%s"),*Addr->ToString(true));
+								
+							FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
+							
+							NewSessionInfo->Init(Addr);
+							HostSession->SessionInfo = MakeShareable(NewSessionInfo);
+							break;
+						}
+						case EWatMessageType::SessionRequest:
+						{
+							UE_LOG(LogOnline, Warning, TEXT("Session request received."));
+								
+							FNboSerializeToBufferWat Packet; 
+						    AppendSessionToPacket(Packet, HostSession);
+							int PacketLength = Packet.GetByteCount();
+								
+							FMessage Answer = { EWatMessageType::SessionSize, {{0}, {0}, {0}, {0}} };
+				            Answer.BSDAddr = *reinterpret_cast<FBSDAddress*>(&PacketLength);
+
+							int SentSize = 0;
+					        Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *SenderAddress);
+							UE_LOG(LogOnline, Warning, TEXT("Session size sent."));
+
+						    Socket->SendTo(Packet.GetRawBuffer(0), PacketLength, SentSize, *SenderAddress);
+							UE_LOG(LogOnline, Warning, TEXT("Session sent:%s"),*HostSession->SessionInfo->ToDebugString());	
+							break;
+						}
+						default:
+							UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->MessageType));
+					}
+				}
+				else
 				{
-					// Setup the host session info				
-					HostsAddresses = new SOCKADDR_IN();
-					HostsAddresses[0] = Message->adr;
-					FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
-					NewSessionInfo->Init(HostsAddresses[0]);
-					HostSession->SessionInfo = MakeShareable(NewSessionInfo);
-						
-					char Ip[16];
-					inet_ntop(AF_INET, reinterpret_cast<void*>(&HostsAddresses[0].sin_addr), Ip, 16);
-					UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%hs:%d"), Ip, ntohs(HostsAddresses[0].sin_port));
-					break;
+					switch (Message->MessageType)
+					{
+						case EWatMessageType::HostCount:
+							ExpectedHostsCount = *reinterpret_cast<int*>(&Message->BSDAddr);
+							UE_LOG(LogOnline, Warning, TEXT("Host count received: %d"), ExpectedHostsCount);
+							break;
+						case EWatMessageType::SessionSize:
+							ExpectedSessionSize = *reinterpret_cast<int*>(&Message->BSDAddr);
+							UE_LOG(LogOnline, Warning, TEXT("Session size received: %d"), ExpectedSessionSize);
+					        break;
+						default:
+							UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->MessageType));
+					}
 				}
-				case MessageType::SessionRequest:
+			}
+			else if (ReceivedSize == NAT_PUNCHING_PACKET_SIZE)
+			{
+				char ReceivedPunchPacked[4] = { '\0' };
+				memcpy(ReceivedPunchPacked, ReceptionBuffer, NAT_PUNCHING_PACKET_SIZE);
+				if (!strcmp(ReceivedPunchPacked, "one"))
 				{
-					UE_LOG(LogOnline, Warning, TEXT("Session request received."));
-					FNboSerializeToBufferWat Packet; 
-				    AppendSessionToPacket(Packet, HostSession);		    
-					int PacketLength = Packet.GetByteCount();
-					FMessage Answer = { MessageType::SessionSize, {0, 0, {{{0,0,0,0}}}, {0}} };
-		                        Answer.adr = *reinterpret_cast<SOCKADDR_IN *>(&PacketLength);
-			                sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
-					UE_LOG(LogOnline, Warning, TEXT("Session size sent."));			  
-				    sendto(Socket, reinterpret_cast<char*>(Packet.GetRawBuffer(0)), PacketLength, 0,  reinterpret_cast<SOCKADDR*>(&SenderAddr), SenderAddrSize);
-					UE_LOG(LogOnline, Warning, TEXT("Session sent:%s"),*HostSession->SessionInfo->ToDebugString());	
-					break;
+					UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));
+					SendNatPunchThroughPacket(SenderAddress, reinterpret_cast<uint8*>("two"));
 				}
-				default:
-					UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->messageType));
+				UE_LOG(LogOnline, Warning, TEXT("NAT punch through successful."));
+
+				if (!bIsHost)
+				{
+					FMessage Answer = { EWatMessageType::SessionRequest, {{0}, {0}, {0}, {0}} };
+					int SentSize = 0;
+					Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *SenderAddress);
+					UE_LOG(LogOnline, Warning, TEXT("Sent session request."));
 				}
+			}
+			else if (ReceivedSize == ExpectedHostsCount * sizeof(FBSDAddress) && ReceivedSize != 0)
+			{
+				UE_LOG(LogOnline, Warning, TEXT("Hosts addresses received. Hosts list:"));
+				HostsAddresses.Reserve(ExpectedHostsCount);
+	                        HostsAddresses.SetNum(ExpectedHostsCount);
+				for (int i = 0; i < ExpectedHostsCount; i++)
+				{
+					HostsAddresses[i] = ReadAddressFromBSDAddress(*reinterpret_cast<FBSDAddress*>(ReceptionBuffer + i * sizeof(FBSDAddress)))->Clone();
+					UE_LOG(LogOnline, Warning, TEXT("%s"), *HostsAddresses[i]->ToString(true));
+				}
+				//TODO connect to everyone
+				FMessage Answer = { EWatMessageType::ClientConnectionRequest, {{0},{0},{0},{0}}};
+				WriteAddressIntoMessage(Answer, HostsAddresses[0]);
+				int SentSize = 0;
+				Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *RelationServerAddress);
+				UE_LOG(LogOnline, Warning, TEXT("Connection request sent to server."));
+
+				SendNatPunchThroughPacket(HostsAddresses[0], reinterpret_cast<uint8*>("one"));
+				UE_LOG(LogOnline, Warning, TEXT("NAT Punching package sent to host..."));
+				ExpectedHostsCount = 0;
+			}
+			else if(ReceivedSize == ExpectedSessionSize && ReceivedSize != 0) 
+	        {
+			    ExpectedSessionSize = 0;
+			    // Add space in the search results array
+			    FOnlineSessionSearchResult* NewResult = new (ClientSessionSearch->SearchResults) FOnlineSessionSearchResult();
+			    FOnlineSession* NewSession = &NewResult->Session;
+			    // Prepare to read data from the packet
+			    FNboSerializeFromBufferWat Packet(reinterpret_cast<uint8*>(ReceptionBuffer), ReceivedSize);
+			    ReadSessionFromPacket(Packet, NewSession);
+			    UE_LOG(LogOnline, Warning, TEXT("Received session:%s"), *NewSession->SessionInfo->ToDebugString());	
+	            TriggerOnSearchingTimeoutDelegates();
 			}
 			else
 			{
-				switch (Message->messageType)
-				{
-				case MessageType::HostCount:
-					ExpectedHostsCount = *reinterpret_cast<int*>(&Message->adr);
-					UE_LOG(LogOnline, Warning, TEXT("Host count received: %d"), ExpectedHostsCount);
-					break;
-				case MessageType::SessionSize:
-					ExpectedSessionSize = *reinterpret_cast<int*>(&Message->adr);
-					UE_LOG(LogOnline, Warning, TEXT("Session size received: %d"), ExpectedSessionSize);
-			        break;
-				default:
-					UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->messageType));
-				}
+				UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Length:%d"), ReceivedSize);
 			}
 		}
-		else if (ReceivedSize == NAT_PUNCHING_PACKET_SIZE)
+		else
 		{
-			char ReceivedPunchPacked[4] = { '\0' };
-			memcpy(ReceivedPunchPacked, ReceptionBuffer, NAT_PUNCHING_PACKET_SIZE);
-			if (!strcmp(ReceivedPunchPacked, "one"))
-			{
-				UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));
-				SendNatPunchThroughPacket(SenderAddr, "two");
-			}
-			UE_LOG(LogOnline, Warning, TEXT("NAT punch through successful."));
-
-			if (!bIsHost)
-			{
-				FMessage Answer = { MessageType::SessionRequest, {0, 0, {{{0,0,0,0}}}, {0}} };
-				sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(&SenderAddr), sizeof(SenderAddr));
-				UE_LOG(LogOnline, Warning, TEXT("Sent session request."));
-			}
+			UE_LOG(LogOnline, Warning, TEXT("Error: Reception error. Code:%d"),  SocketSubsystem->GetLastErrorCode());
 		}
-		else if (ReceivedSize == ExpectedHostsCount * sizeof(SOCKADDR_IN) && ReceivedSize != 0)
-		{
-			UE_LOG(LogOnline, Warning, TEXT("Hosts addresses received. Hosts list:"));
-			HostsAddresses = new SOCKADDR_IN[ExpectedHostsCount];
-			for (int i = 0; i < ExpectedHostsCount; i++)
-			{
-				//TODO connect to everyone
-				HostsAddresses[i] = *reinterpret_cast<SOCKADDR_IN*>(ReceptionBuffer + i * sizeof(SOCKADDR_IN));
-				char Ip[16];
-				inet_ntop(AF_INET, reinterpret_cast<void*>(&HostsAddresses[i].sin_addr), Ip, 16);
-				UE_LOG(LogOnline, Warning, TEXT("%hs:%d"), Ip, ntohs(HostsAddresses[i].sin_port));
-			}
-
-			FMessage Answer = { MessageType::ClientConnectionRequest, HostsAddresses[0] };
-			sendto(Socket, reinterpret_cast<char*>(&Answer), sizeof(FMessage), 0, reinterpret_cast<SOCKADDR*>(RelationServerAddr), sizeof(*RelationServerAddr));
-			UE_LOG(LogOnline, Warning, TEXT("Connection request sent to server."));
-
-			SendNatPunchThroughPacket(HostsAddresses[0], "one");
-			UE_LOG(LogOnline, Warning, TEXT("NAT Punching package sent to host..."));
-			ExpectedHostsCount = 0;
-		}
-		else if(ReceivedSize == ExpectedSessionSize && ReceivedSize != 0) 
-        {
-		    ExpectedSessionSize = 0;
-		    // Add space in the search results array
-		    FOnlineSessionSearchResult* NewResult = new (ClientSessionSearch->SearchResults) FOnlineSessionSearchResult();
-		    FOnlineSession* NewSession = &NewResult->Session;
-		    // Prepare to read data from the packet
-		    FNboSerializeFromBufferWat Packet(reinterpret_cast<uint8*>(ReceptionBuffer), ReceivedSize);
-		    ReadSessionFromPacket(Packet, NewSession);
-			UE_LOG(LogOnline, Warning, TEXT("Received session:%s"), *NewSession->SessionInfo->ToDebugString());	
-            TriggerOnSearchingTimeoutDelegates();
-		}
-		else if (ReceivedSize > 0)
-		{
-			UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Length:%d"), ReceivedSize);
-		}
-		else if (ReceivedSize == -1 && WSAGetLastError() != WSAEWOULDBLOCK)
-		{
-			UE_LOG(LogOnline, Warning, TEXT("Error: Reception error. Code:%d"), WSAGetLastError());
-		}
-
-
 		delete[] ReceptionBuffer;
 	}
 }

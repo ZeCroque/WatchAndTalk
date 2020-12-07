@@ -9,10 +9,10 @@
 #include "OnlineAsyncTaskManager.h"
 #include "WatIpNetDriver.h"
 
-void FOnlineSessionInfoWat::Init(const SOCKADDR_IN& Addr)
+void FOnlineSessionInfoWat::Init(TSharedPtr<FInternetAddr> Addr)
 {
 	// Read the IP from the system
-	HostAddr = Addr;
+	HostAddr = Addr->Clone();
 
 	FGuid OwnerGuid;
 	FPlatformMisc::CreateGuid(OwnerGuid);
@@ -202,7 +202,7 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Cannot create session '%s': session already exists."), *SessionName.ToString());
 	}
 
-	TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
+	//TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
 	
 	return Success;
 }
@@ -672,11 +672,9 @@ bool FOnlineSessionWat::PingSearchResults(const FOnlineSessionSearchResult& Sear
 /** Get a resolved connection string from a session info */
 static void GetConnectStringFromSessionInfo(TSharedPtr<FOnlineSessionInfoWat>& SessionInfo, FString& ConnectInfo)
 {
-	if (SessionInfo.IsValid())
+	if (SessionInfo.IsValid() && SessionInfo->HostAddr->IsValid())
 	{
-		char Ip[16];
-		inet_ntop(AF_INET, reinterpret_cast<void*>(&SessionInfo.Get()->HostAddr.sin_addr), Ip, 16);	
-		ConnectInfo = FString(Ip + FString(":") + FString::FromInt(ntohs(SessionInfo.Get()->HostAddr.sin_port)));
+		ConnectInfo = SessionInfo->HostAddr->ToString(true);
 	}
 }
 
