@@ -66,7 +66,7 @@ public:
 
 	virtual bool IsValid() const override
 	{
-		return SessionId.IsValid() && HostAddr->IsValid();
+		return SessionId.IsValid() && HostAddr && HostAddr->IsValid();
 	}
 
 	virtual FString ToString() const override

@@ -65,7 +65,6 @@ public:
 	 */
  	friend inline FNboSerializeFromBufferWat& operator>>(FNboSerializeFromBufferWat& Ar, FOnlineSessionInfoWat& SessionInfo)
  	{
-		check(SessionInfo.IsValid());
 		// Skip SessionType (assigned at creation)
 		Ar >> SessionInfo.SessionId; 
 		Ar >> *SessionInfo.HostAddr;

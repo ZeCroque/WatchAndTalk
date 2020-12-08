@@ -239,6 +239,7 @@ void FWLANManager::ReadSessionFromPacket(FNboSerializeFromBufferWat& Packet, FOn
 
 	// Allocate and read the connection data
 	FOnlineSessionInfoWat* WatSessionInfo = new FOnlineSessionInfoWat();
+	WatSessionInfo->HostAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
 	Packet >> *WatSessionInfo;
 	Session->SessionInfo = MakeShareable(WatSessionInfo); 
 
