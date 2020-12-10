@@ -3,11 +3,10 @@
 #include "NboSerializerWat.h"
 #include "Misc/Guid.h"
 #include "OnlineSubsystem.h"
-#include "OnlineSubsystemWat.h"
 #include "OnlineSessionInfoWat.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineAsyncTaskManager.h"
-#include "WatIpNetDriver.h"
+#include "IpNetDriver.h"
 
 void FOnlineSessionInfoWat::Init(TSharedPtr<FInternetAddr> Addr)
 {
@@ -201,8 +200,8 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 	{
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Cannot create session '%s': session already exists."), *SessionName.ToString());
 	}
-
-	//TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
+	Session->SessionState = EOnlineSessionState::Pending;
+	TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
 	
 	return Success;
 }
@@ -310,7 +309,7 @@ bool FOnlineSessionWat::StartSession(FName SessionName)
 			Session->SessionState == EOnlineSessionState::Ended)
 		{
 			// If this lan match has join in progress disabled, shut down the beacon
-			Result = UpdateLANStatus();
+			//Result = UpdateLANStatus();
 			Session->SessionState = EOnlineSessionState::InProgress;
 		}
 		else
@@ -328,7 +327,7 @@ bool FOnlineSessionWat::StartSession(FName SessionName)
 	if (Result != ONLINE_IO_PENDING)
 	{
 		// Just trigger the delegate
-		TriggerOnStartSessionCompleteDelegates(SessionName, true/*(Result == ONLINE_SUCCESS) ? true : false*/);
+		///TriggerOnStartSessionCompleteDelegates(SessionName, true/*(Result == ONLINE_SUCCESS) ? true : false*/);
 	}
 
 	return Result == ONLINE_SUCCESS || Result == ONLINE_IO_PENDING;
@@ -460,7 +459,6 @@ bool FOnlineSessionWat::FindSessions(int32 SearchingPlayerNum, const TSharedRef<
 		SessionSearchStartInSeconds = FPlatformTime::Seconds();
 
 		// Check if its a LAN query
-		//Return = FindLANSession();
 		FOnValidResponsePacketDelegate ResponseDelegate = FOnValidResponsePacketDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidResponsePacketReceived);
 		FOnSearchingTimeoutDelegate TimeoutDelegate = FOnSearchingTimeoutDelegate::CreateRaw(this, &FOnlineSessionWat::OnLANSearchTimeout);
 		Success = WLANSessionManager.Search(SearchSettings, ResponseDelegate, TimeoutDelegate);
@@ -657,8 +655,11 @@ uint32 FOnlineSessionWat::JoinLANSession(int32 PlayerNum, FNamedOnlineSession* S
 		FOnlineSessionInfoWat* SessionInfo = (FOnlineSessionInfoWat*)Session->SessionInfo.Get();
 		SessionInfo->SessionId = SearchSessionInfo->SessionId;
 
-		SessionInfo->HostAddr = SearchSessionInfo->HostAddr;
+		SessionInfo->HostAddr = SearchSessionInfo->HostAddr->Clone();
 		Result = ONLINE_SUCCESS;
+	        UE_LOG(LogOnline, Warning, TEXT("%s"), *SessionInfo->HostAddr->ToString(true));
+		
+		WLANSessionManager.StopWLANProcess();
 	}
 
 	return Result;
@@ -1181,4 +1182,9 @@ TSharedPtr<const FUniqueNetId> FOnlineSessionWat::CreateSessionIdFromString(cons
 		SessionId = MakeShared<FUniqueNetIdWat>(SessionIdStr);
 	}
 	return SessionId;
+}
+
+int FOnlineSessionWat::GetPort()
+{
+  return WLANSessionManager.GetPort();
 }

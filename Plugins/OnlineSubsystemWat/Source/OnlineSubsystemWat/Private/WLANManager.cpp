@@ -5,6 +5,8 @@
 #include "OnlineSessionSettings.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
+#include "WatIpNetDriver.h"
+#include "Kismet/GameplayStatics.h"
 
 FWLANManager::~FWLANManager()
 {
@@ -41,25 +43,17 @@ bool FWLANManager::Init()
 		Socket->SetNonBlocking();
 		Socket->SetRecvErr();
 		bSuccess = Socket->SetBroadcast();
-		//TODO remove? was failing but connection was working anyway
-		/*// Bind to our listen port
-		if (ListenSocket->Bind(*ListenAddr))
-		{
-			// Set it to broadcast mode, so we can send on it
-			// NOTE: You must set this to broadcast mode on Xbox 360 or the
-			// secure layer will eat any packets sent
-
-		}
-		else
-		{
-			UE_LOG_ONLINE(Error, TEXT("Failed to bind listen socket to addr (%s) for WLAN beacon"), *ListenAddr->ToString(true));
-		}*/
 	}
 	else
 	{
 		UE_LOG_ONLINE(Error, TEXT("Failed to create listen socket for LAN beacon"));
 	}
 	return bSuccess && Socket;
+}
+
+int FWLANManager::GetPort() const
+{
+  return Port;
 }
 
 bool FWLANManager::SendPresentationMessage()
@@ -82,6 +76,7 @@ bool FWLANManager::SendPresentationMessage()
 			return false;
 		}
 		UE_LOG(LogOnline, Warning, TEXT("Sent presentation message : %d bytes to %s"), SentBytes, *RelationServerAddress->ToString(true));
+		Port = Socket->GetPortNo();
 		return true;
 	}
 	return false;
@@ -152,7 +147,8 @@ void FWLANManager::StopWLANProcess()
 {
 	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	SocketSubsystem->DestroySocket(Socket);
-	
+	Socket = nullptr;
+	bIsProcessing = false;
 	if(ClientSessionSearch)
 	{
 		delete ClientSessionSearch;
@@ -313,7 +309,7 @@ void FWLANManager::ReadSettingsFromPacket(FNboSerializeFromBufferWat& Packet, FO
 
 void FWLANManager::Tick(float DeltaTime)
 {
-	if(Socket)
+	if(bIsProcessing && Socket)
 	{
 		uint8* ReceptionBuffer = new uint8[MaxBufferLength];
 		int ReceivedSize = 0;
@@ -345,26 +341,31 @@ void FWLANManager::Tick(float DeltaTime)
 							
 							NewSessionInfo->Init(Addr);
 							HostSession->SessionInfo = MakeShareable(NewSessionInfo);
+												  //TODO delegate session started
 							break;
 						}
 						case EWatMessageType::SessionRequest:
 						{
 							UE_LOG(LogOnline, Warning, TEXT("Session request received."));
-								
+
+
 							FNboSerializeToBufferWat Packet; 
-						    AppendSessionToPacket(Packet, HostSession);
+						        AppendSessionToPacket(Packet, HostSession);
 							int PacketLength = Packet.GetByteCount();
 								
 							FMessage Answer = { EWatMessageType::SessionSize, {{0}, {0}, {0}, {0}} };
-				            Answer.BSDAddr = *reinterpret_cast<FBSDAddress*>(&PacketLength);
+				                        Answer.BSDAddr = *reinterpret_cast<FBSDAddress*>(&PacketLength);
 
 							int SentSize = 0;
-					        Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *SenderAddress);
+					                Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *SenderAddress);
 							UE_LOG(LogOnline, Warning, TEXT("Session size sent."));
 
-						    Socket->SendTo(Packet.GetRawBuffer(0), PacketLength, SentSize, *SenderAddress);
-							UE_LOG(LogOnline, Warning, TEXT("Session sent:%s"),*HostSession->SessionInfo->ToDebugString());	
-							break;
+						        Socket->SendTo(Packet.GetRawBuffer(0), PacketLength, SentSize, *SenderAddress);
+							UE_LOG(LogOnline, Warning, TEXT("Session sent:%s"),*HostSession->SessionInfo->ToDebugString());
+							StopWLANProcess();
+							UE_LOG(LogOnline, Warning, TEXT("Loading level..."));
+							GetWorldForOnline("GameNetDriver")->ServerTravel(L"Level_POC?listen", true);
+							break;      
 						}
 						default:
 							UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->MessageType));
@@ -437,7 +438,7 @@ void FWLANManager::Tick(float DeltaTime)
 			    FNboSerializeFromBufferWat Packet(reinterpret_cast<uint8*>(ReceptionBuffer), ReceivedSize);
 			    ReadSessionFromPacket(Packet, NewSession);
 			    UE_LOG(LogOnline, Warning, TEXT("Received session:%s"), *NewSession->SessionInfo->ToDebugString());	
-	            TriggerOnSearchingTimeoutDelegates();
+	                    TriggerOnSearchingTimeoutDelegates();
 			}
 			else
 			{

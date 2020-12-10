@@ -45,18 +45,21 @@ private:
 	class FOnlineSessionSearch* ClientSessionSearch;
 	class FNamedOnlineSession* HostSession;
     int ExpectedSessionSize;
+	bool bIsProcessing;
+	int Port;
 	
 public:
 	
-	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0){}
+	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0), bIsProcessing(true){}
 
 	virtual ~FWLANManager();
 
 	//TODO relation server addr & port parameters
 	bool Init();
 
-	bool SendPresentationMessage();
+	int GetPort() const;
 
+	bool SendPresentationMessage();
 
 	TSharedPtr<class FInternetAddr> ReadAddressFromBSDAddress(FBSDAddress Address) const;
 	

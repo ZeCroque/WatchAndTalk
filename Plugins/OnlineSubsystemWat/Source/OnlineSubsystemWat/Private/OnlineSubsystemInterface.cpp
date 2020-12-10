@@ -126,6 +126,10 @@ FText FOnlineSubsystemWaT::GetOnlineServiceName() const
 {
 	return FText::FromString(TEXT("WatOSS"));
 }
+int FOnlineSubsystemWaT::GetPort()
+{
+  return SessionInterface->GetPort();
+}
 
 bool FOnlineSubsystemWaT::Tick(float DeltaTime)
 {

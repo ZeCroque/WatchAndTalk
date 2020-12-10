@@ -28,6 +28,7 @@ public class OnlineSubsystemWat : ModuleRules
 			{
 				"Core",
                 "OnlineSubsystemUtils",
+                "NetCore"
                 // ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -43,7 +44,8 @@ public class OnlineSubsystemWat : ModuleRules
                 "OnlineSubsystem",
                 "Sockets",
                 "OnlineSubsystemUtils",
-                "Json"
+                "Json",
+                "PacketHandler"
                 // ... add private dependencies that you statically link with here ...	
 			}
 			);

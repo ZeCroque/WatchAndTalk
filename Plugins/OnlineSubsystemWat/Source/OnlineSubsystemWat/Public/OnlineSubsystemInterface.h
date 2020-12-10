@@ -43,6 +43,7 @@ public:
 	virtual bool Exec(class UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
 	virtual FText GetOnlineServiceName() const override;
 
+    int GetPort();
 	// FTickerObjectBase
 	
 	virtual bool Tick(float DeltaTime) override;
