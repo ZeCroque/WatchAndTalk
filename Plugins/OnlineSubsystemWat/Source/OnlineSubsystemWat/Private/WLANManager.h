@@ -1,13 +1,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "OnlineDelegateMacros.h"
+#include "OnlineKeyValuePair.h"
 
 #define NAT_PUNCHING_PACKET_SIZE 4
 #define MAX_HOST_COUNT_DEFAULT 25
 #define MAX_BUFFER_LENGTH_DEFAULT MAX_HOST_COUNT_DEFAULT*sizeof(FBSDAddress)
 
-enum class EWatMessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6};
+enum class EWatMessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6, JoinRequest = 7};
 
 struct FBSDAddress
 {
@@ -23,8 +25,15 @@ struct FMessage
 	FBSDAddress BSDAddr;
 };
 
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnValidQueryPacket, uint8*, int32, uint64);
-typedef FOnValidQueryPacket::FDelegate FOnValidQueryPacketDelegate;
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSessionStarted, class FInternetAddr*);
+typedef FOnSessionStarted::FDelegate FOnSessionStartedDelegate;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
+typedef FOnValidSessionRequest::FDelegate FOnValidSessionRequestDelegate;
+
+DECLARE_MULTICAST_DELEGATE(FOnJoinRequest);
+typedef FOnJoinRequest::FDelegate FOnJoinRequestDelegate;
+
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValidResponsePacket, uint8*, int32);
 typedef FOnValidResponsePacket::FDelegate FOnValidResponsePacketDelegate;
@@ -43,14 +52,14 @@ private:
 	int MaxBufferLength;
 	int ExpectedHostsCount;
 	class FOnlineSessionSearch* ClientSessionSearch;
-	class FNamedOnlineSession* HostSession;
     int ExpectedSessionSize;
 	bool bIsProcessing;
 	int Port;
+	int ExpectedSessionSettingsSize;
 	
 public:
 	
-	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), HostSession(nullptr), ExpectedSessionSize(0), bIsProcessing(true){}
+	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), ExpectedSessionSize(0), bIsProcessing(true), Port(0), ExpectedSessionSettingsSize(0){}
 
 	virtual ~FWLANManager();
 
@@ -61,6 +70,10 @@ public:
 
 	bool SendPresentationMessage();
 
+	bool SendSession(class FNamedOnlineSession* HostSession, FInternetAddr* ClientAddress);
+
+        bool SendJoinRequest(FInternetAddr* HostAddress);
+
 	TSharedPtr<class FInternetAddr> ReadAddressFromBSDAddress(FBSDAddress Address) const;
 	
 	TSharedPtr<class FInternetAddr> ReadAddressFromMessage(FMessage Message) const;
@@ -70,9 +83,9 @@ public:
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
 	 *
-	 * @param QueryDelegate delegate to fire when a client query is received
+	 * @param SessionRequestDelegate delegate to fire when a client query is received
 	 */
-	bool Host(FOnValidQueryPacketDelegate& QueryDelegate);
+	bool Host(FOnSessionStartedDelegate SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate JoinRequestDelegate);
 
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
@@ -92,19 +105,23 @@ public:
 	 */
 	void StopWLANProcess();
 
-	void SetHostSession(class FNamedOnlineSession* Session);
-
+	void AppendSearchSettingsToPacket(class FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, class FOnlineSessionSearchParam>& SearchParams);
+	
 	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session);
 
 	void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSessionSettings* SessionSettings);
 
+	void ReadSearchSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSearchSettings& SearchSettings);
+
 	void ReadSessionFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSession* Session);
 
-        void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
+    void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
 
 	void Tick(float DeltaTime);
 
-	DEFINE_ONLINE_DELEGATE_THREE_PARAM(OnValidQueryPacket, uint8*, int32, uint64);
+	DEFINE_ONLINE_DELEGATE(OnJoinRequest);
+	DEFINE_ONLINE_DELEGATE_ONE_PARAM(OnSessionStarted, class FInternetAddr*);
+	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
 	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidResponsePacket, uint8*, int32);
 	DEFINE_ONLINE_DELEGATE(OnSearchingTimeout);
 };	

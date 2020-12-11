@@ -137,6 +137,11 @@ private:
 	 */
 	void OnValidQueryPacketReceived(uint8* PacketData, int32 PacketLength, uint64 ClientNonce);
 
+	void OnValidSessionRequestDelegate(FOnlineSearchSettings* OnlineSearchSettings, FInternetAddr* SenderAddr);
+
+	void OnSessionStartDelegate(FInternetAddr* HostAddress);
+
+	void OnJoinSessionDelegate();
 	/**
 	 * Delegate triggered when the LAN beacon has detected a valid host response to a client request has been received
 	 *

@@ -151,10 +151,9 @@ public:
 	}
 };
 
+//Session complete delegate is fired with "true" only after relation server has returned host's own public IP
 bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName, const FOnlineSessionSettings& NewSessionSettings)
 {	
-	bool Success = false;
-	
 	// Check for an existing session
 	FNamedOnlineSession* Session = GetNamedSession(SessionName);
 	if (!Session )
@@ -186,24 +185,22 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 		// Unique identifier of this build for compatibility
 		Session->SessionSettings.BuildUniqueId = GetBuildUniqueId();
 
-		WLANSessionManager.SetHostSession(Session);
-		
-		FOnValidQueryPacketDelegate QueryPacketDelegate = FOnValidQueryPacketDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidQueryPacketReceived);
-		Success = WLANSessionManager.Host(QueryPacketDelegate);
-
-		if(Success)
+		FOnSessionStartedDelegate SessionStartedCompleteDelegate = FOnSessionStartedDelegate::CreateRaw(this, &FOnlineSessionWat::OnSessionStartDelegate);
+		FOnValidSessionRequestDelegate SessionRequestDelegate = FOnValidSessionRequestDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidSessionRequestDelegate);
+		FOnJoinRequestDelegate JoinRequestDelegate = FOnJoinRequestDelegate::CreateRaw(this, &FOnlineSessionWat::OnJoinSessionDelegate);
+		if(WLANSessionManager.Host(SessionStartedCompleteDelegate, SessionRequestDelegate, JoinRequestDelegate))
 		{
 			RegisterLocalPlayers(Session);
+			return true;
 		}
 	}
 	else
 	{
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Cannot create session '%s': session already exists."), *SessionName.ToString());
 	}
-	Session->SessionState = EOnlineSessionState::Pending;
-	TriggerOnCreateSessionCompleteDelegates(SessionName, Success);
+	TriggerOnCreateSessionCompleteDelegates(SessionName, false);
 	
-	return Success;
+	return false;
 }
 
 bool FOnlineSessionWat::CreateSession(const FUniqueNetId& HostingPlayerId, FName SessionName, const FOnlineSessionSettings& NewSessionSettings)
@@ -297,6 +294,7 @@ uint32 FOnlineSessionWat::UpdateLANStatus()
 	return Result;
 }
 
+//On session started delegate is fired only when client has requested connection
 bool FOnlineSessionWat::StartSession(FName SessionName)
 {
 	uint32 Result = ONLINE_FAIL;
@@ -309,25 +307,20 @@ bool FOnlineSessionWat::StartSession(FName SessionName)
 			Session->SessionState == EOnlineSessionState::Ended)
 		{
 			// If this lan match has join in progress disabled, shut down the beacon
+			//TODO check this
 			//Result = UpdateLANStatus();
 			Session->SessionState = EOnlineSessionState::InProgress;
 		}
 		else
 		{
-			UE_LOG_ONLINE_SESSION(Warning,	TEXT("Can't start an online session (%s) in state %s"),
-				*SessionName.ToString(),
-				EOnlineSessionState::ToString(Session->SessionState));
+			UE_LOG_ONLINE_SESSION(Warning,	TEXT("Can't start an online session (%s) in state %s"), *SessionName.ToString(), EOnlineSessionState::ToString(Session->SessionState));
+			TriggerOnStartSessionCompleteDelegates(SessionName, false);
 		}
 	}
 	else
 	{
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Can't start an online game for session (%s) that hasn't been created"), *SessionName.ToString());
-	}
-
-	if (Result != ONLINE_IO_PENDING)
-	{
-		// Just trigger the delegate
-		///TriggerOnStartSessionCompleteDelegates(SessionName, true/*(Result == ONLINE_SUCCESS) ? true : false*/);
+		TriggerOnStartSessionCompleteDelegates(SessionName, false);
 	}
 
 	return Result == ONLINE_SUCCESS || Result == ONLINE_IO_PENDING;
@@ -650,10 +643,13 @@ uint32 FOnlineSessionWat::JoinLANSession(int32 PlayerNum, FNamedOnlineSession* S
 
 	if (Session->SessionInfo.IsValid() && SearchSession != nullptr && SearchSession->SessionInfo.IsValid())
 	{
+		
+
 		// Copy the session info over
 		const FOnlineSessionInfoWat* SearchSessionInfo = (const FOnlineSessionInfoWat*)SearchSession->SessionInfo.Get();
 		FOnlineSessionInfoWat* SessionInfo = (FOnlineSessionInfoWat*)Session->SessionInfo.Get();
 		SessionInfo->SessionId = SearchSessionInfo->SessionId;
+		WLANSessionManager.SendJoinRequest(SearchSessionInfo->HostAddr.Get());
 
 		SessionInfo->HostAddr = SearchSessionInfo->HostAddr->Clone();
 		Result = ONLINE_SUCCESS;
@@ -949,6 +945,32 @@ void FOnlineSessionWat::AppendSessionSettingsToPacket(FNboSerializeToBufferWat& 
 			UE_LOG(LogOnline,Warning , TEXT("%s"), *Setting.ToString());
 		}
 	}
+}
+
+void FOnlineSessionWat::OnValidSessionRequestDelegate(FOnlineSearchSettings* OnlineSearchSettings, FInternetAddr* SenderAddr)
+{
+	//TODO check online settings
+	//TODO multiple sessions
+	for(auto Param : OnlineSearchSettings->SearchParams)
+	{
+		UE_LOG(LogOnline, Warning, TEXT("%s:%s"), *Param.Key.ToString(),*Param.Value.ToString())
+	}
+	
+	WLANSessionManager.SendSession(&Sessions[0],  SenderAddr);
+}
+
+void FOnlineSessionWat::OnSessionStartDelegate(FInternetAddr* HostAddress)
+{
+	FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
+	NewSessionInfo->Init(MakeShareable(HostAddress));
+	Sessions[0].SessionInfo = MakeShareable(NewSessionInfo);
+	Sessions[0].SessionState = EOnlineSessionState::Pending;
+        TriggerOnCreateSessionCompleteDelegates(Sessions[0].SessionName, true);
+}
+
+void FOnlineSessionWat::OnJoinSessionDelegate()
+{
+	TriggerOnStartSessionCompleteDelegates(Sessions[0].SessionName, true);
 }
 
 void FOnlineSessionWat::OnValidQueryPacketReceived(uint8* PacketData, int32 PacketLength, uint64 ClientNonce)
