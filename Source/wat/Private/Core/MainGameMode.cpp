@@ -3,14 +3,20 @@
 
 #include "Core/MainGameMode.h"
 
+#include <set>
+
+
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/MainGameState.h"
 #include "SecurityCamera.h"
+#include "Characters/MonsterCharacter.h"
+#include "Math/UnrealMathSSE.h"
 
 AMainGameMode::AMainGameMode() : Super()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/Blueprints/Characters/PlayerCharacterBP"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
+		TEXT("/Game/Blueprints/Characters/PlayerCharacterBP"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 }
 
@@ -50,6 +56,13 @@ void AMainGameMode::PostInitializeComponents()
 			}
 		}
 	}
-	
+
+	TArray<AActor*> FoundMonster;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonsterCharacter::StaticClass(), FoundMonster);
+	if (FoundMonster.Num() == 1)
+	{
+		AMonsterCharacter* Monster = Cast<AMonsterCharacter>(FoundMonster.Last());
+		MainGameState->MonsterCharacter = Monster;
+	}
 	//TODO if(Camera->GetLevel() == Player1Level)
 }

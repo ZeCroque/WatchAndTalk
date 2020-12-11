@@ -11,6 +11,7 @@ void AMainGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(AMainGameState, Player1Cameras);
 	DOREPLIFETIME(AMainGameState, Player2Cameras);
 	DOREPLIFETIME(AMainGameState, EndGameInteractables);
+	DOREPLIFETIME(AMainGameState, MonsterCharacter);
 }
 
 bool AMainGameState::AreAllEndGameInteractableClicked() const

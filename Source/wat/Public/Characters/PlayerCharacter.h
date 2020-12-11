@@ -35,7 +35,7 @@ public:
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
 	UPROPERTY(EditAnywhere)
-	float SprintSpeedMultiplier;
+	float SprintSpeedAdditionner;
 		
 
 protected:
