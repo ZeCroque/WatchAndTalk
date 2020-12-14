@@ -53,13 +53,12 @@ private:
 	int ExpectedHostsCount;
 	class FOnlineSessionSearch* ClientSessionSearch;
     int ExpectedSessionSize;
-	bool bIsProcessing;
 	int Port;
 	int ExpectedSessionSettingsSize;
 	
 public:
 	
-	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), ExpectedSessionSize(0), bIsProcessing(true), Port(0), ExpectedSessionSettingsSize(0){}
+	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), ExpectedSessionSize(0), Port(0), ExpectedSessionSettingsSize(0){}
 
 	virtual ~FWLANManager();
 
@@ -72,7 +71,7 @@ public:
 
 	bool SendSession(class FNamedOnlineSession* HostSession, FInternetAddr* ClientAddress);
 
-        bool SendJoinRequest(FInternetAddr* HostAddress);
+    bool SendJoinRequest(FInternetAddr* HostAddress);
 
 	TSharedPtr<class FInternetAddr> ReadAddressFromBSDAddress(FBSDAddress Address) const;
 	
@@ -109,7 +108,7 @@ public:
 
 	static void AppendSearchSettingsToPacket(class FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, class FOnlineSessionSearchParam>& SearchParams);
 	
-	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session);
+	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session) const;
 
 	static void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSessionSettings* SessionSettings);
 

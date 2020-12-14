@@ -190,12 +190,12 @@ void FWLANManager::StopWLANProcess()
 	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	SocketSubsystem->DestroySocket(Socket);
 	Socket = nullptr;
-	bIsProcessing = false;
-	if (ClientSessionSearch)
+
+	RelationServerAddress.Reset();
+        for(auto& HostAddress : HostsAddresses) 
 	{
-		delete ClientSessionSearch;
-		ClientSessionSearch = nullptr;
-	}
+                HostAddress.Reset();
+        }
 }
 
 void FWLANManager::AppendSearchSettingsToPacket(FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, FOnlineSessionSearchParam>& SearchParams)
@@ -208,7 +208,7 @@ void FWLANManager::AppendSearchSettingsToPacket(FNboSerializeToBufferWat& Packet
 	}
 }
 
-void FWLANManager::AppendSessionToPacket(FNboSerializeToBufferWat& Packet, FOnlineSession* Session)
+void FWLANManager::AppendSessionToPacket(FNboSerializeToBufferWat& Packet, FOnlineSession* Session) const
 {
 	/** Owner of the session */
 	Packet << *StaticCastSharedPtr<const FUniqueNetIdWat>(Session->OwningUserId)
@@ -429,7 +429,7 @@ void FWLANManager::ReadSettingsFromPacket(FNboSerializeFromBufferWat& Packet, FO
 
 void FWLANManager::Tick(float DeltaTime)
 {
-	if (bIsProcessing && Socket)
+	if (Socket)
 	{
 		uint8* ReceptionBuffer = new uint8[MaxBufferLength];
 		int ReceivedSize = 0;
@@ -454,7 +454,7 @@ void FWLANManager::Tick(float DeltaTime)
 							break;
 						case EWatMessageType::HostAddress:
 						{
-                                                  const auto Addr = ReadAddressFromMessage(*Message);
+                                                        const auto Addr = ReadAddressFromMessage(*Message);
 							HostsAddresses.Add(Addr);
 							UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%s"), *Addr->ToString(true));
 							TriggerOnSessionStartedDelegates(Addr.Get());
@@ -526,7 +526,7 @@ void FWLANManager::Tick(float DeltaTime)
 					HostsAddresses.SetNum(ExpectedHostsCount);
 					for (int i = 0; i < ExpectedHostsCount; i++)
 					{
-						HostsAddresses[i] = ReadAddressFromBSDAddress(*reinterpret_cast<FBSDAddress*>(ReceptionBuffer + i * sizeof(FBSDAddress)))->Clone();
+						HostsAddresses[i] = ReadAddressFromBSDAddress(*reinterpret_cast<FBSDAddress*>(ReceptionBuffer + i * sizeof(FBSDAddress)));
 						UE_LOG(LogOnline, Warning, TEXT("%s"), *HostsAddresses[i]->ToString(true));
 					}
 					//TODO connect to everyone
