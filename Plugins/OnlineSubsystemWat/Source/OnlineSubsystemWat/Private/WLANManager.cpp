@@ -149,7 +149,7 @@ void FWLANManager::WriteAddressIntoMessage(FMessage& Message, TSharedPtr<FIntern
 	Algo::Reverse(Message.BSDAddr.IpBytes, sizeof(uint32));
 }
 
-bool FWLANManager::Host(FOnSessionStartedDelegate SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate JoinRequestDelegate)
+bool FWLANManager::Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate& JoinRequestDelegate)
 {
 	bIsHost = true;
 	AddOnSessionStartedDelegate_Handle(SessionStartedDelegate);
@@ -158,7 +158,7 @@ bool FWLANManager::Host(FOnSessionStartedDelegate SessionStartedDelegate, FOnVal
 	return SendPresentationMessage();
 }
 
-bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate)
+bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnSearchingTimeoutDelegate& TimeoutDelegate)
 {
 	bIsHost = false;
 
@@ -254,7 +254,7 @@ void FWLANManager::AppendSessionSettingsToPacket(FNboSerializeToBufferWat& Packe
 	}
 
 	// Add count of advertised keys and the data
-	Packet << (int32)NumAdvertisedProperties;
+	Packet << static_cast<int32>(NumAdvertisedProperties);
 	for (FSessionSettings::TConstIterator It(SessionSettings->Settings); It; ++It)
 	{
 		const FOnlineSessionSetting& Setting = It.Value();

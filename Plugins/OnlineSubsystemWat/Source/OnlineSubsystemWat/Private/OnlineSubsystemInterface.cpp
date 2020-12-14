@@ -36,31 +36,16 @@ IOnlineTournamentPtr FOnlineSubsystemWaT::GetTournamentInterface() const
 
 bool FOnlineSubsystemWaT::Init()
 {
-  const bool bNullInit = true;
 	
-  if (bNullInit)
+  if (!SessionInterface && !IdentityInterface)
   {
-	  // Create the online async task thread
-	 // OnlineAsyncTaskThreadRunnable = new FOnlineAsyncTaskManagerNull(this);
-	  //check(OnlineAsyncTaskThreadRunnable);
-	  //OnlineAsyncTaskThread = FRunnableThread::Create(OnlineAsyncTaskThreadRunnable, *FString::Printf(TEXT("OnlineAsyncTaskThreadNull %s(%d)"), *InstanceName.ToString(), TaskCounter.Increment()), 128 * 1024, TPri_Normal);
-	  //check(OnlineAsyncTaskThread);
-	  //UE_LOG_ONLINE(Verbose, TEXT("Created thread (ID:%d)."), OnlineAsyncTaskThread->GetThreadID());
-
 	  SessionInterface = MakeShareable(new FOnlineSessionWat(this));
-	  //LeaderboardsInterface = MakeShareable(new FOnlineLeaderboardsNull(this));
 	  IdentityInterface = MakeShareable(new FOnlineIdentityWat(this));
-	  /*AchievementsInterface = MakeShareable(new FOnlineAchievementsNull(this));
-	  VoiceInterface = MakeShareable(new FOnlineVoiceImpl(this));
-	  StoreV2Interface = MakeShareable(new FOnlineStoreV2Null(*this));
-	  PurchaseInterface = MakeShareable(new FOnlinePurchaseNull(*this));*/
-  }
-  else
-  {
-      Shutdown();
+  	  return true;
   }
 
-  return bNullInit;
+  Shutdown();
+  return false;
 }
 
 bool FOnlineSubsystemWaT::Shutdown()
@@ -68,24 +53,6 @@ bool FOnlineSubsystemWaT::Shutdown()
   UE_LOG_ONLINE(VeryVerbose, TEXT("FOnlineSubsystemNull::Shutdown()"));
 
   FOnlineSubsystemImpl::Shutdown();
-
-  /*if (OnlineAsyncTaskThread)
-  {
-	  // Destroy the online async task thread
-	  delete OnlineAsyncTaskThread;
-	  OnlineAsyncTaskThread = nullptr;
-  }*/
-
-  /*if (OnlineAsyncTaskThreadRunnable)
-  {
-	  delete OnlineAsyncTaskThreadRunnable;
-	  OnlineAsyncTaskThreadRunnable = nullptr;
-  }*/
-
-  /*if (VoiceInterface.IsValid() && bVoiceInterfaceInitialized)
-  {
-	  VoiceInterface->Shutdown();
-  }*/
 
   #define DESTRUCT_INTERFACE(Interface) \
   if (Interface.IsValid()) \
@@ -95,12 +62,7 @@ bool FOnlineSubsystemWaT::Shutdown()
   }
 
   // Destruct the interfaces
-  /*DESTRUCT_INTERFACE(PurchaseInterface);
-  DESTRUCT_INTERFACE(StoreV2Interface);
-  DESTRUCT_INTERFACE(VoiceInterface);
-  DESTRUCT_INTERFACE(AchievementsInterface);*/
   DESTRUCT_INTERFACE(IdentityInterface);
-  //DESTRUCT_INTERFACE(LeaderboardsInterface);
   DESTRUCT_INTERFACE(SessionInterface);
 
   #undef DESTRUCT_INTERFACE
@@ -126,7 +88,7 @@ FText FOnlineSubsystemWaT::GetOnlineServiceName() const
 {
 	return FText::FromString(TEXT("WatOSS"));
 }
-int FOnlineSubsystemWaT::GetPort()
+int FOnlineSubsystemWaT::GetPort() const
 {
   return SessionInterface->GetPort();
 }

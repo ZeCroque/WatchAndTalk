@@ -7,6 +7,8 @@ Notes:
 	  for Winsock WSAE* errors returned by Windows Sockets.
 =============================================================================*/
 
+//Note almost vanilla unreal file, only changed names and modified port finding method
+
 #include "WatIpConnection.h"
 #include "WatIpNetDriver.h"
 #include "SocketSubsystem.h"

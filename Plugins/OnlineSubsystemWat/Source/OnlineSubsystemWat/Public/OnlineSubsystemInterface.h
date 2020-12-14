@@ -6,7 +6,6 @@
 #include "CoreMinimal.h"
 #include "OnlineSubsystemImpl.h"
 #include "OnlineSubsystemWatPackage.h"
-#include "HAL/ThreadSafeCounter.h"
 
 #ifndef WAT_SUBSYSTEM
 #define WAT_SUBSYSTEM FName(TEXT("WAT"))
@@ -29,7 +28,6 @@ public:
 	virtual ~FOnlineSubsystemWaT() = default;
 
 	// IOnlineSubsystem
-
 	virtual IOnlineSessionPtr GetSessionInterface() const override;
 	virtual IOnlineIdentityPtr GetIdentityInterface() const override;
 	virtual IOnlineFriendsPtr GetFriendsInterface() const override;
@@ -43,9 +41,9 @@ public:
 	virtual bool Exec(class UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
 	virtual FText GetOnlineServiceName() const override;
 
-    int GetPort();
-	// FTickerObjectBase
+    int GetPort() const;
 	
+	// FTickerObjectBase
 	virtual bool Tick(float DeltaTime) override;
 
 	PACKAGE_SCOPE:
@@ -56,9 +54,7 @@ public:
 	FOnlineSubsystemWaT(FName InInstanceName) :
 		FOnlineSubsystemImpl(WAT_SUBSYSTEM, InInstanceName),
 		SessionInterface(nullptr),
-		IdentityInterface(nullptr)/*,
-		OnlineAsyncTaskThreadRunnable(nullptr),
-		OnlineAsyncTaskThread(nullptr)*/
+		IdentityInterface(nullptr)
 	{}
 	
 
@@ -69,15 +65,6 @@ private:
 
 	/** Interface to the identity registration/auth services */
 	FOnlineIdentityWatPtr IdentityInterface;
-
-	/** Online async task runnable */
-	//class FOnlineAsyncTaskManagerNull* OnlineAsyncTaskThreadRunnable;
-
-	/** Online async task thread */
-	//class FRunnableThread* OnlineAsyncTaskThread;
-
-	// task counter, used to generate unique thread names for each task
-	//static FThreadSafeCounter TaskCounter;
 };
 
 typedef TSharedPtr<FOnlineSubsystemWaT, ESPMode::ThreadSafe> FOnlineSubsystemWatPtr;

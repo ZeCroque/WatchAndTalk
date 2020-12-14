@@ -83,19 +83,21 @@ public:
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
 	 *
-	 * @param SessionRequestDelegate delegate to fire when a client query is received
+	 * @param SessionStartedDelegate delegate to fire when session is successfuly started (relation server sent back our public ip and used port)
+	 * @param SessionRequestDelegate delegate to fire when a client session query is received
+	 * @param JoinRequestDelegate delegate to fire when a client join query is received
 	 */
-	bool Host(FOnSessionStartedDelegate SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate JoinRequestDelegate);
+	bool Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate& JoinRequestDelegate);
 
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
 	 *
-	 * @param ResponseDelegate delegate to fire when a server response is received
+	 * @param SearchSettings the settings searched session must correspond to
 	 * @param TimeoutDelegate delegate to fire if we exceed maximum search time
 	 *
 	 * @return true if search was started successfully, false otherwise
 	 */
-	bool Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnValidResponsePacketDelegate& ResponseDelegate, FOnSearchingTimeoutDelegate& TimeoutDelegate);
+	bool Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnSearchingTimeoutDelegate& TimeoutDelegate);
 
 	//TODO timeout
 	bool SendNatPunchThroughPacket(TSharedPtr<class FInternetAddr> PeerAddress, uint8* PunchPacket);
@@ -105,17 +107,17 @@ public:
 	 */
 	void StopWLANProcess();
 
-	void AppendSearchSettingsToPacket(class FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, class FOnlineSessionSearchParam>& SearchParams);
+	static void AppendSearchSettingsToPacket(class FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, class FOnlineSessionSearchParam>& SearchParams);
 	
 	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session);
 
-	void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSessionSettings* SessionSettings);
+	static void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSessionSettings* SessionSettings);
 
-	void ReadSearchSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSearchSettings& SearchSettings);
+	static void ReadSearchSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSearchSettings& SearchSettings);
 
 	void ReadSessionFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSession* Session);
 
-    void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
+	static void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
 
 	void Tick(float DeltaTime);
 

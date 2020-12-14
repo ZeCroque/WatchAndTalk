@@ -7,7 +7,6 @@
 #include "Misc/ScopeLock.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
-#include "LANBeacon.h"
 #include "OnlineSubsystemWatPackage.h"
 #include "WLANManager.h"
 
@@ -26,9 +25,6 @@ private:
 	/** Reference to the main Null subsystem */
 	class FOnlineSubsystemWaT* WatSubsystem;
 
-	/** Handles advertising sessions over LAN and client searches */
-	FLANSession LANSessionManager;
-
 	FWLANManager WLANSessionManager;
 
 private:
@@ -36,39 +32,12 @@ private:
 	/** Hidden on purpose */
 	FOnlineSessionWat() :
 		WatSubsystem(nullptr),
-		CurrentSessionSearch(nullptr)
+		CurrentSessionSearch(nullptr),
+		SessionSearchStartInSeconds(-1.0)
 	{}
-
+	
 	/**
-	 * Checks whether there are any sessions that need to be advertised (over LAN)
-	 *
-	 * @return true if there is at least one
-	 */
-	bool NeedsToAdvertise();
-
-	/**
-	 * Determines whether this particular session should be advertised (over LAN)
-	 *
-	 * @return true if yes
-	 */
-	bool NeedsToAdvertise( FNamedOnlineSession& Session );
-
-	/**
-	 * Determines whether this particular session is joinable.
-	 *
-	 * @return true if yes
-	 */
-	bool IsSessionJoinable( const FNamedOnlineSession& Session) const;
-
-	/**
-	 * Updates the status of LAN session (creates it if needed, shuts down if not)
-	 * 
-	 * @return ONLINE_SUCCESS if everything went successful, an error code otherwise
-	 */
-	uint32 UpdateLANStatus();
-
-	/**
-	 *	Join a LAN session
+	 *	Join a WLAN session
 	 * 
 	 * @param PlayerNum local index of the user initiating the request
 	 * @param Session newly allocated session with join information
@@ -76,84 +45,19 @@ private:
 	 * 
 	 * @return ONLINE_SUCCESS if successful, an error code otherwise
 	 */
-	uint32 JoinLANSession(int32 PlayerNum, class FNamedOnlineSession* Session, const class FOnlineSession* SearchSession);
+	uint32 JoinWLANSession(int32 PlayerNum, class FNamedOnlineSession* Session, const class FOnlineSession* SearchSession);
 
-	/**
-	 * Builds a LAN search query and broadcasts it
-	 *
-	 * @return ONLINE_SUCCESS if successful, an error code otherwise
-	 */
-	uint32 FindLANSession();
-
-	/**
-	 * Finishes searching over LAN and returns to hosting (if needed)
-	 *
-	 * @return ONLINE_SUCCESS if successful, an error code otherwise
-	 */
-	uint32 FinalizeLANSearch();
-
-	/**
-	 * Adds the game session data to the packet that is sent by the host
-	 * in response to a server query
-	 *
-	 * @param Packet the writer object that will encode the data
-	 * @param Session the session to add to the packet
-	 */
-	void AppendSessionToPacket(class FNboSerializeToBufferWat& Packet, class FOnlineSession* Session);
-
-	/**
-	 * Adds the game settings data to the packet that is sent by the host
-	 * in response to a server query
-	 *
-	 * @param Packet the writer object that will encode the data
-	 * @param SessionSettings the session settings to add to the packet
-	 */
-	void AppendSessionSettingsToPacket(class FNboSerializeToBufferWat& Packet, FOnlineSessionSettings* SessionSettings);
-
-	/**
-	 * Reads the settings data from the packet and applies it to the
-	 * specified object
-	 *
-	 * @param Packet the reader object that will read the data
-	 * @param SessionSettings the session settings to copy the data to
-	 */
-	void ReadSessionFromPacket(class FNboSerializeFromBufferWat& Packet, class FOnlineSession* Session);
-
-	/**
-	 * Reads the settings data from the packet and applies it to the
-	 * specified object
-	 *
-	 * @param Packet the reader object that will read the data
-	 * @param SessionSettings the session settings to copy the data to
-	 */
-	void ReadSettingsFromPacket(class FNboSerializeFromBufferWat& Packet, FOnlineSessionSettings& SessionSettings);
-
-	/**
-	 * Delegate triggered when the LAN beacon has detected a valid client request has been received
-	 *
-	 * @param PacketData packet data sent by the requesting client with header information removed
-	 * @param PacketLength length of the packet not including header size
-	 * @param ClientNonce the nonce returned by the client to return with the server packet
-	 */
-	void OnValidQueryPacketReceived(uint8* PacketData, int32 PacketLength, uint64 ClientNonce);
 
 	void OnValidSessionRequestDelegate(FOnlineSearchSettings* OnlineSearchSettings, FInternetAddr* SenderAddr);
 
 	void OnSessionStartDelegate(FInternetAddr* HostAddress);
 
 	void OnJoinSessionDelegate();
-	/**
-	 * Delegate triggered when the LAN beacon has detected a valid host response to a client request has been received
-	 *
-	 * @param PacketData packet data sent by the requesting client with header information removed
-	 * @param PacketLength length of the packet not including header size
-	 */
-	void OnValidResponsePacketReceived(uint8* PacketData, int32 PacketLength);
 
 	/**
-	 * Delegate triggered when the LAN beacon has finished searching (some time after last received host packet)
+	 * Delegate triggered when the WLAN manager has finished searching (some time after last received host packet)
 	 */
-	void OnLANSearchTimeout();
+	void OnSearchTimeoutDelegate();
 
 	/**
 	 * Returns true if the session owner is also the host.
@@ -180,6 +84,8 @@ PACKAGE_SCOPE:
 		SessionSearchStartInSeconds(0)
 	{}
 
+	int GetPort() const;
+	
 	/**
 	 * Session tick for various background tasks
 	 */
@@ -198,41 +104,13 @@ PACKAGE_SCOPE:
 		return new (Sessions) FNamedOnlineSession(SessionName, Session);
 	}
 
-	/**
-	 * Parse the command line for invite/join information at launch
-	 */
-	void CheckPendingSessionInvite();
-
-	/**
-	* Registers and updates voice data for the given player id
-	*
-	* @param PlayerId player to register with the voice subsystem
-	*/
-	void RegisterVoice(const FUniqueNetId& PlayerId);
-
-	/**
-	* Unregisters a given player id from the voice subsystem
-	*
-	* @param PlayerId player to unregister with the voice subsystem
-	*/
-	void UnregisterVoice(const FUniqueNetId& PlayerId);
-
-	/**
-	 * Registers all local players with the current session
-	 *
-	 * @param Session the session that they are registering in
-	 */
-	void RegisterLocalPlayers(class FNamedOnlineSession* Session);
-
 public:
 
 	virtual ~FOnlineSessionWat() {}
 
 	virtual TSharedPtr<const FUniqueNetId> CreateSessionIdFromString(const FString& SessionIdStr) override;
 
-	int GetPort();
-
-	FNamedOnlineSession* GetNamedSession(FName SessionName) override
+	virtual FNamedOnlineSession* GetNamedSession(FName SessionName) override
 	{
 		FScopeLock ScopeLock(&SessionLock);
 		for (int32 SearchIndex = 0; SearchIndex < Sessions.Num(); SearchIndex++)
@@ -242,7 +120,7 @@ public:
 				return &Sessions[SearchIndex];
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	virtual void RemoveNamedSession(FName SessionName) override

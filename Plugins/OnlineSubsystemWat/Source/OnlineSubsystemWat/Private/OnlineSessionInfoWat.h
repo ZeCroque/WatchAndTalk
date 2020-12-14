@@ -39,7 +39,7 @@ PACKAGE_SCOPE:
 	 * Initialize a Null session info with the address of this machine
 	 * and an id for the session
 	 */
-	void Init(TSharedPtr<class FInternetAddr> HostAddr);
+	void Init(TSharedPtr<class FInternetAddr> Addr);
 
 	/** The ip & port that the host is listening on*/
 	TSharedPtr<class FInternetAddr> HostAddr;
