@@ -190,12 +190,6 @@ void FWLANManager::StopWLANProcess()
 	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	SocketSubsystem->DestroySocket(Socket);
 	Socket = nullptr;
-
-	RelationServerAddress.Reset();
-        for(auto& HostAddress : HostsAddresses) 
-	{
-                HostAddress.Reset();
-        }
 }
 
 void FWLANManager::AppendSearchSettingsToPacket(FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, FOnlineSessionSearchParam>& SearchParams)
