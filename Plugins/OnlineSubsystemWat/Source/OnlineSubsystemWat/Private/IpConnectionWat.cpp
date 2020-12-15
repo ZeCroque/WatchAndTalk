@@ -9,8 +9,8 @@ Notes:
 
 //Note almost vanilla unreal file, only changed names and modified port finding method
 
-#include "WatIpConnection.h"
-#include "WatIpNetDriver.h"
+#include "IpConnectionWat.h"
+#include "IpNetDriverWat.h"
 #include "SocketSubsystem.h"
 #include "Engine/Engine.h"
 #include "Engine/PendingNetGame.h"
@@ -48,7 +48,7 @@ TAutoConsoleVariable<int32> CVarWatNetIpConnectionDisableResolution(
 	ECVF_Default | ECVF_Cheat);
 
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
-UWatIpConnection::UWatIpConnection(const FObjectInitializer& ObjectInitializer) :
+UIpConnectionWat::UIpConnectionWat(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer),
 	Socket(nullptr),
 	ResolveInfo(nullptr),
@@ -66,7 +66,7 @@ UWatIpConnection::UWatIpConnection(const FObjectInitializer& ObjectInitializer) 
 }
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-void UWatIpConnection::InitBase(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
+void UIpConnectionWat::InitBase(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
 {
 	// Pass the call up the chain
 	Super::InitBase(InDriver, InSocket, InURL, InState, 
@@ -80,7 +80,7 @@ void UWatIpConnection::InitBase(UNetDriver* InDriver, class FSocket* InSocket, c
 	}
 }
 
-void UWatIpConnection::InitLocalConnection(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
+void UIpConnectionWat::InitLocalConnection(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
 {
 	InitBase(InDriver, InSocket, InURL, InState, 
 		// Use the default packet size/overhead unless overridden by a child class
@@ -136,7 +136,7 @@ void UWatIpConnection::InitLocalConnection(UNetDriver* InDriver, class FSocket* 
 	}
 }
 
-void UWatIpConnection::InitRemoteConnection(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, const class FInternetAddr& InRemoteAddr, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
+void UIpConnectionWat::InitRemoteConnection(UNetDriver* InDriver, class FSocket* InSocket, const FURL& InURL, const class FInternetAddr& InRemoteAddr, EConnectionState InState, int32 InMaxPacket, int32 InPacketOverhead)
 {
 	SCOPE_CYCLE_COUNTER(Stat_IpConnectionInitRemoteConnection);
 
@@ -159,7 +159,7 @@ void UWatIpConnection::InitRemoteConnection(UNetDriver* InDriver, class FSocket*
 	SetExpectedClientLoginMsgType( NMT_Hello );
 }
 
-void UWatIpConnection::Tick()
+void UIpConnectionWat::Tick()
 {
 	if (CVarWatNetIpConnectionUseSendTasks.GetValueOnGameThread() != 0)
 	{
@@ -230,7 +230,7 @@ void UWatIpConnection::Tick()
 	else if (ResolutionState == EAddressResolutionState::Connected)
 	{
 		CleanupResolutionSockets();
-		UWatIpNetDriver* IpDriver = Cast<UWatIpNetDriver>(Driver);
+		UIpNetDriverWat* IpDriver = Cast<UIpNetDriverWat>(Driver);
 
 		// Set the right object now that we have a connection
 		IpDriver->SetSocketAndLocalAddress(ResolutionSocket);
@@ -250,7 +250,7 @@ void UWatIpConnection::Tick()
 	Super::Tick();
 }
 
-void UWatIpConnection::CleanUp()
+void UIpConnectionWat::CleanUp()
 {
 	// Force ourselves into a finishing state such that we clean up any excess network objects.
 	if (IsAddressResolutionEnabled())
@@ -266,7 +266,7 @@ void UWatIpConnection::CleanUp()
 	WaitForSendTasks();
 }
 
-void UWatIpConnection::HandleConnectionTimeout(const FString& ErrorStr)
+void UIpConnectionWat::HandleConnectionTimeout(const FString& ErrorStr)
 {
 	if (CanContinueResolution())
 	{
@@ -279,7 +279,7 @@ void UWatIpConnection::HandleConnectionTimeout(const FString& ErrorStr)
 	}
 }
 
-void UWatIpConnection::WaitForSendTasks()
+void UIpConnectionWat::WaitForSendTasks()
 {
 	if (CVarWatNetIpConnectionUseSendTasks.GetValueOnGameThread() != 0 && LastSendTask.IsValid())
 	{
@@ -290,7 +290,7 @@ void UWatIpConnection::WaitForSendTasks()
 	}
 }
 
-void UWatIpConnection::LowLevelSend(void* Data, int32 CountBits, FOutPacketTraits& Traits)
+void UIpConnectionWat::LowLevelSend(void* Data, int32 CountBits, FOutPacketTraits& Traits)
 {
 	const uint8* DataToSend = reinterpret_cast<uint8*>(Data);
 
@@ -385,7 +385,7 @@ void UWatIpConnection::LowLevelSend(void* Data, int32 CountBits, FOutPacketTrait
 				LastSendTask = FFunctionGraphTask::CreateAndDispatchWhenReady([this, Packet = TArray<uint8>(DataToSend, CountBytes), SocketSubsystem, bNotifyOnSuccess]
 				{
 					bool bWasSendSuccessful = false;
-					UWatIpConnection::FSocketSendResult Result;
+					UIpConnectionWat::FSocketSendResult Result;
 
 					{
 						SCOPE_CYCLE_COUNTER(STAT_IpConnection_SendToSocket);
@@ -441,7 +441,7 @@ void UWatIpConnection::LowLevelSend(void* Data, int32 CountBits, FOutPacketTrait
 	}
 }
 
-void UWatIpConnection::ReceivedRawPacket(void* Data, int32 Count)
+void UIpConnectionWat::ReceivedRawPacket(void* Data, int32 Count)
 {
 	UE_CLOG(SocketError_RecvDelayStartTime > 0.0, LogNet, Log, TEXT("UWatIpConnection::ReceivedRawPacket: Recoverd from socket errors. %s Connection"), *Describe());
 	
@@ -458,7 +458,7 @@ void UWatIpConnection::ReceivedRawPacket(void* Data, int32 Count)
 	Super::ReceivedRawPacket(Data, Count);
 }
 
-float UWatIpConnection::GetTimeoutValue()
+float UIpConnectionWat::GetTimeoutValue()
 {
 	// Include support for no-timeouts
 #if !UE_BUILD_SHIPPING
@@ -471,7 +471,7 @@ float UWatIpConnection::GetTimeoutValue()
 
 	if (ResolutionState == EAddressResolutionState::Connecting)
 	{
-		UWatIpNetDriver* IpDriver = Cast<UWatIpNetDriver>(Driver);
+		UIpNetDriverWat* IpDriver = Cast<UIpNetDriverWat>(Driver);
 		if (IpDriver == nullptr || IpDriver->GetResolutionTimeoutValue() == 0.0f)
 		{
 			return Driver->InitialConnectTimeout;
@@ -482,7 +482,7 @@ float UWatIpConnection::GetTimeoutValue()
 	return UNetConnection::GetTimeoutValue();
 }
 
-void UWatIpConnection::HandleSocketSendResult(const FSocketSendResult& Result, ISocketSubsystem* SocketSubsystem)
+void UIpConnectionWat::HandleSocketSendResult(const FSocketSendResult& Result, ISocketSubsystem* SocketSubsystem)
 {
 	if (Result.Error == SE_NO_ERROR)
 	{
@@ -545,7 +545,7 @@ void UWatIpConnection::HandleSocketSendResult(const FSocketSendResult& Result, I
 	}
 }
 
-void UWatIpConnection::HandleSocketRecvError(class UNetDriver* NetDriver, const FString& ErrorString)
+void UIpConnectionWat::HandleSocketRecvError(class UNetDriver* NetDriver, const FString& ErrorString)
 {
 	check(NetDriver);
 
@@ -585,7 +585,7 @@ void UWatIpConnection::HandleSocketRecvError(class UNetDriver* NetDriver, const 
 
 }
 
-void UWatIpConnection::CleanupResolutionSockets()
+void UIpConnectionWat::CleanupResolutionSockets()
 {
 	if (Driver == nullptr || Driver->GetSocketSubsystem() == nullptr || !IsAddressResolutionEnabled())
 	{
@@ -613,12 +613,12 @@ void UWatIpConnection::CleanupResolutionSockets()
 	ResolverResults.Empty();
 }
 
-FString UWatIpConnection::LowLevelGetRemoteAddress(bool bAppendPort)
+FString UIpConnectionWat::LowLevelGetRemoteAddress(bool bAppendPort)
 {
 	return (RemoteAddr.IsValid()) ? RemoteAddr->ToString(bAppendPort) : TEXT("");
 }
 
-FString UWatIpConnection::LowLevelDescribe()
+FString UIpConnectionWat::LowLevelDescribe()
 {
 	TSharedRef<FInternetAddr> LocalAddr = Driver->GetSocketSubsystem()->CreateInternetAddr();
 

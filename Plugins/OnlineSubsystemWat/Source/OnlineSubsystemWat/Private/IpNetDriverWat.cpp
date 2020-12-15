@@ -8,7 +8,7 @@ Notes:
 	  for Winsock WSAE* errors returned by Windows Sockets.
 =============================================================================*/
 
-#include "WatIpNetDriver.h"
+#include "IpNetDriverWat.h"
 #include "Misc/CommandLine.h"
 #include "EngineGlobals.h"
 #include "Engine/World.h"
@@ -25,9 +25,9 @@ Notes:
 
 #include "IPAddress.h"
 #include "OnlineSubsystem.h"
-#include "OnlineSubsystemInterface.h"
+#include "OnlineSubsystemWat.h"
 #include "Sockets.h"
-#include "WatIpConnection.h"
+#include "IpConnectionWat.h"
 #include "Serialization/ArchiveCountMem.h"
 
 /** For backwards compatibility with the engine stateless connect code */
@@ -43,7 +43,7 @@ DECLARE_CYCLE_STAT(TEXT("IpNetDriver Add new connection"), Stat_IpNetDriverAddNe
 DECLARE_CYCLE_STAT(TEXT("IpNetDriver Socket RecvFrom"), STAT_IpNetDriver_RecvFromSocket, STATGROUP_Net);
 DECLARE_CYCLE_STAT(TEXT("IpNetDriver Destroy WaitForReceiveThread"), STAT_IpNetDriver_Destroy_WaitForReceiveThread, STATGROUP_Net);
 
-UWatIpNetDriver::FOnNetworkProcessingCausingSlowFrame UWatIpNetDriver::OnNetworkProcessingCausingSlowFrame;
+UIpNetDriverWat::FOnNetworkProcessingCausingSlowFrame UIpNetDriverWat::OnNetworkProcessingCausingSlowFrame;
 
 // Time before the alarm delegate is called (in seconds)
 float GWatIpNetDriverMaxDesiredTimeSliceBeforeAlarmSecs = 1.0f;
@@ -139,7 +139,7 @@ namespace WatIPNetDriverInternal
  */
 class FPacketIterator
 {
-	friend class UWatIpNetDriver;
+	friend class UIpNetDriverWat;
 	
 private:
 	struct FCachedPacket
@@ -162,13 +162,13 @@ private:
 
 
 private:
-	FPacketIterator(UWatIpNetDriver* InDriver)
+	FPacketIterator(UIpNetDriverWat* InDriver)
 		: FPacketIterator(InDriver, InDriver->RecvMultiState.Get(), FPlatformTime::Seconds(),
 							(InDriver->MaxSecondsInReceive > 0.0 && InDriver->NbPacketsBetweenReceiveTimeTest > 0))
 	{
 	}
 
-	FPacketIterator(UWatIpNetDriver* InDriver, FRecvMulti* InRMState, double InStartReceiveTime, bool bInCheckReceiveTime)
+	FPacketIterator(UIpNetDriverWat* InDriver, FRecvMulti* InRMState, double InStartReceiveTime, bool bInCheckReceiveTime)
 		: bBreak(false)
 		, IterationCount(0)
 		, Driver(InDriver)
@@ -188,7 +188,7 @@ private:
 		, bCheckReceiveTime(bInCheckReceiveTime)
 		, CheckReceiveTimePacketCountMask(bInCheckReceiveTime ? (FMath::RoundUpToPowerOfTwo(InDriver->NbPacketsBetweenReceiveTimeTest)-1) : 0)
 		, BailOutTime(InStartReceiveTime + InDriver->MaxSecondsInReceive)
-		, bSlowFrameChecks(UWatIpNetDriver::OnNetworkProcessingCausingSlowFrame.IsBound())
+		, bSlowFrameChecks(UIpNetDriverWat::OnNetworkProcessingCausingSlowFrame.IsBound())
 		, AlarmTime(InStartReceiveTime + GWatIpNetDriverMaxDesiredTimeSliceBeforeAlarmSecs)
 	{
 		if (!bUseRecvMulti && SocketSubsystem != nullptr)
@@ -419,7 +419,7 @@ private:
 				}
 				else
 				{
-					UWatIpNetDriver::FReceivedPacket IncomingPacket;
+					UIpNetDriverWat::FReceivedPacket IncomingPacket;
 					const bool bHasPacket = SocketReceiveThreadRunnable->ReceiveQueue.Dequeue(IncomingPacket);
 
 					if (bHasPacket)
@@ -456,7 +456,7 @@ private:
 							}
 						}
 						// Received an error
-						else if (!UWatIpNetDriver::IsRecvFailBlocking(CurError))
+						else if (!UIpNetDriverWat::IsRecvFailBlocking(CurError))
 						{
 							bReceivedPacketOrError = true;
 						}
@@ -486,7 +486,7 @@ private:
 					CurrentPacket.Data.SetNumUninitialized(0, false);
 
 					// Received an error
-					if (!UWatIpNetDriver::IsRecvFailBlocking(CurError))
+					if (!UIpNetDriverWat::IsRecvFailBlocking(CurError))
 					{
 						bReceivedPacketOrError = true;
 					}
@@ -536,7 +536,7 @@ private:
 			{
 				ESocketErrors RecvMultiError = (SocketSubsystem != nullptr ? SocketSubsystem->GetLastErrorCode() : SE_NO_ERROR);
 
-				if (UWatIpNetDriver::IsRecvFailBlocking(RecvMultiError))
+				if (UIpNetDriverWat::IsRecvFailBlocking(RecvMultiError))
 				{
 					bBreak = true;
 					break;
@@ -599,13 +599,13 @@ private:
 
 	/** Cached reference to the NetDriver, and NetDriver variables/values */
 
-	UWatIpNetDriver* const Driver;
+	UIpNetDriverWat* const Driver;
 
 	FDDoSDetection& DDoS;
 
 	ISocketSubsystem* const SocketSubsystem;
 
-	UWatIpNetDriver::FReceiveThreadRunnable* const SocketReceiveThreadRunnable;
+	UIpNetDriverWat::FReceiveThreadRunnable* const SocketReceiveThreadRunnable;
 
 	/** Stores information for the current packet being received (when using single-receive mode) */
 	FCachedPacket CurrentPacket;
@@ -652,26 +652,26 @@ private:
 class FIpConnectionHelper
 {
 private:
-	friend class UWatIpNetDriver;
-	static void HandleSocketRecvError(UWatIpNetDriver* Driver, UWatIpConnection* Connection, const FString& ErrorString)
+	friend class UIpNetDriverWat;
+	static void HandleSocketRecvError(UIpNetDriverWat* Driver, UIpConnectionWat* Connection, const FString& ErrorString)
 	{
 		Connection->HandleSocketRecvError(Driver, ErrorString);
 	}
 
-	static void PushSocketsToConnection(UWatIpConnection* Connection, TArray<TSharedPtr<FSocket>>& Sockets)
+	static void PushSocketsToConnection(UIpConnectionWat* Connection, TArray<TSharedPtr<FSocket>>& Sockets)
 	{
 		UE_LOG(LogNet, Verbose, TEXT("Pushed %d sockets to net connection %s"), Sockets.Num(), *Connection->GetName());
 		Connection->BindSockets = Sockets;
 	}
 
-	static void PushResolverResultsToConnection(UWatIpConnection* Connection, TArray<TSharedRef<FInternetAddr>>& ResolverResults)
+	static void PushResolverResultsToConnection(UIpConnectionWat* Connection, TArray<TSharedRef<FInternetAddr>>& ResolverResults)
 	{
 		UE_LOG(LogNet, Verbose, TEXT("Pushed %d resolver results to net connection %s"), ResolverResults.Num(), *Connection->GetName());
 		Connection->ResolverResults = ResolverResults;
 		Connection->ResolutionState = EAddressResolutionState::TryNextAddress;
 	}
 
-	static void CleanUpConnectionSockets(UWatIpConnection* Connection)
+	static void CleanUpConnectionSockets(UIpConnectionWat* Connection)
 	{
 		if (Connection != nullptr)
 		{
@@ -679,13 +679,13 @@ private:
 		}
 	}
 
-	static void HandleResolverError(UWatIpConnection* Connection)
+	static void HandleResolverError(UIpConnectionWat* Connection)
 	{
 		Connection->ResolutionState = EAddressResolutionState::Error;
 		Connection->Close();
 	}
 
-	static bool IsAddressResolutionEnabledForConnection(const UWatIpConnection* Connection)
+	static bool IsAddressResolutionEnabledForConnection(const UIpConnectionWat* Connection)
 	{
 		if (Connection != nullptr)
 		{
@@ -695,7 +695,7 @@ private:
 		return false;
 	}
 
-	static bool HasAddressResolutionFailedForConnection(const UWatIpConnection* Connection)
+	static bool HasAddressResolutionFailedForConnection(const UIpConnectionWat* Connection)
 	{
 		if (Connection != nullptr)
 		{
@@ -710,7 +710,7 @@ private:
  * UWatIpNetDriver
  */
 
-UWatIpNetDriver::UWatIpNetDriver(const FObjectInitializer& ObjectInitializer)
+UIpNetDriverWat::UIpNetDriverWat(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, PauseReceiveEnd(0.f)
 	, ServerDesiredSocketReceiveBufferBytes(0x20000)
@@ -721,24 +721,24 @@ UWatIpNetDriver::UWatIpNetDriver(const FObjectInitializer& ObjectInitializer)
 {
 }
 
-bool UWatIpNetDriver::IsAvailable() const
+bool UIpNetDriverWat::IsAvailable() const
 {
 	// IP driver always valid for now
 	return true;
 }
 
-ISocketSubsystem* UWatIpNetDriver::GetSocketSubsystem()
+ISocketSubsystem* UIpNetDriverWat::GetSocketSubsystem()
 {
 	return ISocketSubsystem::Get();
 }
 
-FSocket * UWatIpNetDriver::CreateSocket()
+FSocket * UIpNetDriverWat::CreateSocket()
 {
 	// This is a deprecated function with unsafe socket lifetime management. The Release call is intentional and for backwards compatiblity only.
 	return CreateSocketForProtocol((LocalAddr.IsValid() ? LocalAddr->GetProtocolType() : NAME_None)).Release();
 }
 
-FUniqueSocket UWatIpNetDriver::CreateSocketForProtocol(const FName& ProtocolType)
+FUniqueSocket UIpNetDriverWat::CreateSocketForProtocol(const FName& ProtocolType)
 {
 	// Create UDP socket and enable broadcasting.
 	ISocketSubsystem* SocketSubsystem = GetSocketSubsystem();
@@ -752,7 +752,7 @@ FUniqueSocket UWatIpNetDriver::CreateSocketForProtocol(const FName& ProtocolType
 	return SocketSubsystem->CreateUniqueSocket(NAME_DGram, TEXT("Unreal"), ProtocolType);
 }
 
-FUniqueSocket UWatIpNetDriver::CreateAndBindSocket(TSharedRef<FInternetAddr> BindAddr, int32 Port, bool bReuseAddressAndPort, int32 DesiredRecvSize, int32 DesiredSendSize, FString& Error)
+FUniqueSocket UIpNetDriverWat::CreateAndBindSocket(TSharedRef<FInternetAddr> BindAddr, int32 Port, bool bReuseAddressAndPort, int32 DesiredRecvSize, int32 DesiredSendSize, FString& Error)
 {
 	ISocketSubsystem* SocketSubsystem = GetSocketSubsystem();
 	if (SocketSubsystem == nullptr)
@@ -823,12 +823,12 @@ FUniqueSocket UWatIpNetDriver::CreateAndBindSocket(TSharedRef<FInternetAddr> Bin
 	return NewSocket;
 }
 
-void UWatIpNetDriver::SetSocketAndLocalAddress(FSocket* NewSocket)
+void UIpNetDriverWat::SetSocketAndLocalAddress(FSocket* NewSocket)
 {
 	SetSocketAndLocalAddress(TSharedPtr<FSocket>(NewSocket, FSocketDeleter(GetSocketSubsystem())));
 }
 
-void UWatIpNetDriver::SetSocketAndLocalAddress(const TSharedPtr<FSocket>& SharedSocket)
+void UIpNetDriverWat::SetSocketAndLocalAddress(const TSharedPtr<FSocket>& SharedSocket)
 {
 	SocketPrivate = SharedSocket;
 
@@ -848,13 +848,13 @@ void UWatIpNetDriver::SetSocketAndLocalAddress(const TSharedPtr<FSocket>& Shared
 	}
 }
 
-int UWatIpNetDriver::GetClientPort()
+int UIpNetDriverWat::GetClientPort()
 {
-	auto* OnlineSub = static_cast<FOnlineSubsystemWaT*>(IOnlineSubsystem::Get());      
+	auto* OnlineSub = static_cast<FOnlineSubsystemWat*>(IOnlineSubsystem::Get());      
 	return OnlineSub->GetPort();
 }
 
-void UWatIpNetDriver::ClearSockets()
+void UIpNetDriverWat::ClearSockets()
 {
 	// For backwards compatability with the public Socket member. Destroy it manually if it won't be destroyed by the reset below.
 	PRAGMA_DISABLE_DEPRECATION_WARNINGS
@@ -874,7 +874,7 @@ void UWatIpNetDriver::ClearSockets()
 	BoundSockets.Reset();
 }
 
-bool UWatIpNetDriver::InitBase( bool bInitAsClient, FNetworkNotify* InNotify, const FURL& URL, bool bReuseAddressAndPort, FString& Error )
+bool UIpNetDriverWat::InitBase( bool bInitAsClient, FNetworkNotify* InNotify, const FURL& URL, bool bReuseAddressAndPort, FString& Error )
 {
 	// Read any timeout overrides from the URL
 	if (const TCHAR* InitialConnectTimeoutOverride = URL.GetOption(TEXT("InitialConnectTimeout="), nullptr))
@@ -1049,7 +1049,7 @@ bool UWatIpNetDriver::InitBase( bool bInitAsClient, FNetworkNotify* InNotify, co
 	return true;
 }
 
-bool UWatIpNetDriver::InitConnect( FNetworkNotify* InNotify, const FURL& ConnectURL, FString& Error )
+bool UIpNetDriverWat::InitConnect( FNetworkNotify* InNotify, const FURL& ConnectURL, FString& Error )
 {
 	ISocketSubsystem* SocketSubsystem = GetSocketSubsystem();
 	if (SocketSubsystem == nullptr)
@@ -1068,7 +1068,7 @@ bool UWatIpNetDriver::InitConnect( FNetworkNotify* InNotify, const FURL& Connect
   
         //NetConnectionClass = LoadClass<UNetConnection>(NULL,L"/Script/OnlineSubsystemUtils.IpConnection",NULL,LOAD_None,NULL);
 	ServerConnection = NewObject<UNetConnection>(GetTransientPackage(), NetConnectionClass);
-	UWatIpConnection* IPConnection = CastChecked<UWatIpConnection>(ServerConnection);
+	UIpConnectionWat* IPConnection = CastChecked<UIpConnectionWat>(ServerConnection);
 
 	if (IPConnection == nullptr)
 	{
@@ -1088,7 +1088,7 @@ bool UWatIpNetDriver::InitConnect( FNetworkNotify* InNotify, const FURL& Connect
 		BoundSockets.Empty();
 
 		// Create a weakobj so that we can pass the Connection safely to the lambda for later
-		TWeakObjectPtr<UWatIpConnection> SafeConnectionPtr(IPConnection);
+		TWeakObjectPtr<UIpConnectionWat> SafeConnectionPtr(IPConnection);
 
 		auto AsyncResolverHandler = [SafeConnectionPtr, SocketSubsystem, DestinationPort](FAddressInfoResult Results) {
 
@@ -1151,7 +1151,7 @@ bool UWatIpNetDriver::InitConnect( FNetworkNotify* InNotify, const FURL& Connect
 	return true;
 }
 
-bool UWatIpNetDriver::InitListen( FNetworkNotify* InNotify, FURL& LocalURL, bool bReuseAddressAndPort, FString& Error )
+bool UIpNetDriverWat::InitListen( FNetworkNotify* InNotify, FURL& LocalURL, bool bReuseAddressAndPort, FString& Error )
 {
 
 	if( !InitBase( false, InNotify, LocalURL, bReuseAddressAndPort, Error ) )
@@ -1169,7 +1169,7 @@ bool UWatIpNetDriver::InitListen( FNetworkNotify* InNotify, FURL& LocalURL, bool
 	return true;
 }
 
-void UWatIpNetDriver::TickDispatch(float DeltaTime)
+void UIpNetDriverWat::TickDispatch(float DeltaTime)
 {
 	LLM_SCOPE(ELLMTag::Networking);
 
@@ -1205,7 +1205,7 @@ void UWatIpNetDriver::TickDispatch(float DeltaTime)
 		bool bOk = It.GetCurrentPacket(ReceivedPacket);
 		const TSharedRef<const FInternetAddr> FromAddr = ReceivedPacket.Address.ToSharedRef();
 		UNetConnection* Connection = nullptr;
-		UWatIpConnection* const MyServerConnection = GetServerConnection();
+		UIpConnectionWat* const MyServerConnection = GetServerConnection();
 
 		if (bOk)
 		{
@@ -1322,7 +1322,7 @@ void UWatIpNetDriver::TickDispatch(float DeltaTime)
 					bRecentlyDisconnectedClient = true;
 				}
 			}
-			check(Connection == nullptr || CastChecked<UWatIpConnection>(Connection)->RemoteAddr->CompareEndpoints(*FromAddr));
+			check(Connection == nullptr || CastChecked<UIpConnectionWat>(Connection)->RemoteAddr->CompareEndpoints(*FromAddr));
 		}
 
 
@@ -1427,9 +1427,9 @@ void UWatIpNetDriver::TickDispatch(float DeltaTime)
 	DDoS.PostFrameReceive();
 }
 
-FSocket* UWatIpNetDriver::GetSocket()
+FSocket* UIpNetDriverWat::GetSocket()
 {
-	UWatIpConnection* IpServerConnection = Cast<UWatIpConnection>(ServerConnection);
+	UIpConnectionWat* IpServerConnection = Cast<UIpConnectionWat>(ServerConnection);
 	if (FIpConnectionHelper::IsAddressResolutionEnabledForConnection(IpServerConnection))
 	{
 		return IpServerConnection->Socket;
@@ -1440,7 +1440,7 @@ FSocket* UWatIpNetDriver::GetSocket()
 	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 }
 
-UNetConnection* UWatIpNetDriver::ProcessConnectionlessPacket(FReceivedPacketView& PacketRef, const FPacketBufferView& WorkingBuffer)
+UNetConnection* UIpNetDriverWat::ProcessConnectionlessPacket(FReceivedPacketView& PacketRef, const FPacketBufferView& WorkingBuffer)
 {
 	UNetConnection* ReturnVal = nullptr;
 	TSharedPtr<StatelessConnectHandlerComponent> StatelessConnect;
@@ -1468,7 +1468,7 @@ UNetConnection* UWatIpNetDriver::ProcessConnectionlessPacket(FReceivedPacketView
 					UE_LOG(LogNet, Log, TEXT("Finding connection to update to new address: %s"), *IncomingAddress);
 
 					TSharedPtr<StatelessConnectHandlerComponent> CurComp;
-					UWatIpConnection* FoundConn = nullptr;
+					UIpConnectionWat* FoundConn = nullptr;
 
 					for (UNetConnection* const CurConn : ClientConnections)
 					{
@@ -1476,7 +1476,7 @@ UNetConnection* UWatIpNetDriver::ProcessConnectionlessPacket(FReceivedPacketView
 
 						if (CurComp.IsValid() && StatelessConnect->DoesRestartedHandshakeMatch(*CurComp))
 						{
-							FoundConn = Cast<UWatIpConnection>(CurConn);
+							FoundConn = Cast<UIpConnectionWat>(CurConn);
 							break;
 						}
 					}
@@ -1562,7 +1562,7 @@ UNetConnection* UWatIpNetDriver::ProcessConnectionlessPacket(FReceivedPacketView
 
 			UE_LOG(LogNet, Log, TEXT("Server accepting post-challenge connection from: %s"), *IncomingAddress);
 
-			ReturnVal = NewObject<UWatIpConnection>(GetTransientPackage(), NetConnectionClass);
+			ReturnVal = NewObject<UIpConnectionWat>(GetTransientPackage(), NetConnectionClass);
 			check(ReturnVal != nullptr);
 
 #if STATELESSCONNECT_HAS_RANDOM_SEQUENCE
@@ -1608,7 +1608,7 @@ UNetConnection* UWatIpNetDriver::ProcessConnectionlessPacket(FReceivedPacketView
 	return ReturnVal;
 }
 
-void UWatIpNetDriver::LowLevelSend(TSharedPtr<const FInternetAddr> Address, void* Data, int32 CountBits, FOutPacketTraits& Traits)
+void UIpNetDriverWat::LowLevelSend(TSharedPtr<const FInternetAddr> Address, void* Data, int32 CountBits, FOutPacketTraits& Traits)
 {
 	if (Address.IsValid() && Address->IsValid())
 	{
@@ -1666,12 +1666,12 @@ void UWatIpNetDriver::LowLevelSend(TSharedPtr<const FInternetAddr> Address, void
 
 
 
-FString UWatIpNetDriver::LowLevelGetNetworkNumber()
+FString UIpNetDriverWat::LowLevelGetNetworkNumber()
 {
 	return LocalAddr.IsValid() ? LocalAddr->ToString(true) : FString(TEXT(""));
 }
 
-void UWatIpNetDriver::LowLevelDestroy()
+void UIpNetDriverWat::LowLevelDestroy()
 {
 	Super::LowLevelDestroy();
 
@@ -1681,7 +1681,7 @@ void UWatIpNetDriver::LowLevelDestroy()
 	{
 		// Wait for send tasks if needed before closing the socket,
 		// since at this point CleanUp() may not have been called on the server connection.
-		UWatIpConnection* const IpServerConnection = GetServerConnection();
+		UIpConnectionWat* const IpServerConnection = GetServerConnection();
 		if (IpServerConnection)
 		{
 			IpServerConnection->WaitForSendTasks();
@@ -1724,7 +1724,7 @@ void UWatIpNetDriver::LowLevelDestroy()
 }
 
 
-bool UWatIpNetDriver::HandleSocketsCommand( const TCHAR* Cmd, FOutputDevice& Ar, UWorld* InWorld )
+bool UIpNetDriverWat::HandleSocketsCommand( const TCHAR* Cmd, FOutputDevice& Ar, UWorld* InWorld )
 {
 	Ar.Logf(TEXT(""));
 	FSocket* CmdSocket = GetSocket();
@@ -1741,7 +1741,7 @@ bool UWatIpNetDriver::HandleSocketsCommand( const TCHAR* Cmd, FOutputDevice& Ar,
 	return UNetDriver::Exec( InWorld, TEXT("SOCKETS"),Ar);
 }
 
-bool UWatIpNetDriver::HandlePauseReceiveCommand(const TCHAR* Cmd, FOutputDevice& Ar, UWorld* InWorld)
+bool UIpNetDriverWat::HandlePauseReceiveCommand(const TCHAR* Cmd, FOutputDevice& Ar, UWorld* InWorld)
 {
 	FString PauseTimeStr;
 	uint32 PauseTime;
@@ -1761,7 +1761,7 @@ bool UWatIpNetDriver::HandlePauseReceiveCommand(const TCHAR* Cmd, FOutputDevice&
 }
 
 #if !UE_BUILD_SHIPPING
-void UWatIpNetDriver::TestSuddenPortChange(uint32 NumConnections)
+void UIpNetDriverWat::TestSuddenPortChange(uint32 NumConnections)
 {
 	if (ConnectionlessHandler.IsValid() && StatelessConnectComponent.IsValid())
 	{
@@ -1772,7 +1772,7 @@ void UWatIpNetDriver::TestSuddenPortChange(uint32 NumConnections)
 			// Reset the connection's port to pretend that we used to be sending traffic on an old connection. This is
 			// done because once the test is complete, we need to be back onto the port we started with. This
 			// fakes what happens in live with clients randomly sending traffic on a new port.
-			UWatIpConnection* const TestConnection = (UWatIpConnection*)ClientConnections[i];
+			UIpConnectionWat* const TestConnection = (UIpConnectionWat*)ClientConnections[i];
 			TSharedRef<FInternetAddr> RemoteAddrRef = TestConnection->RemoteAddr.ToSharedRef();
 
 			MappedClientConnections.Remove(RemoteAddrRef);
@@ -1791,7 +1791,7 @@ void UWatIpNetDriver::TestSuddenPortChange(uint32 NumConnections)
 }
 #endif
 
-bool UWatIpNetDriver::Exec( UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar )
+bool UIpNetDriverWat::Exec( UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar )
 {
 	if (FParse::Command(&Cmd,TEXT("SOCKETS")))
 	{
@@ -1805,12 +1805,12 @@ bool UWatIpNetDriver::Exec( UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar
 	return UNetDriver::Exec( InWorld, Cmd,Ar);
 }
 
-UWatIpConnection* UWatIpNetDriver::GetServerConnection() 
+UIpConnectionWat* UIpNetDriverWat::GetServerConnection() 
 {
-	return (UWatIpConnection*)ServerConnection;
+	return (UIpConnectionWat*)ServerConnection;
 }
 
-UWatIpNetDriver::FReceiveThreadRunnable::FReceiveThreadRunnable(UWatIpNetDriver* InOwningNetDriver)
+UIpNetDriverWat::FReceiveThreadRunnable::FReceiveThreadRunnable(UIpNetDriverWat* InOwningNetDriver)
 	: ReceiveQueue(CVarWatNetIpNetDriverReceiveThreadQueueMaxPackets.GetValueOnAnyThread())
 	, bIsRunning(true)
 	, OwningNetDriver(InOwningNetDriver)
@@ -1818,7 +1818,7 @@ UWatIpNetDriver::FReceiveThreadRunnable::FReceiveThreadRunnable(UWatIpNetDriver*
 	SocketSubsystem = OwningNetDriver->GetSocketSubsystem();
 }
 
-bool UWatIpNetDriver::FReceiveThreadRunnable::DispatchPacket(FReceivedPacket&& IncomingPacket, int32 NbBytesRead)
+bool UIpNetDriverWat::FReceiveThreadRunnable::DispatchPacket(FReceivedPacket&& IncomingPacket, int32 NbBytesRead)
 {
 	IncomingPacket.PacketBytes.SetNum(FMath::Max(NbBytesRead, 0), false);
 	IncomingPacket.PlatformTimeSeconds = FPlatformTime::Seconds();
@@ -1827,7 +1827,7 @@ bool UWatIpNetDriver::FReceiveThreadRunnable::DispatchPacket(FReceivedPacket&& I
 	return ReceiveQueue.Enqueue(MoveTemp(IncomingPacket));
 }
 
-uint32 UWatIpNetDriver::FReceiveThreadRunnable::Run()
+uint32 UIpNetDriverWat::FReceiveThreadRunnable::Run()
 {
 	const FTimespan Timeout = FTimespan::FromMilliseconds(CVarWatNetIpNetDriverReceiveThreadPollTimeMS.GetValueOnAnyThread());
 	const float SleepTimeForWaitableErrorsInSec = CVarWatRcvThreadSleepTimeForWaitableErrorsInSeconds.GetValueOnAnyThread();

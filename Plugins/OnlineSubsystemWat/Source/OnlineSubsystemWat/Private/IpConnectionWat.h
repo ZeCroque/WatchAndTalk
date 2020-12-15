@@ -11,7 +11,7 @@
 #include "Engine/NetConnection.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "SocketTypes.h"
-#include "WatIpConnection.generated.h"
+#include "IpConnectionWat.generated.h"
 
 class FInternetAddr;
 class ISocketSubsystem;
@@ -30,7 +30,7 @@ enum class EAddressResolutionState : uint8
 };
 
 UCLASS(transient, config=Engine)
-class ONLINESUBSYSTEMWAT_API UWatIpConnection : public UNetConnection
+class ONLINESUBSYSTEMWAT_API UIpConnectionWat : public UNetConnection
 {
     GENERATED_UCLASS_BODY()
 	// Variables.

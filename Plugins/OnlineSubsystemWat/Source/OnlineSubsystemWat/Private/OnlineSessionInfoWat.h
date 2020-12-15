@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "OnlineSubsystemTypes.h"
-#include "OnlineSubsystemInterface.h"
+#include "OnlineSubsystemWat.h"
 #include "OnlineSubsystemWatPackage.h"
 
-class FOnlineSubsystemWaT;
+class FOnlineSubsystemWat;
 
 // from OnlineSubsystemTypes.h
 TEMP_UNIQUENETIDSTRING_SUBCLASS(FUniqueNetIdWat, WAT_SUBSYSTEM);

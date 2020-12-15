@@ -1,4 +1,4 @@
-#include "OnlineSessionWaT.h"
+#include "OnlineSessionWat.h"
 
 #include "NboSerializerWat.h"
 #include "Misc/Guid.h"

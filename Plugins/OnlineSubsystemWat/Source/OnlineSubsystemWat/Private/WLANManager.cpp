@@ -5,7 +5,7 @@
 #include "OnlineSessionSettings.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
-#include "WatIpNetDriver.h"
+#include "IpNetDriverWat.h"
 
 FWLANManager::~FWLANManager()
 {

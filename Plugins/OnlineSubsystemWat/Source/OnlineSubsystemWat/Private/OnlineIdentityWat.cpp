@@ -287,7 +287,7 @@ void FOnlineIdentityWat::RevokeAuthToken(const FUniqueNetId& UserId, const FOnRe
 	});
 }
 
-FOnlineIdentityWat::FOnlineIdentityWat(FOnlineSubsystemWaT* InSubsystem)
+FOnlineIdentityWat::FOnlineIdentityWat(FOnlineSubsystemWat* InSubsystem)
 	: WatSubsystem(InSubsystem)
 {
 	// autologin the 0-th player

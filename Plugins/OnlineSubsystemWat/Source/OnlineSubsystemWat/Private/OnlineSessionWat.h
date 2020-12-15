@@ -11,7 +11,7 @@
 #include "WLANManager.h"
 
 
-class FOnlineSubsystemWaT;
+class FOnlineSubsystemWat;
 
 /**
  * Interface definition for the online services session services 
@@ -23,7 +23,7 @@ class FOnlineSessionWat : public IOnlineSession
 private:
 
 	/** Reference to the main Null subsystem */
-	class FOnlineSubsystemWaT* WatSubsystem;
+	class FOnlineSubsystemWat* WatSubsystem;
 
 	FWLANManager WLANSessionManager;
 
@@ -78,7 +78,7 @@ PACKAGE_SCOPE:
 	/** Current search start time. */
 	double SessionSearchStartInSeconds;
 
-	FOnlineSessionWat(class FOnlineSubsystemWaT* InSubsystem) :
+	FOnlineSessionWat(class FOnlineSubsystemWat* InSubsystem) :
 		WatSubsystem(InSubsystem),
 		CurrentSessionSearch(nullptr),
 		SessionSearchStartInSeconds(0)

@@ -16,7 +16,7 @@
 #include "Containers/CircularQueue.h"
 #include "SocketTypes.h"
 #include "SocketSubsystem.h"
-#include "WatIpNetDriver.generated.h"
+#include "IpNetDriverWat.generated.h"
 
 
 // Forward declarations
@@ -34,7 +34,7 @@ extern TSharedPtr<FInternetAddr> GWatCurrentDuplicateIP;
 
 
 UCLASS(transient, config=Engine)
-class ONLINESUBSYSTEMWAT_API UWatIpNetDriver : public UNetDriver
+class ONLINESUBSYSTEMWAT_API UIpNetDriverWat : public UNetDriver
 {
     friend class FPacketIterator;
 
@@ -61,7 +61,7 @@ public:
 	float PauseReceiveEnd;
 
 	/** Base constructor */
-	UWatIpNetDriver(const FObjectInitializer& ObjectInitializer);
+	UIpNetDriverWat(const FObjectInitializer& ObjectInitializer);
 
 	//~ Begin UNetDriver Interface.
 	virtual bool IsAvailable() const override;
@@ -209,7 +209,7 @@ public:
 
 
 	/** @return IP connection to server */
-	class UWatIpConnection* GetServerConnection();
+	class UIpConnectionWat* GetServerConnection();
 
 	/** @return The address resolution timeout value */
 	float GetResolutionTimeoutValue() const { return ResolutionConnectionTimeout; }
@@ -285,7 +285,7 @@ private:
 	class FReceiveThreadRunnable : public FRunnable
 	{
 	public:
-		FReceiveThreadRunnable(UWatIpNetDriver* InOwningNetDriver);
+		FReceiveThreadRunnable(UIpNetDriverWat* InOwningNetDriver);
 
 		virtual uint32 Run() override;
 
@@ -299,7 +299,7 @@ private:
 		bool DispatchPacket(FReceivedPacket&& IncomingPacket, int32 NbBytesRead);
 
 	private:
-		UWatIpNetDriver* OwningNetDriver;
+		UIpNetDriverWat* OwningNetDriver;
 		ISocketSubsystem* SocketSubsystem;
 	};
 
