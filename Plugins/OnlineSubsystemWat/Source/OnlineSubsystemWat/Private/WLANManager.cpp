@@ -123,25 +123,21 @@ bool FWLANManager::SendJoinRequest(FInternetAddr* HostAddress)
         return true;
 }
 
-TSharedPtr<FInternetAddr> FWLANManager::ReadAddressFromBSDAddress(FBSDAddress Address) const
+void FWLANManager::ReadAddressFromBSDAddress(FBSDAddress BSDAddress, FInternetAddr* Address) const
 {
-	Algo::Reverse(Address.PortBytes, sizeof(uint16));
-	Algo::Reverse(Address.IpBytes, sizeof(uint32));
+	Algo::Reverse(BSDAddress.PortBytes, sizeof(uint16));
+	Algo::Reverse(BSDAddress.IpBytes, sizeof(uint32));
 
-	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-	auto Addr = SocketSubsystem->CreateInternetAddr();
-	Addr->SetIp(*reinterpret_cast<uint32*>(Address.IpBytes));
-	Addr->SetPort(*reinterpret_cast<uint16*>(Address.PortBytes));
-
-	return TSharedPtr<FInternetAddr>(Addr);
+	Address->SetIp(*reinterpret_cast<uint32*>(BSDAddress.IpBytes));
+	Address->SetPort(*reinterpret_cast<uint16*>(BSDAddress.PortBytes));
 }
 
-TSharedPtr<FInternetAddr> FWLANManager::ReadAddressFromMessage(FMessage Message) const
+void FWLANManager::ReadAddressFromMessage(FMessage Message, FInternetAddr* Address) const
 {
-	return ReadAddressFromBSDAddress(Message.BSDAddr);
+	ReadAddressFromBSDAddress(Message.BSDAddr, Address);
 }
 
-void FWLANManager::WriteAddressIntoMessage(FMessage& Message, TSharedPtr<FInternetAddr> Address) const
+void FWLANManager::WriteAddressIntoMessage(FMessage& Message, FInternetAddr* Address) const
 {
 	*reinterpret_cast<uint16*>(Message.BSDAddr.PortBytes) = Address->GetPort();
 	Address->GetIp(*reinterpret_cast<uint32*>(Message.BSDAddr.IpBytes));
@@ -164,14 +160,14 @@ bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings
 
 	if (SendPresentationMessage())
 	{
-		ClientSessionSearch = &SearchSettings.Get();
+		ClientSessionSearch = SearchSettings;
 		AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
 		return true;
 	}
 	return false;
 }
 
-bool FWLANManager::SendNatPunchThroughPacket(TSharedPtr<FInternetAddr> PeerAddress, uint8* PunchPacket)
+bool FWLANManager::SendNatPunchThroughPacket(FInternetAddr* PeerAddress, uint8* PunchPacket)
 {
 	int SentSize = 0;
 	if (!Socket->SendTo(PunchPacket, NAT_PUNCHING_PACKET_SIZE, SentSize, *PeerAddress))
@@ -190,6 +186,13 @@ void FWLANManager::StopWLANProcess()
 	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	SocketSubsystem->DestroySocket(Socket);
 	Socket = nullptr;
+
+	if(!bIsHost)
+	{
+		HostsAddresses.Empty();
+	}
+
+	ClientSessionSearch.Reset();
 }
 
 void FWLANManager::AppendSearchSettingsToPacket(FNboSerializeToBufferWat& Packet, FOnlineKeyValuePairs<FName, FOnlineSessionSearchParam>& SearchParams)
@@ -443,15 +446,19 @@ void FWLANManager::Tick(float DeltaTime)
 						switch (Message->MessageType)
 						{
 						case EWatMessageType::ClientConnectionRequest:
+						{
 							UE_LOG(LogOnline, Warning, TEXT("Connection request received."));
-							SendNatPunchThroughPacket(ReadAddressFromMessage(*Message), reinterpret_cast<uint8*>("one"));
+							const auto Address = SocketSubsystem->CreateInternetAddr();
+							ReadAddressFromMessage(*Message, &Address.Get());
+							SendNatPunchThroughPacket(&Address.Get(), reinterpret_cast<uint8*>("one"));
 							break;
+						}
 						case EWatMessageType::HostAddress:
 						{
-                                                        const auto Addr = ReadAddressFromMessage(*Message);
-							HostsAddresses.Add(Addr);
-							UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%s"), *Addr->ToString(true));
-							TriggerOnSessionStartedDelegates(Addr.Get());
+							HostsAddresses.Add(SocketSubsystem->CreateInternetAddr());							
+                            ReadAddressFromMessage(*Message, HostsAddresses[0].Get());						
+							UE_LOG(LogOnline, Warning, TEXT("NAT adress received:%s"), *HostsAddresses[0]->ToString(true));
+							TriggerOnSessionStartedDelegates(HostsAddresses[0]);
 							break;
 						}
 						case EWatMessageType::SessionRequest:
@@ -492,8 +499,8 @@ void FWLANManager::Tick(float DeltaTime)
 					memcpy(ReceivedPunchPacked, ReceptionBuffer, NAT_PUNCHING_PACKET_SIZE);
 					if (!strcmp(ReceivedPunchPacked, "one"))
 					{
-						UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));
-						SendNatPunchThroughPacket(SenderAddress, reinterpret_cast<uint8*>("two"));
+						UE_LOG(LogOnline, Warning, TEXT("Peer punched our NAT first. Trying to punch his again..."));					
+						SendNatPunchThroughPacket(&SenderAddress.Get(), reinterpret_cast<uint8*>("two"));
 					}
 					UE_LOG(LogOnline, Warning, TEXT("NAT punch through successful."));
 
@@ -520,17 +527,18 @@ void FWLANManager::Tick(float DeltaTime)
 					HostsAddresses.SetNum(ExpectedHostsCount);
 					for (int i = 0; i < ExpectedHostsCount; i++)
 					{
-						HostsAddresses[i] = ReadAddressFromBSDAddress(*reinterpret_cast<FBSDAddress*>(ReceptionBuffer + i * sizeof(FBSDAddress)));
+						HostsAddresses[i] = SocketSubsystem->CreateInternetAddr();
+						ReadAddressFromBSDAddress(*reinterpret_cast<FBSDAddress*>(ReceptionBuffer + i * sizeof(FBSDAddress)), HostsAddresses[i].Get());
 						UE_LOG(LogOnline, Warning, TEXT("%s"), *HostsAddresses[i]->ToString(true));
 					}
 					//TODO connect to everyone
 					FMessage Answer = { EWatMessageType::ClientConnectionRequest, {{0},{0},{0},{0}} };
-					WriteAddressIntoMessage(Answer, HostsAddresses[0]);
+					WriteAddressIntoMessage(Answer, HostsAddresses[0].Get());
 					int SentSize = 0;
 					Socket->SendTo(reinterpret_cast<uint8*>(&Answer), sizeof(FMessage), SentSize, *RelationServerAddress);
 					UE_LOG(LogOnline, Warning, TEXT("Connection request sent to server."));
 
-					SendNatPunchThroughPacket(HostsAddresses[0], reinterpret_cast<uint8*>("one"));
+					SendNatPunchThroughPacket(HostsAddresses[0].Get(), reinterpret_cast<uint8*>("one"));
 					UE_LOG(LogOnline, Warning, TEXT("NAT Punching package sent to host..."));
 					ExpectedHostsCount = 0;
 				}

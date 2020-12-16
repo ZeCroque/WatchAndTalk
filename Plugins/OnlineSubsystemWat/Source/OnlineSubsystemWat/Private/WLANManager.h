@@ -25,7 +25,7 @@ struct FMessage
 	FBSDAddress BSDAddr;
 };
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnSessionStarted, class FInternetAddr*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSessionStarted, TSharedPtr<class FInternetAddr>);
 typedef FOnSessionStarted::FDelegate FOnSessionStartedDelegate;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
@@ -51,7 +51,7 @@ private:
 	int MaxHostCount;
 	int MaxBufferLength;
 	int ExpectedHostsCount;
-	class FOnlineSessionSearch* ClientSessionSearch;
+	TSharedPtr<class FOnlineSessionSearch> ClientSessionSearch;
     int ExpectedSessionSize;
 	int Port;
 	int ExpectedSessionSettingsSize;
@@ -73,11 +73,14 @@ public:
 
     bool SendJoinRequest(FInternetAddr* HostAddress);
 
-	TSharedPtr<class FInternetAddr> ReadAddressFromBSDAddress(FBSDAddress Address) const;
+	void ReadAddressFromBSDAddress(FBSDAddress BSDAddress, FInternetAddr* Address) const;
 	
-	TSharedPtr<class FInternetAddr> ReadAddressFromMessage(FMessage Message) const;
+	void ReadAddressFromMessage(FMessage Message, FInternetAddr* Address) const;
 	
-	void WriteAddressIntoMessage(FMessage& Message, TSharedPtr<class FInternetAddr> Address) const;
+	void WriteAddressIntoMessage(FMessage& Message, FInternetAddr* Address) const;
+
+	//TODO timeout
+	bool SendNatPunchThroughPacket(class FInternetAddr* PeerAddress, uint8* PunchPacket);
 
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
@@ -98,8 +101,7 @@ public:
 	 */
 	bool Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings, FOnSearchingTimeoutDelegate& TimeoutDelegate);
 
-	//TODO timeout
-	bool SendNatPunchThroughPacket(TSharedPtr<class FInternetAddr> PeerAddress, uint8* PunchPacket);
+
 
 	/**
 	 * Send the relation server that we're ne longer searching for clients
@@ -121,7 +123,7 @@ public:
 	void Tick(float DeltaTime);
 
 	DEFINE_ONLINE_DELEGATE(OnJoinRequest);
-	DEFINE_ONLINE_DELEGATE_ONE_PARAM(OnSessionStarted, class FInternetAddr*);
+	DEFINE_ONLINE_DELEGATE_ONE_PARAM(OnSessionStarted, TSharedPtr<class FInternetAddr>);
 	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
 	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidResponsePacket, uint8*, int32);
 	DEFINE_ONLINE_DELEGATE(OnSearchingTimeout);

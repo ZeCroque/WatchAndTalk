@@ -50,7 +50,7 @@ private:
 
 	void OnValidSessionRequestDelegate(FOnlineSearchSettings* OnlineSearchSettings, FInternetAddr* SenderAddr);
 
-	void OnSessionStartDelegate(FInternetAddr* HostAddress);
+	void OnSessionStartDelegate(TSharedPtr<FInternetAddr> HostAddress);
 
 	void OnJoinSessionDelegate();
 

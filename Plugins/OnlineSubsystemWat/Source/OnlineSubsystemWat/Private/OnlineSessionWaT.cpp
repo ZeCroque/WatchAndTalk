@@ -11,7 +11,7 @@
 
 void FOnlineSessionInfoWat::Init(TSharedPtr<FInternetAddr> Addr)
 {
-	HostAddr = Addr->Clone();
+	HostAddr = Addr;
 
 	FGuid OwnerGuid;
 	FPlatformMisc::CreateGuid(OwnerGuid);
@@ -553,10 +553,10 @@ void FOnlineSessionWat::OnValidSessionRequestDelegate(FOnlineSearchSettings* Onl
 	WLANSessionManager.SendSession(&Sessions[0],  SenderAddr);
 }
 
-void FOnlineSessionWat::OnSessionStartDelegate(FInternetAddr* HostAddress)
+void FOnlineSessionWat::OnSessionStartDelegate(TSharedPtr<FInternetAddr> HostAddress)
 {
 	FOnlineSessionInfoWat* NewSessionInfo = new FOnlineSessionInfoWat();
-	NewSessionInfo->Init(MakeShareable(HostAddress));
+	NewSessionInfo->Init(HostAddress);
 	Sessions[0].SessionInfo = MakeShareable(NewSessionInfo);
 	Sessions[0].SessionState = EOnlineSessionState::Pending;
     TriggerOnCreateSessionCompleteDelegates(Sessions[0].SessionName, true);
