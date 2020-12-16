@@ -25,3 +25,8 @@ bool AMainPlayerState::Possess_Validate(APlayerController* ClientController, APa
 {
     return true;
 }
+
+void AMainPlayerState::OnDeactivated()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Client %s deconnected"), *this->GetPlayerName());
+}
