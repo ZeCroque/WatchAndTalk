@@ -11,8 +11,7 @@ UClearVectorTask::UClearVectorTask(FObjectInitializer const& ObjectInitializer)
 
 EBTNodeResult::Type UClearVectorTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	OwnerComp.GetBlackboardComponent()->ClearValue(BlackboardKey.SelectedKeyName);
-	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-	return EBTNodeResult::Succeeded;
+    OwnerComp.GetBlackboardComponent()->ClearValue(BlackboardKey.SelectedKeyName);
+    FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+    return EBTNodeResult::Succeeded;
 }
-

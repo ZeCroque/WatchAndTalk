@@ -15,12 +15,13 @@ AMonsterAIController::AMonsterAIController(const FObjectInitializer& ObjectIniti
 {
     static ConstructorHelpers::FObjectFinder<UBehaviorTree> OBJ(
         TEXT("BehaviorTree'/Game/Blueprints/AI/MonsterBT.MonsterBT'"));
-    
+
     if (OBJ.Succeeded())
     {
         BTree = OBJ.Object;
     }
-    BehaviorTreeComponent = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorComp"));
+    BehaviorTreeComponent = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent
+    >(this, TEXT("BehaviorComp"));
     Blackboard = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackboardComp"));
     SetupPerceptionSystem();
 }
