@@ -39,7 +39,7 @@ void AMainPlayerState::CheckIfGameShouldEnd_Implementation(AEndGameInteractable*
 void AMainPlayerState::EndGame_Implementation()
 {
     auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
-    if (!EndGameWidget->GetIsVisible())
+    if (EndGameWidget != nullptr && !EndGameWidget->GetIsVisible())
     {
         EndGameWidget->AddToViewport();
         auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
