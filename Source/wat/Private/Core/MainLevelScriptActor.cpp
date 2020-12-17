@@ -3,6 +3,7 @@
 
 #include "Core/MainLevelScriptActor.h"
 #include "SecurityCamera.h"
+#include "Characters/MonsterCharacter.h"
 #include "Interactables/EndGameInteractable.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/MainGameState.h"
@@ -46,6 +47,15 @@ void AMainLevelScriptActor::PostInitializeComponents()
             }
         }
     }
-	
+
+    TArray<AActor*> FoundMonster;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonsterCharacter::StaticClass(), FoundMonster);
+    if (FoundMonster.Num() == 1)
+    {
+        AMonsterCharacter* Monster = Cast<AMonsterCharacter>(FoundMonster.Last());
+        MainGameState->MonsterCharacter = Monster;
+    }
+    
+    
     //TODO if(Camera->GetLevel() == Player1Level)
 }
