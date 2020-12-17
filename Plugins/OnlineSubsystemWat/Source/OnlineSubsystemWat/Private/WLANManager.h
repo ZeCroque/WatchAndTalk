@@ -8,8 +8,10 @@
 #define NAT_PUNCHING_PACKET_SIZE 4
 #define MAX_HOST_COUNT_DEFAULT 25
 #define MAX_BUFFER_LENGTH_DEFAULT MAX_HOST_COUNT_DEFAULT*sizeof(FBSDAddress)
+#define HOST_CONNECTION_TIMEOUT_DURATION 3.f
+#define HOSTS_SEARCH_TIMEOUT_DURATION 15.f
 
-enum class EWatMessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, SessionRequest = 5, SessionSize = 6, JoinRequest = 7};
+enum class EWatMessageType {Error = 0, HostPresentation = 1, ClientPresentation = 2, HostCount = 2, ClientConnectionRequest = 3, HostAddress = 4, HostDisconnected = 5, SessionRequest = 6, SessionSize = 7, JoinRequest = 8};
 
 struct FBSDAddress
 {
@@ -55,10 +57,14 @@ private:
     int ExpectedSessionSize;
 	int Port;
 	int ExpectedSessionSettingsSize;
+	float HostConnectionTimeoutDuration;
+	float HostsSearchTimeoutDuration;
+	bool bIsSearching;
+	int CurrentHostIndex;
 	
 public:
 	
-	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), ExpectedSessionSize(0), Port(0), ExpectedSessionSettingsSize(0){}
+	FWLANManager() : Socket(nullptr), RelationServerAddress(nullptr), bIsHost(false), MaxHostCount(MAX_HOST_COUNT_DEFAULT), MaxBufferLength(MAX_BUFFER_LENGTH_DEFAULT), ExpectedHostsCount(0), ClientSessionSearch(nullptr), ExpectedSessionSize(0), Port(0), ExpectedSessionSettingsSize(0), HostConnectionTimeoutDuration(HOST_CONNECTION_TIMEOUT_DURATION), HostsSearchTimeoutDuration(HOSTS_SEARCH_TIMEOUT_DURATION), bIsSearching(false), CurrentHostIndex(0){}
 
 	virtual ~FWLANManager();
 
@@ -71,7 +77,13 @@ public:
 
 	bool SendSession(class FNamedOnlineSession* HostSession, FInternetAddr* ClientAddress);
 
+	bool SendConnectionRequest();
+
+        bool SendHostDisconnectedMessage();
+
     bool SendJoinRequest(FInternetAddr* HostAddress);
+
+	void StopSearch();
 
 	void ReadAddressFromBSDAddress(FBSDAddress BSDAddress, FInternetAddr* Address) const;
 	

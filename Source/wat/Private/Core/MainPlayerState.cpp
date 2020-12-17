@@ -28,5 +28,5 @@ bool AMainPlayerState::Possess_Validate(APlayerController* ClientController, APa
 
 void AMainPlayerState::OnDeactivated()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Client %s deconnected"), *this->GetPlayerName());
+	UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
 }
