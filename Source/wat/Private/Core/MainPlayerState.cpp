@@ -26,6 +26,11 @@ bool AMainPlayerState::Possess_Validate(APlayerController* ClientController, APa
     return true;
 }
 
+void AMainPlayerState::OnDeactivated()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
+}
+
 void AMainPlayerState::CheckIfGameShouldEnd_Implementation(AEndGameInteractable* Interactable)
 {
     Interactable->bUsed = true;

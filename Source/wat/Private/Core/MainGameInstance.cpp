@@ -272,17 +272,14 @@ void UMainGameInstance::JoinOnlineGame(FName SessionName)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
 
-    FOnlineSessionSearchResult SearchResult;
-
     if (SessionSearch->SearchResults.Num() > 0)
     {
         for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
         {
-            if (SessionSearch->SearchResults[i].Session.OwningUserId != Player->GetPreferredUniqueNetId())
+            if (SessionSearch->SearchResults[i].Session.OwningUserId != Player->GetPreferredUniqueNetId() && FName(*SessionSearch->SearchResults[i].Session.OwningUserName) == SessionName)
             {
-                SearchResult = SessionSearch->SearchResults[i];
-                ConnectToSession(Player->GetPreferredUniqueNetId()->AsShared(), SessionName, SearchResult);
-                break;
+                  ConnectToSession(Player->GetPreferredUniqueNetId()->AsShared(), SessionName, SessionSearch->SearchResults[i]);
+                  break;   
             }
         }
     }	
