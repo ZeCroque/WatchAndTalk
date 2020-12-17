@@ -6,13 +6,14 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Characters/PlayerCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AInteractable::AInteractable()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	bIsOverlappingWithPlayer = false;
+	bInUse = false;
 
 	BlendTime = 1.0f;
 	
@@ -51,11 +52,7 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 		PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 		if (PlayerCharacter)
 		{
-			if (PlayerCharacter->AddInteractable(this))
-			{
-				InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
-			}
-			bIsOverlappingWithPlayer = true;
+			PlayerCharacter->AddInteractable(this);
 		}
 	}
 }
@@ -64,11 +61,9 @@ void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
 {
 	if (PlayerCharacter == OtherActor)
 	{
-			PlayerCharacter->RemoveInteractable(this);
-			InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
-			bIsOverlappingWithPlayer = false;
-			PlayerCharacter = nullptr;
-			PlayerController = nullptr;
+		PlayerCharacter->RemoveInteractable(this);
+		PlayerCharacter = nullptr;
+		PlayerController = nullptr;
 	}
 }
 
@@ -79,9 +74,16 @@ void AInteractable::Interact()
 		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
 		if (PlayerController)
 		{
+			bInUse = true;
 			PlayerController->SetViewTargetWithBlend(this, BlendTime);
 		}
 	}
+}
+
+void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AInteractable, bInUse);
 }
 
 // Called every frame
@@ -89,16 +91,13 @@ void AInteractable::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(bIsOverlappingWithPlayer && PlayerCharacter)
-	{
-		if(PlayerCharacter->IsClosestInteractable(this))
-		{
-			InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
-		}
-		else
-		{
-			InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
+	if(PlayerCharacter && !bInUse && PlayerCharacter->IsClosestInteractable(this))
+	 {
+              InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+              return;
+	 }
+
+	InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
+
 }
 

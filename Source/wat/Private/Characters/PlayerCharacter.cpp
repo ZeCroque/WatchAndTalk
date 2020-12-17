@@ -128,10 +128,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 
     PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
 }
 
 void APlayerCharacter::SetupStimulus()
@@ -181,7 +181,7 @@ void APlayerCharacter::LookUpAtRate(float Rate)
     AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::Interact()
+void APlayerCharacter::Interact_Implementation()
 {
 	auto* ClosestInteractable = GetClosestInteractable();
 	if(ClosestInteractable)
@@ -190,28 +190,30 @@ void APlayerCharacter::Interact()
 	}
 }
 
-void APlayerCharacter::Return()
+void APlayerCharacter::Return_Implementation()
 {
-	Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
+    Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
 }
 
-void APlayerCharacter::Sprint()
+void APlayerCharacter::StartSprinting()
 {
-	GetCharacterMovement() -> MaxWalkSpeed += SprintSpeedAdditionner;
+	GetCharacterMovement() -> MaxWalkSpeed += SprintAdditionalSpeedValue;
 }
 
 void APlayerCharacter::StopSprinting()
 {
-	GetCharacterMovement() -> MaxWalkSpeed -= SprintSpeedAdditionner;
+	GetCharacterMovement() -> MaxWalkSpeed -= SprintAdditionalSpeedValue;
 }
 
-void APlayerCharacter::StartCrouch()
+void APlayerCharacter::StartCrouching()
 {
 	Crouch();
 }
 
-void APlayerCharacter::StopCrouch()
+void APlayerCharacter::StopCrouching()
 {
 	UnCrouch();
 }
+
+
 

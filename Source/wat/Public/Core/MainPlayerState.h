@@ -21,8 +21,5 @@ public:
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Possess(class APlayerController* ClientController, APawn* Pawn);
-
     virtual void OnDeactivated() override;
 };

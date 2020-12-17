@@ -1,5 +1,4 @@
 #include "Core/MainPlayerState.h"
-#include "Core/MainGameMode.h"
 #include "Core/MainGameState.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -11,17 +10,6 @@ void AMainPlayerState::KillPlayer_Implementation()
 }
 
 bool AMainPlayerState::KillPlayer_Validate()
-{
-    return true;
-}
-
-void AMainPlayerState::Possess_Implementation(APlayerController* ClientController, APawn* Pawn)
-{
-    Pawn->SetOwner(ClientController);
-    ClientController->Possess(Pawn);
-}
-
-bool AMainPlayerState::Possess_Validate(APlayerController* ClientController, APawn* Pawn)
 {
     return true;
 }

@@ -39,13 +39,15 @@ protected:
 
 	UPROPERTY()
 	APlayerController* PlayerController;
-	
-	bool bIsOverlappingWithPlayer;
+
+	UPROPERTY(Replicated)
+	bool bInUse;
 	
 public:	
 	// Sets default values for this actor's properties
 	AInteractable();
 	virtual void Interact();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	// Called when the game starts or when spawned

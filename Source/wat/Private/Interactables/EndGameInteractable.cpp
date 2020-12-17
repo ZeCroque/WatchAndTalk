@@ -8,7 +8,7 @@ void AEndGameInteractable::Interact()
     AInteractable::Interact();
     if (PlayerController)
     {
-        PlayerController->GetPlayerState<AMainPlayerState>()->CheckIfGameShouldEnd(this);
+        //PlayerController->GetPlayerState<AMainPlayerState>()->CheckIfGameShouldEnd(this);
     }
 }
 
