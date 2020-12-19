@@ -3,10 +3,8 @@
 
 #include "AI/Services/IsPlayerInMeleeRangeBTS.h"
 #include "AI/MonsterAIController.h"
-#include "Characters/MonsterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AI/BlackboardKeys.h"
 
 UIsPlayerInMeleeRangeBTS::UIsPlayerInMeleeRangeBTS()
 {
@@ -34,10 +32,8 @@ void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCom
     }
 
     // write true or false depending on whether the player is withing melee range
-    Controller->GetBlackboardComponent()->SetValueAsBool(BBKeys::PlayerIsInMeleeRange,
+    Controller->GetBlackboardComponent()->SetValueAsBool(PlayerIsInMeleeRange.SelectedKeyName,
                                                          Npc->GetDistanceTo(Player) <= MeleeRange);
-
-    //TODO KeySelector
 }
 
 void UIsPlayerInMeleeRangeBTS::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

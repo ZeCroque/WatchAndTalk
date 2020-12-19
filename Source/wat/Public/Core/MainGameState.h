@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/GameStateBase.h"
 #include "Interactables/EndGameInteractable.h"
 #include "Net/UnrealNetwork.h"
@@ -34,6 +35,9 @@ public:
 
 	UPROPERTY(Replicated)
 	TArray<AEndGameInteractable*> EndGameInteractables;
+
+	UPROPERTY(Replicated)
+	class AMonsterCharacter* MonsterCharacter;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool AreAllEndGameInteractableClicked() const;

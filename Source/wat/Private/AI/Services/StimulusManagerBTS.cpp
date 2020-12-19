@@ -10,6 +10,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/PlayerCharacter.h"
 #include "Perception/AISense_Sight.h"
 
 class UNavigationSystemV1;
@@ -17,73 +18,77 @@ class AMonsterAIController;
 
 UStimulusManagerBTS::UStimulusManagerBTS()
 {
-    NodeName = TEXT("Stimulus Manager");
+	NodeName = TEXT("Stimulus Manager");
 }
 
 FString UStimulusManagerBTS::GetStaticServiceDescription() const
 {
-    return FString("Setup actual perception from stimulus state");
+	return FString("Setup actual perception from stimulus state");
 }
 
 void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-    Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-    AAIController* const Controller = OwnerComp.GetAIOwner();
-    UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
-    if (Controller)
-    {
-        TArray<AActor*> Actors;
-        UAIPerceptionComponent* PerceptionComponent = Controller->GetPerceptionComponent();
-        PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Actors);
+	AAIController* const Controller = OwnerComp.GetAIOwner();
+	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
+	if (Controller)
+	{
+		TArray<AActor*> Actors;
+		UAIPerceptionComponent* PerceptionComponent = Controller->GetPerceptionComponent();
+		PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Actors);
 
-        for (AActor* Actor : Actors)
-        {
-            FActorPerceptionBlueprintInfo Infos;
-            PerceptionComponent->GetActorsPerception(Actor, Infos);
+		for (AActor* Actor : Actors)
+		{
+			FActorPerceptionBlueprintInfo Infos;
+			PerceptionComponent->GetActorsPerception(Actor, Infos);
 
-            for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
-            {
-                Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
-                Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
-                Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-                Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
-                Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
-                return;
-            }
-        }
+			for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
+			{
+				if (Actor->IsA(APlayerCharacter::StaticClass()))
+				{
+					Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+					Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
+					Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+					Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
+					Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
+					return;
+				}
+			}
+		}
 
-        Blackboard->ClearValue(Player.SelectedKeyName);
-        Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
-        Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
-        PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
-        for (AActor* Actor : Actors)
-        {
-            FActorPerceptionBlueprintInfo Infos;
-            PerceptionComponent->GetActorsPerception(Actor, Infos);
+		Blackboard->ClearValue(Player.SelectedKeyName);
+		Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
+		Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
+		PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
+		for (AActor* Actor : Actors)
+		{
+			FActorPerceptionBlueprintInfo Infos;
+			PerceptionComponent->GetActorsPerception(Actor, Infos);
 
-            for (FAIStimulus const& Stimulus : Infos.LastSensedStimuli)
-            {
-                if (Stimulus.Type.Name == "Default__AISense_Hearing")
-                {
-                    if (Stimulus.Tag == AITags::NoiseTag)
-                    {
-                        Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
-                        Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-                    }
-                }
-                if (Stimulus.Type.Name == "Default__AISense_Sight")
-                {
-                    //TODO consider stimulus age. ok mec
-                    Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
-                }
-            }
-        }
+			for (FAIStimulus const& Stimulus : Infos.LastSensedStimuli)
+			{
+				if (Stimulus.Type.Name == "Default__AISense_Hearing")
+				{
+					if (Stimulus.Tag == AITags::NoiseTag)
+					{
+						Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
+						Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+					}
+					break;
+				}
+				if (Stimulus.Type.Name == "Default__AISense_Sight")
+				{
+					Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+					break;
+				}
+			}
+		}
 
-        if (!Blackboard->IsVectorValueSet(LastSeenLocation.SelectedKeyName))
-        {
-            Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, false);
-            Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
-        }
-    }
+		if (!Blackboard->IsVectorValueSet(LastSeenLocation.SelectedKeyName))
+		{
+			Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, false);
+			Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
+		}
+	}
 }

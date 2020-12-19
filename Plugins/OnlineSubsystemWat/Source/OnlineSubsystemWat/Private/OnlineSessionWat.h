@@ -52,8 +52,6 @@ private:
 
 	void OnSessionStartDelegate(TSharedPtr<FInternetAddr> HostAddress);
 
-	void OnJoinSessionDelegate();
-
 	/**
 	 * Delegate triggered when the WLAN manager has finished searching (some time after last received host packet)
 	 */

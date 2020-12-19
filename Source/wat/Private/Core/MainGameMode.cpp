@@ -2,13 +2,14 @@
 
 
 #include "Core/MainGameMode.h"
-
 #include "EngineUtils.h"
 #include "Core/MainGameState.h"
 
+
 AMainGameMode::AMainGameMode() : Super()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/Blueprints/Characters/PlayerCharacterBP"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
+		TEXT("/Game/Blueprints/Characters/PlayerCharacterBP"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 }
 
