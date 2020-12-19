@@ -34,10 +34,10 @@ public:
 
 protected:
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	class APlayerCharacter* PlayerCharacter;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	APlayerController* PlayerController;
 
 	UPROPERTY(Replicated)

@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "GameFramework/GameStateBase.h"
-#include "Interactables/EndGameInteractable.h"
+#include "Interactables/Objectives/Objective.h"
 #include "Net/UnrealNetwork.h"
 #include "MainGameState.generated.h"
 
@@ -28,18 +27,15 @@ class WAT_API AMainGameState : public AGameStateBase
 
 public:
 	UPROPERTY(Replicated)
-	TArray<FCameraZone> Player1Cameras;
+	TArray<FCameraZone> Cameras;
 
 	UPROPERTY(Replicated)
-	TArray<FCameraZone> Player2Cameras;
-
-	UPROPERTY(Replicated)
-	TArray<AEndGameInteractable*> EndGameInteractables;
+	TArray<AObjective*> Objectives;
 
 	UPROPERTY(Replicated)
 	class AMonsterCharacter* MonsterCharacter;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	bool AreAllEndGameInteractableClicked() const;
+	bool AreAllObjectivesCompleted() const;
 
 };

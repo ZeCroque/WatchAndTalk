@@ -30,13 +30,15 @@ private:
 	
 	class AMonitor* GetMonitorByIndex(const int Index);
 
-        //Inputs
+    //Inputs
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	UFUNCTION(Server, Reliable)
 	void Return();
 
-        //Interactable
-    	virtual void Interact() override;
+    //Interactable
+    virtual void Interact() override;
 	
 protected:
 	// Called when the game starts or when spawned

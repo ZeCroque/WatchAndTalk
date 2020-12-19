@@ -3,20 +3,17 @@
 
 #include "Core/MainGameState.h"
 
-#include "OnlineSubsystem.h"
-
 void AMainGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AMainGameState, Player1Cameras);
-	DOREPLIFETIME(AMainGameState, Player2Cameras);
-	DOREPLIFETIME(AMainGameState, EndGameInteractables);
+	DOREPLIFETIME(AMainGameState, Cameras);
+	DOREPLIFETIME(AMainGameState, Objectives);
 	DOREPLIFETIME(AMainGameState, MonsterCharacter);
 }
 
-bool AMainGameState::AreAllEndGameInteractableClicked() const
+bool AMainGameState::AreAllObjectivesCompleted() const
 {
-	for (AEndGameInteractable* Interactable : this->EndGameInteractables)
+	for (AObjective* Interactable : this->Objectives)
 	{
 		if (Interactable != nullptr && Interactable->bUsed == false)
 		{

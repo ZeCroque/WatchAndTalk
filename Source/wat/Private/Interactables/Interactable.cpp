@@ -84,6 +84,8 @@ void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AInteractable, bInUse);
+	DOREPLIFETIME(AInteractable, PlayerCharacter);
+	DOREPLIFETIME(AInteractable, PlayerController);
 }
 
 // Called every frame

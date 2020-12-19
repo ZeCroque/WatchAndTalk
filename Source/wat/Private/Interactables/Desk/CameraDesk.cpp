@@ -99,7 +99,7 @@ void ACameraDesk::MoveRight(float Value)
 	}
 }
 
-void ACameraDesk::Return()
+void ACameraDesk::Return_Implementation()
 {
 	if(PlayerCharacter && PlayerController)
 	{	
@@ -116,7 +116,6 @@ void ACameraDesk::Interact()
 		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
 		if (PlayerController)
 		{
-			this->SetOwner(PlayerController);
 			PlayerController->Possess(this);
 			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
 			bInUse = true;
@@ -134,6 +133,7 @@ void ACameraDesk::Tick(float DeltaTime)
 
 void ACameraDesk::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)
 {
+	Super::SetupPlayerInputComponent(DeskInputComponent);
 	// Bind jump events
 	DeskInputComponent->BindAction("Return", IE_Pressed, this, &ACameraDesk::Return);
 

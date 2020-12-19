@@ -37,7 +37,7 @@ void UScreenMeshComponent::BeginPlay()
 
 	auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
 
-	Camera = GameState->Player1Cameras[DebugZoneIndex].ZoneCameras[0]->GetCaptureComponent2D();
+	Camera = GameState->Cameras[DebugZoneIndex].ZoneCameras[0]->GetCaptureComponent2D();
 	Camera->TextureTarget = RenderTarget;
 	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget));
 }
