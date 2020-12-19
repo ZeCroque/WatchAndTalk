@@ -33,10 +33,6 @@ typedef FOnSessionStarted::FDelegate FOnSessionStartedDelegate;
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
 typedef FOnValidSessionRequest::FDelegate FOnValidSessionRequestDelegate;
 
-DECLARE_MULTICAST_DELEGATE(FOnJoinRequest);
-typedef FOnJoinRequest::FDelegate FOnJoinRequestDelegate;
-
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValidResponsePacket, uint8*, int32);
 typedef FOnValidResponsePacket::FDelegate FOnValidResponsePacketDelegate;
 
@@ -81,7 +77,7 @@ public:
 
         bool SendHostDisconnectedMessage();
 
-    bool SendJoinRequest(FInternetAddr* HostAddress);
+        bool SendJoinRequest(FInternetAddr* HostAddress);
 
 	void StopSearch();
 
@@ -99,9 +95,8 @@ public:
 	 *
 	 * @param SessionStartedDelegate delegate to fire when session is successfuly started (relation server sent back our public ip and used port)
 	 * @param SessionRequestDelegate delegate to fire when a client session query is received
-	 * @param JoinRequestDelegate delegate to fire when a client join query is received
 	 */
-	bool Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate& JoinRequestDelegate);
+	bool Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate);
 
 	/**
 	 * Creates the LAN beacon for queries/advertising servers
@@ -134,7 +129,6 @@ public:
 
 	void Tick(float DeltaTime);
 
-	DEFINE_ONLINE_DELEGATE(OnJoinRequest);
 	DEFINE_ONLINE_DELEGATE_ONE_PARAM(OnSessionStarted, TSharedPtr<class FInternetAddr>);
 	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidSessionRequest, class FOnlineSearchSettings*, class FInternetAddr*);
 	DEFINE_ONLINE_DELEGATE_TWO_PARAM(OnValidResponsePacket, uint8*, int32);
