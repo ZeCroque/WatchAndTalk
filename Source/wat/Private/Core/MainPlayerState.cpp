@@ -1,6 +1,4 @@
 #include "Core/MainPlayerState.h"
-
-#include "Core/MainGameMode.h"
 #include "Core/MainGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MonsterCharacter.h"
@@ -40,7 +38,8 @@ void AMainPlayerState::CheckIfGameShouldEnd_Implementation(AEndGameInteractable*
     if (MainGameState->AreAllEndGameInteractableClicked() == true)
     {
         EndGame();
-    }else
+    }
+    else
     {
         MainGameState->MonsterCharacter->StartGoalReaction();
     }

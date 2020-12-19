@@ -3,6 +3,7 @@
 
 #include "Core/MainGameInstance.h"
 #include "OnlineSessionSettings.h"
+#include "Core/NetworkSettingsWat.h"
 #include "Kismet/GameplayStatics.h"
 
 UMainGameInstance::UMainGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -25,7 +26,8 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
                                     bool bIsPresence, int32 MaxNumPlayers)
 {
     //Get subsystem
-    IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
+    SubsystemName = bIsLAN ? L"NULL": L"WAT";
+    IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get(SubsystemName);
 
 	
 	
@@ -63,7 +65,8 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
 
 void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool bIsLAN, bool bIsPresence)
 {
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    SubsystemName = bIsLAN ? L"NULL": L"WAT";
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
 
     if (OnlineSub)
     {
@@ -102,7 +105,7 @@ bool UMainGameInstance::ConnectToSession(TSharedPtr<const FUniqueNetId> UserId, 
 {
     bool bSuccessful = false;
 
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
 
     if (OnlineSub)
     {
@@ -124,7 +127,7 @@ void UMainGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucc
     {
         UE_LOG(LogTemp, Warning, TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
-        IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+        IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
         if (OnlineSub)
         {
             IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
@@ -147,7 +150,7 @@ void UMainGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("OFindSessionsComplete bSuccess: %d"), bWasSuccessful);
 
-    IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
     {
 
@@ -174,7 +177,7 @@ void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucce
 {
     UE_LOG(LogTemp, Warning, TEXT("OnStartSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
     {
         IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
@@ -185,7 +188,8 @@ void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucce
     }
     if (bWasSuccessful)
     {
-        UGameplayStatics::OpenLevel(GetWorld(), "Level_POC", true, "listen");
+    	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+        UGameplayStatics::OpenLevel(GetWorld(), *NetworkSettingsWat->LobbyLevel.GetAssetName(), true, "listen");
     }
 }
 
@@ -193,7 +197,7 @@ void UMainGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 {
     UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result));
 
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
     {
         IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
@@ -218,7 +222,7 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
 {
     UE_LOG(LogTemp, Warning, TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
     {
         IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
@@ -230,8 +234,9 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
             {
                 auto* World = GetWorld();
             	if(World)
-                { 
-					UGameplayStatics::OpenLevel(World, "Main_Menu_Level", true);
+                {
+            		const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+				    UGameplayStatics::OpenLevel(World, *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
 				}
             }
         }
@@ -241,13 +246,13 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
 bool UMainGameInstance::StartOnlineGame(FName GameSessionName, bool bIsLan)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-	return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
+    return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
 }
 
-void UMainGameInstance::FindOnlineGames()
+void UMainGameInstance::FindOnlineGames(bool bIsLAN)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), true, true);
+    FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), bIsLAN, true);
 }
 
 TArray<FBlueprintSessionResult> UMainGameInstance::GetActiveSession()
@@ -287,7 +292,7 @@ void UMainGameInstance::JoinOnlineGame(FName SessionName)
 
 void UMainGameInstance::DestroySessionAndLeaveGame() const
 {
-    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
     {
         IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();

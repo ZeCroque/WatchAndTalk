@@ -13,49 +13,50 @@ class AMainGameState;
 void AMainLevelScriptActor::PostInitializeComponents()
 {
     Super::PostInitializeComponents();
-    auto* GameState = GetWorld()->GetGameState();
-    AMainGameState* MainGameState = Cast<AMainGameState>(GameState);
 
-    TArray<AActor*> FoundActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
-
-    if (FoundActors.Num() != 0)
+    if(GetWorld()->IsServer())
     {
-        MainGameState->Player1Cameras.Reserve(FoundActors.Num());
-        MainGameState->Player1Cameras.SetNum(FoundActors.Num());
-        for (auto* FoundActor : FoundActors)
+        auto* GameState = GetWorld()->GetGameState();
+        AMainGameState* MainGameState = Cast<AMainGameState>(GameState);
+
+        TArray<AActor*> FoundActors;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
+
+        if (FoundActors.Num() != 0)
         {
-            auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
-            if (FoundCameraActor)
+            MainGameState->Player1Cameras.Reserve(FoundActors.Num());
+            MainGameState->Player1Cameras.SetNum(FoundActors.Num());
+            for (auto* FoundActor : FoundActors)
             {
-                MainGameState->Player1Cameras[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
+                auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
+                if (FoundCameraActor)
+                {
+                    MainGameState->Player1Cameras[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
+                }
             }
         }
-    }
-    TArray<AActor*> FoundEndGameInteractables;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEndGameInteractable::StaticClass(), FoundEndGameInteractables);
-    if (FoundEndGameInteractables.Num() != 0)
-    {
-        MainGameState->EndGameInteractables.Reserve(FoundEndGameInteractables.Num());
-        MainGameState->EndGameInteractables.SetNum(FoundEndGameInteractables.Num());
-        for (AActor* FoundEndGameInteractable : FoundEndGameInteractables)
+        TArray<AActor*> FoundEndGameInteractables;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEndGameInteractable::StaticClass(), FoundEndGameInteractables);
+        if (FoundEndGameInteractables.Num() != 0)
         {
-            AEndGameInteractable* Interactable = Cast<AEndGameInteractable>(FoundEndGameInteractable);
-            if (Interactable)
+            MainGameState->EndGameInteractables.Reserve(FoundEndGameInteractables.Num());
+            MainGameState->EndGameInteractables.SetNum(FoundEndGameInteractables.Num());
+            for (AActor* FoundEndGameInteractable : FoundEndGameInteractables)
             {
-                MainGameState->EndGameInteractables.Add(Interactable);
+                AEndGameInteractable* Interactable = Cast<AEndGameInteractable>(FoundEndGameInteractable);
+                if (Interactable)
+                {
+                    MainGameState->EndGameInteractables.Add(Interactable);
+                }
             }
+        }
+        TArray<AActor*> FoundMonster;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonsterCharacter::StaticClass(), FoundMonster);
+        if (FoundMonster.Num() == 1)
+        {
+            AMonsterCharacter* Monster = Cast<AMonsterCharacter>(FoundMonster.Last());
+            MainGameState->MonsterCharacter = Monster;
         }
     }
 
-    TArray<AActor*> FoundMonster;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonsterCharacter::StaticClass(), FoundMonster);
-    if (FoundMonster.Num() == 1)
-    {
-        AMonsterCharacter* Monster = Cast<AMonsterCharacter>(FoundMonster.Last());
-        MainGameState->MonsterCharacter = Monster;
-    }
-    
-    
-    //TODO if(Camera->GetLevel() == Player1Level)
 }
