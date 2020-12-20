@@ -15,7 +15,7 @@ bool AMainGameState::AreAllObjectivesCompleted() const
 {
 	for (AObjective* Interactable : this->Objectives)
 	{
-		if (Interactable != nullptr && Interactable->bUsed == false)
+		if (Interactable != nullptr && Interactable->bCompleted == false)
 		{
 			return false;
 		}

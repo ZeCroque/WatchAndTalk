@@ -4,25 +4,35 @@
 #include "Interactables/Interactable.h"
 #include "Objective.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnObjectiveInteractionEnd);
+typedef FOnObjectiveInteractionEnd::FDelegate FOnObjectiveInteractionEndDelegate;
+
 UCLASS()
 class WAT_API AObjective : public AInteractable
 {
 	GENERATED_BODY()
 
 private:
-        UFUNCTION(NetMulticast, Reliable)
-        void EndGame();
+	UPROPERTY()
+	class AMainGameState* GameState;
+	
+    UFUNCTION(NetMulticast, Reliable)
+    void EndGame();
 
 protected:
+	FOnObjectiveInteractionEndDelegate OnObjectiveInteractionEnd;
+	
 	virtual void Interact() override;
+	virtual void InteractionEnd();
 
 public:
 	UPROPERTY(Replicated)
-	bool bUsed = false;
+	bool bCompleted = false;
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
+	virtual void BeginPlay() override;
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

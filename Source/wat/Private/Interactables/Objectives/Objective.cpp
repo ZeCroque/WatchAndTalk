@@ -19,23 +19,36 @@ void AObjective::Interact()
 {
     Super::Interact();
 
-    bUsed = true;
-    auto* MainGameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+	bCompleted = true;
+	InteractionEnd();
+}
+
+void AObjective::InteractionEnd()
+{
     if (PlayerController)
     {
-        if (MainGameState->AreAllObjectivesCompleted() == true)
+        if (GameState->AreAllObjectivesCompleted() == true)
         {
             EndGame();
         }
         else
         {
-            MainGameState->MonsterCharacter->StartGoalReaction();
+	        // ReSharper disable once CppExpressionWithoutSideEffects
+	        OnObjectiveInteractionEnd.ExecuteIfBound();
         }
     }
+}
+
+void AObjective::BeginPlay()
+{
+	Super::BeginPlay();
+	
+    GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+	OnObjectiveInteractionEnd.BindUObject(GameState->MonsterCharacter, &AMonsterCharacter::StartGoalReaction);	
 }
 
 void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AObjective, bUsed);
+    DOREPLIFETIME(AObjective, bCompleted);
 }
