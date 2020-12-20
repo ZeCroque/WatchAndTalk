@@ -243,14 +243,17 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
     }
 }
 
-bool UMainGameInstance::StartOnlineGame(FName GameSessionName, bool bIsLan)
+bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
 {
     ULocalPlayer* const Player = GetFirstGamePlayer();
-    return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), GameSessionName, bIsLan, true, 2);
+    CurrentSessionName = SessionName;
+    return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), CurrentSessionName, bIsLan, true, 2);
 }
 
 void UMainGameInstance::FindOnlineGames(bool bIsLAN)
 {
+    GetEngine()->OnNetworkFailure().AddUObject(this, &UMainGameInstance::HandleNetworkFailure);
+
     ULocalPlayer* const Player = GetFirstGamePlayer();
     FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), bIsLAN, true);
 }
@@ -264,17 +267,18 @@ TArray<FBlueprintSessionResult> UMainGameInstance::GetActiveSession()
     Result.Reserve(Length);
     Result.SetNum(Length);
 
-	for(int i = 0; i < Length; i++)
-	{
-        FBlueprintSessionResult Item;
-        Item.OnlineResult = SessionSearch->SearchResults[i];
-        Result[i] = Item;
-	}
+    for(int i = 0; i < Length; i++)
+    {
+      FBlueprintSessionResult Item;
+      Item.OnlineResult = SessionSearch->SearchResults[i];
+      Result[i] = Item;
+    }
     return Result;
 }
 
 void UMainGameInstance::JoinOnlineGame(FName SessionName)
 {
+    CurrentSessionName = SessionName;
     ULocalPlayer* const Player = GetFirstGamePlayer();
 
     if (SessionSearch->SearchResults.Num() > 0)
@@ -299,9 +303,17 @@ void UMainGameInstance::DestroySessionAndLeaveGame() const
 
         if (Sessions.IsValid())
         {
-           // Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
-            Sessions->DestroySession(GameSessionName, OnDestroySessionCompleteDelegate);
+            Sessions->DestroySession(CurrentSessionName, OnDestroySessionCompleteDelegate);
         }
+    }
+}
+
+void UMainGameInstance::HandleNetworkFailure(UWorld *World, UNetDriver *NetDriver, ENetworkFailure::Type FailureType, const FString &ErrorString)
+{
+    if(IOnlineSubsystem::Get(SubsystemName)->GetSessionInterface()->GetNamedSession(CurrentSessionName))
+    {
+        UE_LOG(LogOnline, Warning, TEXT("Host disconnected"));
+        DestroySessionAndLeaveGame();
     }
 }
 

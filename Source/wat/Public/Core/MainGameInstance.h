@@ -57,7 +57,6 @@ public:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	virtual void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 
-
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	bool StartOnlineGame(FName GameSessionName, bool bIsLan);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
@@ -70,11 +69,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void JoinOnlineGame(FName GameSessionName);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-    void DestroySessionAndLeaveGame() const;
+        void DestroySessionAndLeaveGame() const;
+
+        void HandleNetworkFailure(UWorld * World, UNetDriver * NetDriver, ENetworkFailure::Type FailureType, const FString & ErrorString);
 
 	UFUNCTION(Server, Reliable)
 	void MoveToMainLevel();
 	
 private:
   FName SubsystemName;
+  FName CurrentSessionName;
 };

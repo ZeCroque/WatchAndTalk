@@ -1,6 +1,17 @@
 #include "Core/MainPlayerState.h"
 
+
+#include "Core/NetworkSettingsWat.h"
+#include "GameFramework/GameStateBase.h"
+#include "Kismet/GameplayStatics.h"
+
 void AMainPlayerState::OnDeactivated()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
+    if(!HasLocalNetOwner())
+    {
+      UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
+      const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+      UGameplayStatics::OpenLevel(GetWorld(), *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
+    }
+
 }
