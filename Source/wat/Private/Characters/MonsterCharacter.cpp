@@ -3,11 +3,10 @@
 
 #include "Characters/MonsterCharacter.h"
 
-#include "AI/MonsterAIController.h"
-#include "BehaviorTree/BlackboardComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "Characters/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Core/MainPlayerState.h"
 
 // Sets default values
 AMonsterCharacter::AMonsterCharacter()
@@ -18,7 +17,7 @@ AMonsterCharacter::AMonsterCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
-void AMonsterCharacter::MeleeAttack() const
+void AMonsterCharacter::MeleeAttack(APlayerCharacter* Player)
 {
 	//todo : Execute Melee Attack Animation
 
@@ -27,15 +26,8 @@ void AMonsterCharacter::MeleeAttack() const
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
 	}
 
-	auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PlayerController)
-	{
-		auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
-		if (ClientState)
-		{
-			ClientState->KillPlayer();
-		}
-	}
+
+	KillPlayer(Player);
 }
 
 UAnimMontage* AMonsterCharacter::GetMontage() const
@@ -61,7 +53,23 @@ void AMonsterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+void AMonsterCharacter::KillPlayer_Implementation(APlayerCharacter* Player)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player %s was kill"), *Player->GetName());
+	Player->Die();
+
+	auto* GameOverWidget = NewObject<UUserWidget>(this, GameOverWidgetTemplate);
+    if (GameOverWidget != nullptr)
+    {
+        GameOverWidget->AddToViewport();
+        auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        PlayerController->SetInputMode(FInputModeUIOnly());
+        PlayerController->bShowMouseCursor = true;
+    }
+}
+
 void AMonsterCharacter::StartGoalReaction()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Purple,TEXT("Start Goal Reaction"));
+	//Cast<AMonsterAIController>(GetController())->GetBlackboard()->SetValueAsBool()
 }

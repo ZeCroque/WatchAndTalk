@@ -3,6 +3,8 @@
 
 #include "AI/Tasks/MeleeAttackTask.h"
 #include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/PlayerCharacter.h"
 
 UMeleeAttackTask::UMeleeAttackTask(FObjectInitializer const& ObjectInitializer)
 {
@@ -18,7 +20,11 @@ EBTNodeResult::Type UMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
     {
         if (MontageHasFinished(Npc))
         {
-            Npc->MeleeAttack();
+        	auto* Target = Cast<APlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName));
+        	if(Target)
+        	{
+				Npc->MeleeAttack(Target);
+            }
         }
     }
 

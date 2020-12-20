@@ -40,20 +40,25 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
 		for (AActor* Actor : Actors)
 		{
-			FActorPerceptionBlueprintInfo Infos;
-			PerceptionComponent->GetActorsPerception(Actor, Infos);
-
-			for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
+			auto * PerceivedPlayer = Cast<APlayerCharacter>(Actor);
+			if (PerceivedPlayer && PerceivedPlayer->IsAlive())
 			{
-				if (Actor->IsA(APlayerCharacter::StaticClass()))
+				FActorPerceptionBlueprintInfo Infos;
+				PerceptionComponent->GetActorsPerception(Actor, Infos);
+
+				for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
 				{
-					Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
-					Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
-					Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-					Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
-					Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
-					return;
+						Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+						Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
+						Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+						Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
+						Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
+						return;
 				}
+			}
+			else
+			{
+				Blackboard->SetValueAsBool(IsInMeleeRange.SelectedKeyName, false);
 			}
 		}
 
@@ -63,24 +68,28 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
 		for (AActor* Actor : Actors)
 		{
-			FActorPerceptionBlueprintInfo Infos;
-			PerceptionComponent->GetActorsPerception(Actor, Infos);
+			auto* PerceivedPlayer = Cast<APlayerCharacter>(Actor);
+			if(PerceivedPlayer && PerceivedPlayer->IsAlive())
+			{			
+				FActorPerceptionBlueprintInfo Infos;
+				PerceptionComponent->GetActorsPerception(Actor, Infos);
 
-			for (FAIStimulus const& Stimulus : Infos.LastSensedStimuli)
-			{
-				if (Stimulus.Type.Name == "Default__AISense_Hearing")
+				for (FAIStimulus const& Stimulus : Infos.LastSensedStimuli)
 				{
-					if (Stimulus.Tag == AITags::NoiseTag)
+					if (Stimulus.Type.Name == "Default__AISense_Hearing")
 					{
-						Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
-						Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+						if (Stimulus.Tag == AITags::NoiseTag)
+						{
+							Blackboard->SetValueAsVector(NoiseLocation.SelectedKeyName, Stimulus.StimulusLocation);
+							Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+						}
+						break;
 					}
-					break;
-				}
-				if (Stimulus.Type.Name == "Default__AISense_Sight")
-				{
-					Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
-					break;
+					if (Stimulus.Type.Name == "Default__AISense_Sight")
+					{
+						Blackboard->SetValueAsVector(LastSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+						break;
+					}
 				}
 			}
 		}

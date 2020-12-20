@@ -43,6 +43,8 @@ APlayerCharacter::APlayerCharacter()
     Mesh3P->SetVisibleFlag(false);
 
     SetupStimulus();
+
+	bIsAlive = true;
 }
 
 bool APlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -132,6 +134,18 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
+}
+
+bool APlayerCharacter::IsAlive() const
+{
+	return bIsAlive;
+}
+
+void APlayerCharacter::Die()
+{
+	//TODO trigger die anim
+	bIsAlive = false;
+	DisableInput(nullptr);
 }
 
 void APlayerCharacter::SetupStimulus()

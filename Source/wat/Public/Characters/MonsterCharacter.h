@@ -15,7 +15,7 @@ public:
 	// Sets default values for this character's properties
 	AMonsterCharacter();
 
-	void MeleeAttack() const;
+	void MeleeAttack(class APlayerCharacter* Player);
 
 	UAnimMontage* GetMontage() const;
 
@@ -24,12 +24,18 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> GameOverWidgetTemplate;
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(NetMulticast, Reliable)
+    void KillPlayer(class APlayerCharacter* Player);
+	
 	void StartGoalReaction();
 
 private:
