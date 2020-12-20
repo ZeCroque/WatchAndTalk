@@ -9,18 +9,18 @@
 /**
  * 
  */
-UCLASS(Config=NetworkSettings)
+UCLASS(Config=Game, defaultconfig)
 class WAT_API UNetworkSettingsWat : public UDeveloperSettings
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(config, EditAnywhere, meta=(AllowedClasses="World"))
+	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath LobbyLevel;
 
-	UPROPERTY(config, EditAnywhere, meta=(AllowedClasses="World"))
+	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath MainLevel;
 
-	UPROPERTY(config, EditAnywhere, meta=(AllowedClasses="World"))
+	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath MainMenuLevel;
 };

@@ -70,8 +70,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void JoinOnlineGame(FName GameSessionName);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-        void DestroySessionAndLeaveGame() const;
+    void DestroySessionAndLeaveGame() const;
 
+	UFUNCTION(Server, Reliable)
+	void MoveToMainLevel();
+	
 private:
   FName SubsystemName;
 };

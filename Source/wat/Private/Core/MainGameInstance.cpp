@@ -304,3 +304,9 @@ void UMainGameInstance::DestroySessionAndLeaveGame() const
         }
     }
 }
+
+void UMainGameInstance::MoveToMainLevel_Implementation()
+{
+	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+	GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
+}

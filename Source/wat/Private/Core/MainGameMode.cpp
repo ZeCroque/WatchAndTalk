@@ -11,5 +11,7 @@ AMainGameMode::AMainGameMode() : Super()
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
 		TEXT("/Game/Blueprints/Characters/PlayerCharacterBP"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
+
+	bUseSeamlessTravel = true;
 }
 
