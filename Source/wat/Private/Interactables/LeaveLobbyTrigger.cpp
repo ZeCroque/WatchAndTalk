@@ -16,26 +16,28 @@ void ALeaveLobbyTrigger::Interact()
 		{
 			ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
 
-			int MatchingPlayersIdsCount = 0;
-
 			auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
-			
-			for(auto& CurrentPlayerState : PlayerStates)
+
+			if(PlayerStates.Num() > 1)
 			{
-				for(auto& ReadyPlayerId : ReadyPlayersIds)
+				int MatchingPlayersIdsCount = 0;
+				for(auto& CurrentPlayerState : PlayerStates)
 				{
-					if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
+					for(auto& ReadyPlayerId : ReadyPlayersIds)
 					{
-						++MatchingPlayersIdsCount;
-						break;
+						if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
+						{
+							++MatchingPlayersIdsCount;
+							break;
+						}
 					}
 				}
-			}
 
-			if(MatchingPlayersIdsCount == PlayerStates.Num())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
-				Cast<UMainGameInstance>(GetGameInstance())->MoveToMainLevel();
+				if(MatchingPlayersIdsCount == PlayerStates.Num())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
+					Cast<UMainGameInstance>(GetGameInstance())->MoveToMainLevel();
+				}
 			}
 		}
 	}

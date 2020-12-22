@@ -65,7 +65,7 @@ int FWLANManager::GetPort() const
 
 bool FWLANManager::SendPresentationMessage()
 {
-	bool bSuccess = false;
+	bool bSuccess = true;
 	if (!Socket)
 	{
 		bSuccess = Init();
@@ -119,7 +119,7 @@ bool FWLANManager::SendSession(class FNamedOnlineSession* HostSession, FInternet
 
 bool FWLANManager::SendConnectionRequest()
 {
-	if(CurrentHostIndex == HostsAddresses.Num())
+	if(CurrentHostIndex >= HostsAddresses.Num())
 	{
 		StopSearch();
 		return true;
@@ -178,9 +178,11 @@ bool FWLANManager::SendJoinRequest(FInternetAddr* HostAddress)
 
 void FWLANManager::StopSearch()
 {
+	HostConnectionTimeoutDuration = HOST_CONNECTION_TIMEOUT_DURATION;
 	HostsSearchTimeoutDuration = HOSTS_SEARCH_TIMEOUT_DURATION;
 	bIsSearching = false;
 	CurrentHostIndex = 0;
+	HostsAddresses.Empty();
 	TriggerOnSearchingTimeoutDelegates();
 }
 
@@ -221,6 +223,7 @@ bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings
 	if (SendPresentationMessage())
 	{
 		ClientSessionSearch = SearchSettings;
+		ClearOnSearchingTimeoutDelegates(this);
 		AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
 		return true;
 	}
@@ -639,7 +642,7 @@ void FWLANManager::Tick(float DeltaTime)
 			if(HostConnectionTimeoutDuration <= 0.f)
 			{
 				HostConnectionTimeoutDuration = HOST_CONNECTION_TIMEOUT_DURATION;
-				SendHostDisconnectedMessage();
+				//SendHostDisconnectedMessage();
 				++CurrentHostIndex;
 				SendConnectionRequest();
 			}

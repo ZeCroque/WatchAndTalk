@@ -76,8 +76,9 @@ void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool
         if (Sessions.IsValid() && UserId.IsValid())
         {
 
+            SessionSearch.Reset();
             SessionSearch = MakeShareable(new FOnlineSessionSearch());
-
+            SessionSearch->SearchState = EOnlineAsyncTaskState::NotStarted;
             SessionSearch->bIsLanQuery = bIsLAN;
             SessionSearch->MaxSearchResults = 10;
             SessionSearch->PingBucketSize = 500;
@@ -252,6 +253,7 @@ bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
 
 void UMainGameInstance::FindOnlineGames(bool bIsLAN)
 {
+    GetEngine()->OnNetworkFailure().Clear();
     GetEngine()->OnNetworkFailure().AddUObject(this, &UMainGameInstance::HandleNetworkFailure);
 
     ULocalPlayer* const Player = GetFirstGamePlayer();
