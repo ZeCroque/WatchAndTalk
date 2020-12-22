@@ -34,6 +34,9 @@ public:
 
 	UPROPERTY(Replicated)
 	class AMonsterCharacter* MonsterCharacter;
+
+	UPROPERTY()
+	TSet<uint32> PlayersReadyForRestartIds;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool AreAllObjectivesCompleted() const;

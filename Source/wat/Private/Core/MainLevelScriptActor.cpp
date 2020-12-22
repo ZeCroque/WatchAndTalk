@@ -4,6 +4,7 @@
 #include "Core/MainLevelScriptActor.h"
 #include "SecurityCamera.h"
 #include "Characters/MonsterCharacter.h"
+#include "Characters/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/MainGameState.h"
 
@@ -57,5 +58,12 @@ void AMainLevelScriptActor::PostInitializeComponents()
             AMonsterCharacter* FoundMonster = Cast<AMonsterCharacter>(FoundActors.Last());
             MainGameState->MonsterCharacter = FoundMonster;
         }
+    }
+
+	auto* PlayerController = GetWorld()->GetFirstPlayerController();
+	if(PlayerController)
+	{
+		PlayerController->EnableInput(nullptr);
+		PlayerController->SetInputMode(FInputModeGameOnly());
     }
 }

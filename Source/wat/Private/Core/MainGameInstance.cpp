@@ -325,9 +325,3 @@ void UMainGameInstance::HandleNetworkFailure(UWorld *World, UNetDriver *NetDrive
         DestroySessionAndLeaveGame();
     }
 }
-
-void UMainGameInstance::MoveToMainLevel_Implementation()
-{
-	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
-	GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
-}

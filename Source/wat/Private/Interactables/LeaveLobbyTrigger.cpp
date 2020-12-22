@@ -4,6 +4,7 @@
 #include "Interactables/LeaveLobbyTrigger.h"
 #include "Characters/PlayerCharacter.h"
 #include "Core/MainGameInstance.h"
+#include "Core/NetworkSettingsWat.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 
@@ -36,7 +37,8 @@ void ALeaveLobbyTrigger::Interact()
 				if(MatchingPlayersIdsCount == PlayerStates.Num())
 				{
 					UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
-					Cast<UMainGameInstance>(GetGameInstance())->MoveToMainLevel();
+					const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+					GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
 				}
 			}
 		}

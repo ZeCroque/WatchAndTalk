@@ -72,9 +72,6 @@ public:
     void DestroySessionAndLeaveGame() const;
 	
     void HandleNetworkFailure(UWorld * World, UNetDriver * NetDriver, ENetworkFailure::Type FailureType, const FString & ErrorString);
-
-	UFUNCTION(Server, Reliable)
-	void MoveToMainLevel();
 	
 private:
   FName SubsystemName;

@@ -10,10 +10,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
+#include "Core/MainGameState.h"
+#include "Core/NetworkSettingsWat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 #if WITH_EDITOR
 	#include "Core/MainGameInstance.h"
@@ -103,6 +106,40 @@ void APlayerCharacter::BeginPlay()
         GetMesh()->SetVisibility(true);
 	}
 }
+
+void APlayerCharacter::SetPlayerAsReadyForRestart()
+{
+	RestartGame(GetPlayerState()->GetPlayerId());
+}
+
+
+void APlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
+{	
+    auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+    GameState->PlayersReadyForRestartIds.Add(PlayerId);
+
+	int MatchingPlayersIdsCount = 0;
+	for(auto CurrentPlayerState : GameState->PlayerArray)
+	{
+		for(auto& ReadyPlayerId :  GameState->PlayersReadyForRestartIds)
+		{
+			if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
+			{
+				++MatchingPlayersIdsCount;
+				break;
+			}
+		}
+	}
+
+	if(MatchingPlayersIdsCount == GameState->PlayerArray.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
+		const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
+		GameState->PlayersReadyForRestartIds.Empty();
+	}
+}
+
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)

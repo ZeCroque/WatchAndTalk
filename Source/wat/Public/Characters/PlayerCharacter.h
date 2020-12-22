@@ -64,6 +64,13 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Return();
 
+
+	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	void SetPlayerAsReadyForRestart();
+	
+	UFUNCTION(Server, Reliable)
+	void RestartGame(uint32 PlayerId);
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
