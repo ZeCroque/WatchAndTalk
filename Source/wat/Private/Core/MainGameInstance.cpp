@@ -13,7 +13,6 @@ UMainGameInstance::UMainGameInstance(const FObjectInitializer& ObjectInitializer
     OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnFindSessionsComplete);
     OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnJoinSessionComplete);
     OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnDestroySessionComplete);
-
 }
 
 void UMainGameInstance::BeginDestroy()
@@ -246,6 +245,10 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
 
 bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
 {
+#if WITH_EDITOR
+	bIsHost = true;
+#endif
+	
     ULocalPlayer* const Player = GetFirstGamePlayer();
     CurrentSessionName = SessionName;
     return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), CurrentSessionName, bIsLan, true, 2);
@@ -253,6 +256,10 @@ bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
 
 void UMainGameInstance::FindOnlineGames(bool bIsLAN)
 {
+#if WITH_EDITOR
+	bIsHost = false;
+#endif
+
     GetEngine()->OnNetworkFailure().Clear();
     GetEngine()->OnNetworkFailure().AddUObject(this, &UMainGameInstance::HandleNetworkFailure);
 

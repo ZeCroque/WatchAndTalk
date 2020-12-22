@@ -15,6 +15,10 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
 
+#if WITH_EDITOR
+	#include "Core/MainGameInstance.h"
+#endif
+
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
@@ -104,6 +108,10 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+#if WITH_EDITOR
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+#endif
 }
 
 // Called to bind functionality to input

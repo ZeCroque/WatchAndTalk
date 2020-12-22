@@ -69,9 +69,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void JoinOnlineGame(FName GameSessionName);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-        void DestroySessionAndLeaveGame() const;
-
-        void HandleNetworkFailure(UWorld * World, UNetDriver * NetDriver, ENetworkFailure::Type FailureType, const FString & ErrorString);
+    void DestroySessionAndLeaveGame() const;
+	
+    void HandleNetworkFailure(UWorld * World, UNetDriver * NetDriver, ENetworkFailure::Type FailureType, const FString & ErrorString);
 
 	UFUNCTION(Server, Reliable)
 	void MoveToMainLevel();
@@ -79,4 +79,10 @@ public:
 private:
   FName SubsystemName;
   FName CurrentSessionName;
+
+#if WITH_EDITOR
+public:
+	bool bIsHost;
+#endif
+
 };
