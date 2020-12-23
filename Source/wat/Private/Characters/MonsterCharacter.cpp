@@ -15,6 +15,7 @@ AMonsterCharacter::AMonsterCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bIsInGoalReactionMode = false;
 }
 
 void AMonsterCharacter::MeleeAttack(APlayerCharacter* Player)
@@ -71,5 +72,6 @@ void AMonsterCharacter::KillPlayer_Implementation(APlayerCharacter* Player)
 void AMonsterCharacter::StartGoalReaction()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Purple,TEXT("Start Goal Reaction"));
+	bIsInGoalReactionMode = true;
 	//Cast<AMonsterAIController>(GetController())->GetBlackboard()->SetValueAsBool()
 }

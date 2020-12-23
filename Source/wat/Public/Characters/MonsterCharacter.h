@@ -12,6 +12,9 @@ class WAT_API AMonsterCharacter final : public ACharacter
 	GENERATED_BODY()
 
 public:
+
+	bool bIsInGoalReactionMode;
+	
 	// Sets default values for this character's properties
 	AMonsterCharacter();
 
@@ -34,7 +37,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(NetMulticast, Reliable)
-    void KillPlayer(class APlayerCharacter* Player);
+        void KillPlayer(class APlayerCharacter* Player);
 	
 	void StartGoalReaction();
 

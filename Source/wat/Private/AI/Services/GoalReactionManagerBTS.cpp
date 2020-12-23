@@ -5,6 +5,7 @@
 #include "AI/MonsterAIController.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/MonsterCharacter.h"
 
 UGoalReactionManagerBTS::UGoalReactionManagerBTS()
 {
@@ -26,5 +27,19 @@ void UGoalReactionManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
         Player = Cast<AActor>(Target);
     }
 
-    Controller->GetBlackboardComponent()->SetValueAsVector(PlayerLocation.SelectedKeyName, Player->GetActorLocation());
+	if(Player)
+	{
+		Controller->GetBlackboardComponent()->SetValueAsVector(PlayerLocation.SelectedKeyName, Player->GetActorLocation());
+	}
+	
+    if(!Self)
+    {
+	    Self = Cast<AMonsterCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+    }
+	
+	if(Self && Self->bIsInGoalReactionMode)
+	{
+		Self->bIsInGoalReactionMode = false;
+		Controller->GetBlackboardComponent()->SetValueAsBool(IsInGoalReactionMode.SelectedKeyName, true);
+	}
 }
