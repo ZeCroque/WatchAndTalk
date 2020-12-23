@@ -10,7 +10,7 @@
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
-	"CanContainContent": true,
+	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
@@ -21,14 +21,14 @@
 			"LoadingPhase": "Default"
 		}
 	],
-  "Plugins": [
-    {
-      "Name": "OnlineSubsystem",
-      "Enabled": true
-    },
-    {
-      "Name": "OnlineSubsystemUtils",
-      "Enabled": true
-    }
-  ]
+	"Plugins": [
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": true
+		}
+	]
 }

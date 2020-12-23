@@ -7,12 +7,12 @@
 
 UClearStimuliTask::UClearStimuliTask(const FObjectInitializer& ObjectInitializer)
 {
-	NodeName = "Clear Stimuli";
+    NodeName = "Clear Stimuli";
 }
 
 EBTNodeResult::Type UClearStimuliTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	OwnerComp.GetAIOwner()->GetAIPerceptionComponent()->ForgetAll();
-	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-	return EBTNodeResult::Succeeded;
+    OwnerComp.GetAIOwner()->GetAIPerceptionComponent()->ForgetAll();
+    FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+    return EBTNodeResult::Succeeded;
 }

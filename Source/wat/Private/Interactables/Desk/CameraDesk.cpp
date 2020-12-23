@@ -20,6 +20,28 @@ ACameraDesk::ACameraDesk()
 	MapChildActorComponent->SetupAttachment(RootComponent);
 }
 
+// Called when the game starts or when spawned
+void ACameraDesk::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	TArray<UActorComponent*> Components;
+	this->GetComponents(UMonitorChildActorComponent::StaticClass(), Components);
+
+	const int Length = Components.Num();
+	
+	Monitors.Reserve(Length);
+	Monitors.SetNum(Length);
+	for (int i = 0; i < Length; i++)
+	{
+		auto* Monitor = Cast<UMonitorChildActorComponent>(Components[i]);
+		if (Monitor)
+		{
+			Monitors[i] = Monitor;
+		}
+	}
+}
+
 AMonitor* ACameraDesk::GetMonitorByIndex(const int Index)
 {
 	for (auto* MonitorComponent : Monitors)
@@ -77,51 +99,26 @@ void ACameraDesk::MoveRight(float Value)
 	}
 }
 
-void ACameraDesk::Return()
+void ACameraDesk::Return_Implementation()
 {
-		if(PlayerCharacter && PlayerController)
-		{
-			auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
-			ClientState->Possess(PlayerController, PlayerCharacter);
-			bIsOverlappingWithPlayer = true;
-		}
-}
-
-// Called when the game starts or when spawned
-void ACameraDesk::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	TArray<UActorComponent*> Components;
-	this->GetComponents(UMonitorChildActorComponent::StaticClass(), Components);
-
-	const int Length = Components.Num();
-	
-	Monitors.Reserve(Length);
-	Monitors.SetNum(Length);
-	for (int i = 0; i < Length; i++)
-	{
-		auto* Monitor = Cast<UMonitorChildActorComponent>(Components[i]);
-		if (Monitor)
-		{
-			Monitors[i] = Monitor;
-		}
+	if(PlayerCharacter && PlayerController)
+	{	
+		PlayerController->Possess(PlayerCharacter);
+		PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime);
+		bInUse = false;
 	}
 }
 
 void ACameraDesk::Interact()
-{
-	InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
-	bIsOverlappingWithPlayer = false;
-	
+{	
 	if (PlayerCharacter)
 	{
 		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
 		if (PlayerController)
-		{	
-			auto* ClientState = PlayerController->GetPlayerState<AMainPlayerState>();
-			ClientState->Possess(PlayerController, this);
+		{
+			PlayerController->Possess(this);
 			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
+			bInUse = true;
 		}
 	}
 
@@ -136,6 +133,7 @@ void ACameraDesk::Tick(float DeltaTime)
 
 void ACameraDesk::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)
 {
+	Super::SetupPlayerInputComponent(DeskInputComponent);
 	// Bind jump events
 	DeskInputComponent->BindAction("Return", IE_Pressed, this, &ACameraDesk::Return);
 

@@ -9,28 +9,39 @@
 UCLASS()
 class WAT_API AMonsterCharacter final : public ACharacter
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    // Sets default values for this character's properties
-    AMonsterCharacter();
 
-    void MeleeAttack() const;
+	bool bIsInGoalReactionMode;
+	
+	// Sets default values for this character's properties
+	AMonsterCharacter();
 
-    UAnimMontage* GetMontage() const;
+	void MeleeAttack(class APlayerCharacter* Player);
+
+	UAnimMontage* GetMontage() const;
 
 protected:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
 public:
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> GameOverWidgetTemplate;
+	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
-    // Called to bind functionality to input
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+        void KillPlayer(class APlayerCharacter* Player);
+	
+	void StartGoalReaction();
 
 private:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-    UAnimMontage* Montage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* Montage;
 };

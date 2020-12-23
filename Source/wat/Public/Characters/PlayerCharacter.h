@@ -19,6 +19,7 @@ public:
 
     UPROPERTY(VisibleDefaultsOnly)
     class UCameraComponent* FirstPersonCameraComponent = nullptr;
+	
     UPROPERTY(EditAnywhere)
     class USkeletalMeshComponent* Mesh1P = nullptr;
 
@@ -30,28 +31,45 @@ public:
     UPROPERTY(EditAnywhere, Category = Camera)
     float BaseLookUpRate;
 
+	UPROPERTY(EditAnywhere)
+	float SprintAdditionalSpeedValue;
+
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
-	UPROPERTY(EditAnywhere)
-	float SprintSpeedAdditionner;
-		
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	//Inputs
+
+	//Movement
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
+
+	//Special displacements
+	void StartSprinting();
+	void StopSprinting();
+	void StartCrouching();
+    void StopCrouching();
+
+	//Interactables
+	UFUNCTION(Server, Reliable)
 	void Interact();
+
+	UFUNCTION(Server, Reliable)
 	void Return();
 
-	void Sprint();
-	void StopSprinting();
-	void StartCrouch();
-    void StopCrouch();
+
+	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	void SetPlayerAsReadyForRestart();
+	
+	UFUNCTION(Server, Reliable)
+	void RestartGame(uint32 PlayerId);
 
 public:
     // Called every frame
@@ -60,8 +78,14 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	bool IsAlive() const;
+	
+	void Die();
 
 private:
+
+	bool bIsAlive;
+	
     UPROPERTY()
     class UAIPerceptionStimuliSourceComponent* Stimulus;
 

@@ -12,8 +12,8 @@
 UCLASS()
 class WAT_API UClearVectorTask final : public UBTTask_BlackboardBase
 {
-	GENERATED_BODY()
-	explicit UClearVectorTask(FObjectInitializer const& ObjectInitializer);
+    GENERATED_BODY()
+    explicit UClearVectorTask(FObjectInitializer const& ObjectInitializer);
 
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

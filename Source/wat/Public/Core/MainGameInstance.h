@@ -57,11 +57,10 @@ public:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	virtual void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 
-	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	bool StartOnlineGame(FName GameSessionName, bool bIsLan);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-	void FindOnlineGames();
+	void FindOnlineGames(bool bIsLAN);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	TArray<FBlueprintSessionResult> GetActiveSession();
 	UPROPERTY(BlueprintAssignable, Category = "Network|Test")
@@ -71,4 +70,16 @@ public:
 	void JoinOnlineGame(FName GameSessionName);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
     void DestroySessionAndLeaveGame() const;
+	
+    void HandleNetworkFailure(UWorld * World, UNetDriver * NetDriver, ENetworkFailure::Type FailureType, const FString & ErrorString);
+	
+private:
+  FName SubsystemName;
+  FName CurrentSessionName;
+
+#if WITH_EDITOR
+public:
+	bool bIsHost;
+#endif
+
 };

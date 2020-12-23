@@ -37,10 +37,11 @@ private:
     FBlackboardKeySelector HasSightStimulus;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
-     FBlackboardKeySelector Player;
+    FBlackboardKeySelector Player;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
+    FBlackboardKeySelector IsInMeleeRange;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Random Location Tweak", meta=(AllowPrivateAccess="true"))
     float SearchRadius = 1500.0f;
-
-    
 };

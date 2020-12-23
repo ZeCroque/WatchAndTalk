@@ -61,8 +61,7 @@ bool FOnlineSessionWat::CreateSession(int32 HostingPlayerNum, FName SessionName,
 
 		FOnSessionStartedDelegate SessionStartedCompleteDelegate = FOnSessionStartedDelegate::CreateRaw(this, &FOnlineSessionWat::OnSessionStartDelegate);
 		FOnValidSessionRequestDelegate SessionRequestDelegate = FOnValidSessionRequestDelegate::CreateRaw(this, &FOnlineSessionWat::OnValidSessionRequestDelegate);
-		FOnJoinRequestDelegate JoinRequestDelegate = FOnJoinRequestDelegate::CreateRaw(this, &FOnlineSessionWat::OnJoinSessionDelegate);
-		if(WLANSessionManager.Host(SessionStartedCompleteDelegate, SessionRequestDelegate, JoinRequestDelegate))
+		if(WLANSessionManager.Host(SessionStartedCompleteDelegate, SessionRequestDelegate))
 		{
 			return true;
 		}
@@ -84,6 +83,7 @@ bool FOnlineSessionWat::CreateSession(const FUniqueNetId& HostingPlayerId, FName
 //On session started delegate is fired with "true" only after client has requested connection
 bool FOnlineSessionWat::StartSession(FName SessionName)
 {
+        bool bSuccess = false;
 	// Grab the session information by name
 	FNamedOnlineSession* Session = GetNamedSession(SessionName);
 	if (Session)
@@ -92,16 +92,20 @@ bool FOnlineSessionWat::StartSession(FName SessionName)
 		if (Session->SessionState == EOnlineSessionState::Pending || Session->SessionState == EOnlineSessionState::Ended)
 		{
 			Session->SessionState = EOnlineSessionState::InProgress;
-			return true;
+			bSuccess = true;
 		}
-		UE_LOG_ONLINE_SESSION(Warning,	TEXT("Can't start an online session (%s) in state %s"), *SessionName.ToString(), EOnlineSessionState::ToString(Session->SessionState));		
+
+		if(!bSuccess)
+		{
+		    UE_LOG_ONLINE_SESSION(Warning, TEXT("Can't start an online session (%s) in state %s"), *SessionName.ToString(), EOnlineSessionState::ToString(Session->SessionState));
+		}
 	}
 	else
 	{
 		UE_LOG_ONLINE_SESSION(Warning, TEXT("Can't start an online game for session (%s) that hasn't been created"), *SessionName.ToString());
 	}
-	TriggerOnStartSessionCompleteDelegates(SessionName, false);
-	return false;
+	TriggerOnStartSessionCompleteDelegates(SessionName, bSuccess);
+	return bSuccess;
 }
 
 bool FOnlineSessionWat::UpdateSession(FName SessionName, FOnlineSessionSettings& UpdatedSessionSettings, bool bShouldRefreshOnlineData)
@@ -559,13 +563,9 @@ void FOnlineSessionWat::OnSessionStartDelegate(TSharedPtr<FInternetAddr> HostAdd
 	NewSessionInfo->Init(HostAddress);
 	Sessions[0].SessionInfo = MakeShareable(NewSessionInfo);
 	Sessions[0].SessionState = EOnlineSessionState::Pending;
-    TriggerOnCreateSessionCompleteDelegates(Sessions[0].SessionName, true);
+        TriggerOnCreateSessionCompleteDelegates(Sessions[0].SessionName, true);
 }
 
-void FOnlineSessionWat::OnJoinSessionDelegate()
-{
-	TriggerOnStartSessionCompleteDelegates(Sessions[0].SessionName, true);
-}
 void FOnlineSessionWat::OnSearchTimeoutDelegate()
 {
 	//TODO reset WLAN manager?

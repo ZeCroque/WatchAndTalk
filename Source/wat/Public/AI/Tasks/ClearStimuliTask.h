@@ -10,11 +10,11 @@
  * 
  */
 UCLASS()
-class WAT_API UClearStimuliTask : public UBTTask_BlackboardBase
+class WAT_API UClearStimuliTask final : public UBTTask_BlackboardBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	explicit UClearStimuliTask(const FObjectInitializer& ObjectInitializer);
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+    explicit UClearStimuliTask(const FObjectInitializer& ObjectInitializer);
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

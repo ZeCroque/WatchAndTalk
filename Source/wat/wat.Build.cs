@@ -23,6 +23,10 @@ public class wat : ModuleRules
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
-        DynamicallyLoadedModuleNames.Add("OnlineSubsystemWat");
+        DynamicallyLoadedModuleNames.AddRange(new string[]
+        {
+            "OnlineSubsystemWat",
+            "OnlineSubsystemNull"
+        });
     }
 }

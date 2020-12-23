@@ -10,10 +10,17 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
+#include "Core/MainGameState.h"
+#include "Core/NetworkSettingsWat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
+
+#if WITH_EDITOR
+	#include "Core/MainGameInstance.h"
+#endif
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -43,6 +50,8 @@ APlayerCharacter::APlayerCharacter()
     Mesh3P->SetVisibleFlag(false);
 
     SetupStimulus();
+
+	bIsAlive = true;
 }
 
 bool APlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -98,10 +107,48 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
+void APlayerCharacter::SetPlayerAsReadyForRestart()
+{
+	RestartGame(GetPlayerState()->GetPlayerId());
+}
+
+
+void APlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
+{	
+    auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+    GameState->PlayersReadyForRestartIds.Add(PlayerId);
+
+	int MatchingPlayersIdsCount = 0;
+	for(auto CurrentPlayerState : GameState->PlayerArray)
+	{
+		for(auto& ReadyPlayerId :  GameState->PlayersReadyForRestartIds)
+		{
+			if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
+			{
+				++MatchingPlayersIdsCount;
+				break;
+			}
+		}
+	}
+
+	if(MatchingPlayersIdsCount == GameState->PlayerArray.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
+		const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
+		GameState->PlayersReadyForRestartIds.Empty();
+	}
+}
+
+
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+#if WITH_EDITOR
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+#endif
 }
 
 // Called to bind functionality to input
@@ -128,10 +175,22 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 
     PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
+}
+
+bool APlayerCharacter::IsAlive() const
+{
+	return bIsAlive;
+}
+
+void APlayerCharacter::Die()
+{
+	//TODO trigger die anim
+	bIsAlive = false;
+	DisableInput(nullptr);
 }
 
 void APlayerCharacter::SetupStimulus()
@@ -181,7 +240,7 @@ void APlayerCharacter::LookUpAtRate(float Rate)
     AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::Interact()
+void APlayerCharacter::Interact_Implementation()
 {
 	auto* ClosestInteractable = GetClosestInteractable();
 	if(ClosestInteractable)
@@ -190,28 +249,30 @@ void APlayerCharacter::Interact()
 	}
 }
 
-void APlayerCharacter::Return()
+void APlayerCharacter::Return_Implementation()
 {
-	Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
+    Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
 }
 
-void APlayerCharacter::Sprint()
+void APlayerCharacter::StartSprinting()
 {
-	GetCharacterMovement() -> MaxWalkSpeed += SprintSpeedAdditionner;
+	GetCharacterMovement() -> MaxWalkSpeed += SprintAdditionalSpeedValue;
 }
 
 void APlayerCharacter::StopSprinting()
 {
-	GetCharacterMovement() -> MaxWalkSpeed -= SprintSpeedAdditionner;
+	GetCharacterMovement() -> MaxWalkSpeed -= SprintAdditionalSpeedValue;
 }
 
-void APlayerCharacter::StartCrouch()
+void APlayerCharacter::StartCrouching()
 {
 	Crouch();
 }
 
-void APlayerCharacter::StopCrouch()
+void APlayerCharacter::StopCrouching()
 {
 	UnCrouch();
 }
+
+
 

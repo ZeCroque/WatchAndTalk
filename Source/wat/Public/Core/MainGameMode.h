@@ -17,6 +17,5 @@ class WAT_API AMainGameMode : public AGameModeBase
 public:
 	AMainGameMode();
 
-protected:
-	void PostInitializeComponents() override;
+
 };

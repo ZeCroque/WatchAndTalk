@@ -14,31 +14,32 @@ FWLANManager::~FWLANManager()
 
 bool FWLANManager::Init()
 {
-	if (Socket)
-	{
-		UE_LOG(LogOnline, Warning, TEXT("Socket exists already, initialization skipped."));
-		return true;
-	}
+    if (Socket)
+    {
+	    UE_LOG(LogOnline, Warning, TEXT("Socket exists already, initialization skipped."));
+	    return true;
+    }
 
-	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+    ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 
-	// Now the listen address
-	RelationServerAddress = SocketSubsystem->CreateInternetAddr();
-        const auto ResolveInfo = SocketSubsystem->GetHostByName("zecroque.hopto.org");
-        while (!ResolveInfo->IsComplete());
+    // Now the listen address
+    RelationServerAddress = SocketSubsystem->CreateInternetAddr();
+    const auto ResolveInfo = SocketSubsystem->GetHostByName("zecroque.hopto.org");
+    // ReSharper disable once CppPossiblyErroneousEmptyStatements
+    while (!ResolveInfo->IsComplete());
 
-        bool bSuccess = (ResolveInfo->GetErrorCode() == 0);
+    bool bSuccess = (ResolveInfo->GetErrorCode() == 0);
 
-        if (!bSuccess)
-        {
-            UE_LOG(LogOnline, Warning, TEXT("Address creation failed."));
-            return bSuccess;
-        }
+    if (!bSuccess)
+    {
+        UE_LOG(LogOnline, Warning, TEXT("Address creation failed."));
+        return bSuccess;
+    }
 
-        auto& ReadAddr = ResolveInfo->GetResolvedAddress();
-        uint32 ReadIp = 0;
-        ReadAddr.GetIp(ReadIp);
-        RelationServerAddress->SetIp(ReadIp);
+    auto& ReadAddr = ResolveInfo->GetResolvedAddress();
+    uint32 ReadIp = 0;
+    ReadAddr.GetIp(ReadIp);
+    RelationServerAddress->SetIp(ReadIp);
 	RelationServerAddress->SetPort(7777);
 
 	// Now create and set up our sockets (no VDP)
@@ -64,7 +65,7 @@ int FWLANManager::GetPort() const
 
 bool FWLANManager::SendPresentationMessage()
 {
-	bool bSuccess = false;
+	bool bSuccess = true;
 	if (!Socket)
 	{
 		bSuccess = Init();
@@ -118,7 +119,7 @@ bool FWLANManager::SendSession(class FNamedOnlineSession* HostSession, FInternet
 
 bool FWLANManager::SendConnectionRequest()
 {
-	if(CurrentHostIndex == HostsAddresses.Num())
+	if(CurrentHostIndex >= HostsAddresses.Num())
 	{
 		StopSearch();
 		return true;
@@ -177,9 +178,11 @@ bool FWLANManager::SendJoinRequest(FInternetAddr* HostAddress)
 
 void FWLANManager::StopSearch()
 {
+	HostConnectionTimeoutDuration = HOST_CONNECTION_TIMEOUT_DURATION;
 	HostsSearchTimeoutDuration = HOSTS_SEARCH_TIMEOUT_DURATION;
 	bIsSearching = false;
 	CurrentHostIndex = 0;
+	HostsAddresses.Empty();
 	TriggerOnSearchingTimeoutDelegates();
 }
 
@@ -205,12 +208,11 @@ void FWLANManager::WriteAddressIntoMessage(FMessage& Message, FInternetAddr* Add
 	Algo::Reverse(Message.BSDAddr.IpBytes, sizeof(uint32));
 }
 
-bool FWLANManager::Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate, FOnJoinRequestDelegate& JoinRequestDelegate)
+bool FWLANManager::Host(FOnSessionStartedDelegate& SessionStartedDelegate, FOnValidSessionRequestDelegate& SessionRequestDelegate)
 {
 	bIsHost = true;
 	AddOnSessionStartedDelegate_Handle(SessionStartedDelegate);
 	AddOnValidSessionRequestDelegate_Handle(SessionRequestDelegate);
-	AddOnJoinRequestDelegate_Handle(JoinRequestDelegate);
 	return SendPresentationMessage();
 }
 
@@ -221,6 +223,7 @@ bool FWLANManager::Search(const TSharedRef<FOnlineSessionSearch>& SearchSettings
 	if (SendPresentationMessage())
 	{
 		ClientSessionSearch = SearchSettings;
+		ClearOnSearchingTimeoutDelegates(this);
 		AddOnSearchingTimeoutDelegate_Handle(TimeoutDelegate);
 		return true;
 	}
@@ -531,7 +534,6 @@ void FWLANManager::Tick(float DeltaTime)
 							UE_LOG(LogOnline, Warning, TEXT("Join request received."));
 		                                        SendHostDisconnectedMessage();
 							StopWLANProcess();
-							TriggerOnJoinRequestDelegates();
 							break;
 						default:
 							UE_LOG(LogOnline, Warning, TEXT("Error: Unexpected message. Type:%d"), static_cast<int>(Message->MessageType));
@@ -640,7 +642,7 @@ void FWLANManager::Tick(float DeltaTime)
 			if(HostConnectionTimeoutDuration <= 0.f)
 			{
 				HostConnectionTimeoutDuration = HOST_CONNECTION_TIMEOUT_DURATION;
-				SendHostDisconnectedMessage();
+				//SendHostDisconnectedMessage();
 				++CurrentHostIndex;
 				SendConnectionRequest();
 			}

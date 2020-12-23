@@ -29,14 +29,21 @@ private:
 	bool bToggle;
 	
 	class AMonitor* GetMonitorByIndex(const int Index);
+
+    //Inputs
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	UFUNCTION(Server, Reliable)
 	void Return();
+
+    //Interactable
+    virtual void Interact() override;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void Interact() override;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

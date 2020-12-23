@@ -1,54 +1,17 @@
 #include "Core/MainPlayerState.h"
-#include "Core/MainGameMode.h"
-#include "Core/MainGameState.h"
+
+
+#include "Core/NetworkSettingsWat.h"
+#include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
-
-
-void AMainPlayerState::KillPlayer_Implementation()
-{
-    UE_LOG(LogTemp, Warning, TEXT("Player was kill"));
-    //todo kill the player
-}
-
-bool AMainPlayerState::KillPlayer_Validate()
-{
-    return true;
-}
-
-void AMainPlayerState::Possess_Implementation(APlayerController* ClientController, APawn* Pawn)
-{
-    Pawn->SetOwner(ClientController);
-    ClientController->Possess(Pawn);
-}
-
-bool AMainPlayerState::Possess_Validate(APlayerController* ClientController, APawn* Pawn)
-{
-    return true;
-}
 
 void AMainPlayerState::OnDeactivated()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
-}
-
-void AMainPlayerState::CheckIfGameShouldEnd_Implementation(AEndGameInteractable* Interactable)
-{
-    Interactable->bUsed = true;
-    AMainGameState* MainGameState = Cast<AMainGameState>(GetWorld()->GetGameState());
-    if (MainGameState->AreAllEndGameInteractableClicked() == true)
+    if(!HasLocalNetOwner())
     {
-        EndGame();
-    } 
-}
-
-void AMainPlayerState::EndGame_Implementation()
-{
-    auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
-    if (!EndGameWidget->GetIsVisible())
-    {
-        EndGameWidget->AddToViewport();
-        auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-        PlayerController->SetInputMode(FInputModeUIOnly());
-        PlayerController->bShowMouseCursor = true;
+      UE_LOG(LogTemp, Warning, TEXT("Client %s disconnected"), *this->GetPlayerName());
+      const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+      UGameplayStatics::OpenLevel(GetWorld(), *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
     }
+
 }
