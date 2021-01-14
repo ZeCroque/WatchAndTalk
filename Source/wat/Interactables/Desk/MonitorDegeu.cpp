@@ -33,6 +33,7 @@ void AMonitorDegeu::BeginPlay()
 
     RenderSourceCamera1 = GameState->Cameras[DebugZoneIndex].ZoneCameras[1]->GetCaptureComponent2D();
     RenderSourceCamera1->TextureTarget = RenderTarget1;
+    RenderSourceCamera1->SetVisibleFlag(false);
     ScreenMaterial1->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget1));
 
 
@@ -45,6 +46,7 @@ void AMonitorDegeu::BeginPlay()
 
     RenderSourceCamera2 = GameState->Cameras[DebugZoneIndex].ZoneCameras[2]->GetCaptureComponent2D();
     RenderSourceCamera2->TextureTarget = RenderTarget2;
+    RenderSourceCamera2->SetVisibleFlag(false);
     ScreenMaterial2->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget2));
 
 
@@ -57,5 +59,6 @@ void AMonitorDegeu::BeginPlay()
 
     RenderSourceCamera3 = GameState->Cameras[DebugZoneIndex].ZoneCameras[3]->GetCaptureComponent2D();
     RenderSourceCamera3->TextureTarget = RenderTarget3;
+    RenderSourceCamera3->SetVisibleFlag(false);
     ScreenMaterial3->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget3));
 }
