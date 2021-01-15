@@ -12,27 +12,21 @@
 UCLASS()
 class WAT_API UGoalReactionManagerBTS final : public UBTService_BlackboardBase
 {
-    GENERATED_BODY()
-    UGoalReactionManagerBTS();
+	GENERATED_BODY()
+	UGoalReactionManagerBTS();
 
 protected:
-    virtual FString GetStaticServiceDescription() const override;
+	virtual FString GetStaticServiceDescription() const override;
 
 private:
-    virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blackboard key", meta = (AllowPrivateAccess = "true"))
-    FBlackboardKeySelector PlayerLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blackboard key", meta = (AllowPrivateAccess = "true"))
+	FBlackboardKeySelector PlayerLocation;
 
-    UPROPERTY()
-    AActor* Player;
-    
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
-    FBlackboardKeySelector PlayerKey;
-
-    UPROPERTY()
+	UPROPERTY()
 	class AMonsterCharacter* Self;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
 	FBlackboardKeySelector IsInGoalReactionMode;
 };

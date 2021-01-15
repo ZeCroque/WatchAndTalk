@@ -13,8 +13,6 @@ class WAT_API AMonsterCharacter final : public ACharacter
 
 public:
 
-	bool bIsInGoalReactionMode;
-	
 	// Sets default values for this character's properties
 	AMonsterCharacter();
 
@@ -29,7 +27,7 @@ protected:
 public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> GameOverWidgetTemplate;
-	
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,9 +35,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(NetMulticast, Reliable)
-        void KillPlayer(class APlayerCharacter* Player);
-	
-	void StartGoalReaction();
+	void KillPlayer(class APlayerCharacter* Player);
+
+	void StartGoalReaction(ACharacter* Character);
+	void StopGoalReaction();
+
+	UPROPERTY()
+	APlayerCharacter* PlayerToChase;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
