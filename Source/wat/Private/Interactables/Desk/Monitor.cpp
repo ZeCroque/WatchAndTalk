@@ -45,6 +45,8 @@ void AMonitor::BeginPlay()
 
 	RenderSourceCamera = GameState->Cameras[DebugZoneIndex].ZoneCameras[0]->GetCaptureComponent2D();
 	RenderSourceCamera->TextureTarget = RenderTarget;
+	RenderSourceCamera->SetVisibleFlag(false);
+
 	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget));
 }
 
