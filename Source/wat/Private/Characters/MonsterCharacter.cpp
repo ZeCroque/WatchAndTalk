@@ -15,7 +15,6 @@ AMonsterCharacter::AMonsterCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	bIsInGoalReactionMode = false;
 }
 
 void AMonsterCharacter::MeleeAttack(APlayerCharacter* Player)
@@ -60,18 +59,22 @@ void AMonsterCharacter::KillPlayer_Implementation(APlayerCharacter* Player)
 	Player->Die();
 
 	auto* GameOverWidget = NewObject<UUserWidget>(this, GameOverWidgetTemplate);
-    if (GameOverWidget != nullptr)
-    {
-        GameOverWidget->AddToViewport();
-        auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-        PlayerController->SetInputMode(FInputModeUIOnly());
-        PlayerController->bShowMouseCursor = true;
-    }
+	if (GameOverWidget != nullptr)
+	{
+		GameOverWidget->AddToViewport();
+		auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		PlayerController->SetInputMode(FInputModeUIOnly());
+		PlayerController->bShowMouseCursor = true;
+	}
 }
 
-void AMonsterCharacter::StartGoalReaction()
+void AMonsterCharacter::StartGoalReaction(ACharacter* Character)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Purple,TEXT("Start Goal Reaction"));
-	bIsInGoalReactionMode = true;
-	//Cast<AMonsterAIController>(GetController())->GetBlackboard()->SetValueAsBool()
+	PlayerToChase = Cast<APlayerCharacter>(Character);
+}
+
+void AMonsterCharacter::StopGoalReaction()
+{
+	PlayerToChase = nullptr;
 }

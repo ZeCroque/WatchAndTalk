@@ -6,40 +6,35 @@
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/MonsterCharacter.h"
+#include "Characters/PlayerCharacter.h"
 
 UGoalReactionManagerBTS::UGoalReactionManagerBTS()
 {
-    NodeName = TEXT("Goal Complection Manager");
+	NodeName = TEXT("Goal Reaction Manager");
 }
 
 FString UGoalReactionManagerBTS::GetStaticServiceDescription() const
 {
-    return FString("Setup actual perception from stimulus state");
+	return FString("Setup actual perception from stimulus state");
 }
 
 void UGoalReactionManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-    auto* const Controller = OwnerComp.GetAIOwner();
-    auto const Target = Controller->GetBlackboardComponent()->GetValueAsObject(PlayerKey.SelectedKeyName);
-
-    if (Target && !Player)
-    {
-        Player = Cast<AActor>(Target);
-    }
-
-	if(Player)
+	if (!Self)
 	{
-		Controller->GetBlackboardComponent()->SetValueAsVector(PlayerLocation.SelectedKeyName, Player->GetActorLocation());
+		Self = Cast<AMonsterCharacter>(OwnerComp.GetAIOwner()->GetPawn());
 	}
-	
-    if(!Self)
-    {
-	    Self = Cast<AMonsterCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-    }
-	
-	if(Self && Self->bIsInGoalReactionMode)
+
+	auto* const Controller = OwnerComp.GetAIOwner();;
+	if (Self && Self->PlayerToChase)
 	{
-		Self->bIsInGoalReactionMode = false;
 		Controller->GetBlackboardComponent()->SetValueAsBool(IsInGoalReactionMode.SelectedKeyName, true);
+		Controller->GetBlackboardComponent()->SetValueAsVector(PlayerLocation.SelectedKeyName,
+		                                                       Self->PlayerToChase->GetActorLocation());
+	}
+	else if (Self)
+	{
+		Controller->GetBlackboardComponent()->SetValueAsBool(IsInGoalReactionMode.SelectedKeyName, false);
+		Controller->GetBlackboardComponent()->ClearValue(PlayerLocation.SelectedKeyName);
 	}
 }

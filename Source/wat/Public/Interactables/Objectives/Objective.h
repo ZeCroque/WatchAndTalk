@@ -4,7 +4,7 @@
 #include "Interactables/Interactable.h"
 #include "Objective.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnObjectiveInteractionEnd);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnObjectiveInteractionEnd, ACharacter*);
 typedef FOnObjectiveInteractionEnd::FDelegate FOnObjectiveInteractionEndDelegate;
 
 UCLASS()

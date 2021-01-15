@@ -2,6 +2,7 @@
 #include "Characters/MonsterCharacter.h"
 #include "Core/MainGameState.h"
 #include "Kismet/GameplayStatics.h"
+#include "Characters/PlayerCharacter.h"
 
 void AObjective::EndGame_Implementation()
 {
@@ -34,7 +35,7 @@ void AObjective::InteractionEnd()
         else
         {
 	        // ReSharper disable once CppExpressionWithoutSideEffects
-	        OnObjectiveInteractionEnd.ExecuteIfBound();
+	        OnObjectiveInteractionEnd.ExecuteIfBound(PlayerCharacter);
         }
     }
 }
