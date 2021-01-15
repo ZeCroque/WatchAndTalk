@@ -23,7 +23,6 @@ protected:
 	FOnObjectiveInteractionEndDelegate OnObjectiveInteractionEnd;
 	
 	virtual void Interact() override;
-	virtual void InteractionEnd();
 
 public:
 	UPROPERTY(Replicated)
@@ -31,6 +30,8 @@ public:
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
+
+	virtual void InteractionEnd();
 
 	virtual void BeginPlay() override;
 private:

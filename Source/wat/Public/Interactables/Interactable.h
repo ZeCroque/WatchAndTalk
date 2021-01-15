@@ -38,9 +38,6 @@ protected:
 	class APlayerCharacter* PlayerCharacter;
 
 	UPROPERTY(Replicated)
-	APlayerController* PlayerController;
-
-	UPROPERTY(Replicated)
 	bool bInUse;
 	
 public:	
@@ -49,6 +46,8 @@ public:
 	virtual void Interact();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UPROPERTY(Replicated)
+	APlayerController* PlayerController;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
