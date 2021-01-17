@@ -29,4 +29,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
 	FBlackboardKeySelector IsInGoalReactionMode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blackboard key", meta=(AllowPrivateAccess="true"))
+	FBlackboardKeySelector Player;
 };

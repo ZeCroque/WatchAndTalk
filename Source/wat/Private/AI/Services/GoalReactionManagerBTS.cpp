@@ -31,10 +31,12 @@ void UGoalReactionManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		Controller->GetBlackboardComponent()->SetValueAsBool(IsInGoalReactionMode.SelectedKeyName, true);
 		Controller->GetBlackboardComponent()->SetValueAsVector(PlayerLocation.SelectedKeyName,
 		                                                       Self->PlayerToChase->GetActorLocation());
+		Controller->GetBlackboardComponent()->SetValueAsObject(Player.SelectedKeyName, Self->PlayerToChase);
 	}
 	else if (Self)
 	{
 		Controller->GetBlackboardComponent()->SetValueAsBool(IsInGoalReactionMode.SelectedKeyName, false);
 		Controller->GetBlackboardComponent()->ClearValue(PlayerLocation.SelectedKeyName);
+		Controller->GetBlackboardComponent()->ClearValue(Player.SelectedKeyName);
 	}
 }
