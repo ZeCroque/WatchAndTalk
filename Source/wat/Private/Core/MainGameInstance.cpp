@@ -49,9 +49,8 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
             SessionSettings-> bShouldAdvertise = true;
             SessionSettings->bAllowJoinViaPresence = true;
             SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
-
         	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
-            SessionSettings->Set(SETTING_MAPNAME, *NetworkSettingsWat->LobbyLevel.GetAssetName(), EOnlineDataAdvertisementType::ViaOnlineService);
+            SessionSettings->Set(SETTING_MAPNAME, NetworkSettingsWat->LobbyLevel.GetAssetName(), EOnlineDataAdvertisementType::ViaOnlineService);
 
             OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
             return Sessions->CreateSession(*UserId, SessionName, *SessionSettings);
