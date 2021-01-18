@@ -12,6 +12,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/PlayerCharacter.h"
 #include "Perception/AISense_Sight.h"
+#include "Characters/MonsterCharacter.h"
 
 class UNavigationSystemV1;
 class AMonsterAIController;
@@ -19,6 +20,7 @@ class AMonsterAIController;
 UStimulusManagerBTS::UStimulusManagerBTS()
 {
 	NodeName = TEXT("Stimulus Manager");
+	Self = nullptr;
 }
 
 FString UStimulusManagerBTS::GetStaticServiceDescription() const
@@ -29,11 +31,16 @@ FString UStimulusManagerBTS::GetStaticServiceDescription() const
 void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-
+	
 	AAIController* const Controller = OwnerComp.GetAIOwner();
 	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	if (Controller)
 	{
+		if(!Self)
+		{
+			Self = Cast<AMonsterCharacter>(Controller->GetPawn());
+		}
+		
 		TArray<AActor*> Actors;
 		UAIPerceptionComponent* PerceptionComponent = Controller->GetPerceptionComponent();
 		PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Actors);
@@ -62,7 +69,11 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 			}
 		}
 
-		Blackboard->ClearValue(Player.SelectedKeyName);
+		if(!Self->PlayerToChase)
+		{
+			Blackboard->ClearValue(Player.SelectedKeyName);
+		}
+			
 		Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
 		Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
 		PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);

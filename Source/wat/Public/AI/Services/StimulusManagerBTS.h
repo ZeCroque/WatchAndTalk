@@ -44,4 +44,7 @@ private:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Random Location Tweak", meta=(AllowPrivateAccess="true"))
     float SearchRadius = 1500.0f;
+
+	UPROPERTY()
+	class AMonsterCharacter* Self;
 };
