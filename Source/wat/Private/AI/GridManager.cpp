@@ -76,7 +76,7 @@ void AGridManager::SetValueAround(const FVector Center, const int Ray)
 	const int Start_X = GridCoordinate.X;
 	const int Start_Y = GridCoordinate.Y;
 
-	int JStart, JEnd;
+	volatile int JStart=0, JEnd=0;
 	if (Center.Z < FloorHeight)
 	{
 		JStart = 0;

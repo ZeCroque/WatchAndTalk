@@ -5,21 +5,26 @@
 
 #include "Interactables/Objectives/QTEInteractable.h"
 
+AMainPlayerController::AMainPlayerController()
+{
+	DebugGridWidget = nullptr;
+}
+
 bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
-    if (bIsInMiniGame && EventType == EInputEvent::IE_Pressed)
-    {
-        if (!Widget)
-        {
-            auto* Interactable = Cast<AQTEInteractable>(GetPawn());
-            if (Interactable && Interactable->bCanInteract)
-            {
-                Widget = Interactable->Widget;
-            }
-            UE_LOG(LogTemp, Warning, TEXT("%s"), *Widget->GetFName().ToString());
-        }
-        Widget->OnInput(Key);
-        return true;
-    }
-    return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
+	if (bIsInMiniGame && EventType == EInputEvent::IE_Pressed)
+	{
+		if (!Widget)
+		{
+			auto* Interactable = Cast<AQTEInteractable>(GetPawn());
+			if (Interactable && Interactable->bCanInteract)
+			{
+				Widget = Interactable->Widget;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *Widget->GetFName().ToString());
+		}
+		Widget->OnInput(Key);
+		return true;
+	}
+	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }

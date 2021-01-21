@@ -45,6 +45,8 @@ protected:
 
 	//Inputs
 
+	void CreateDebugWidget();
+
 	//Movement
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -91,6 +93,9 @@ private:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound", meta=(AllowPrivateAccess = "true"))
     USoundBase* DistractionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> GridDebugWidget;
 
     UPROPERTY()
     TSet<AInteractable*> InteractablesSet;
