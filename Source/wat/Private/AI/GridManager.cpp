@@ -67,22 +67,16 @@ void AGridManager::DecrementValueAt(const int X, const int Y, const float Value)
 	Grid[X + Y * CellPerSide] = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
 }
 
-void AGridManager::SetValueAround(const FVector Center, const int Ray)
+void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 {
 	// j -> X
 	// i -> y
 
 	const FVector2D GridCoordinate = GetGridCoordinate(Center);
-	const int Start_X = GridCoordinate.X;
-	const int Start_Y = GridCoordinate.Y;
 
-	volatile int JStart=0, JEnd=0;
-	if (Center.Z < FloorHeight)
-	{
-		JStart = 0;
-		JEnd = CellPerSide;
-	}
-	else
+	int JStart = 0;
+	int JEnd = CellPerSide;
+	if (Center.Z >= FloorHeight)
 	{
 		JStart = CellPerSide;
 		JEnd = CellPerSide * 2;
@@ -92,7 +86,7 @@ void AGridManager::SetValueAround(const FVector Center, const int Ray)
 	{
 		for (int j = JStart; j < JEnd; j++)
 		{
-			if (((j - Start_X) * (j - Start_X) + (i - Start_Y) * (i - Start_Y)) <= Ray * Ray)
+			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <= Ray * Ray)
 			{
 				SetValueAt(j, j, 1.0f);
 			}
@@ -100,7 +94,7 @@ void AGridManager::SetValueAround(const FVector Center, const int Ray)
 	}
 }
 
-FVector2D AGridManager::GetGridCoordinate(const FVector WorldCoordinate) const
+FVector2D AGridManager::GetGridCoordinate(const FVector& WorldCoordinate) const
 {
 	const int GridY = static_cast<int>((WorldCoordinate.Y - MinWorld.Y) / CellHeight);
 
@@ -119,7 +113,7 @@ FVector2D AGridManager::GetGridCoordinate(const FVector WorldCoordinate) const
 	return FVector2D(GridX, GridY);
 }
 
-FVector AGridManager::GetWorldCoordinate(const FVector2D GridCoordinate) const
+FVector AGridManager::GetWorldCoordinate(const FVector2D& GridCoordinate) const
 {
 	const float WorldY = GridCoordinate.Y * CellHeight + MinWorld.Y + CellHeight / 2.f;
 	float WorldX, WorldZ;

@@ -35,10 +35,10 @@ public:
 	void DecrementValueAt(int X, int Y, float Value);
 
 	UFUNCTION(BlueprintCallable, Category="Grid")
-	void SetValueAround(FVector Center, int Ray);
+	void SetValueAround(const FVector& Center, const int Ray);
 	
-	FVector2D GetGridCoordinate(FVector WorldCoordinate) const;
-	FVector GetWorldCoordinate(FVector2D GridCoordinate) const;
+	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
+	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
