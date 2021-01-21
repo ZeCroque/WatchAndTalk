@@ -54,17 +54,17 @@ void AGridManager::Tick(float DeltaTime)
 
 float AGridManager::GetValueAt(const int X, const int Y)
 {
-	return Grid[X + Y * CellPerSide];
+	return Grid[X + Y * CellPerSide * 2];
 }
 
 void AGridManager::SetValueAt(const int X, const int Y, const float Value)
 {
-	Grid[X + Y * CellPerSide] = Value;
+	Grid[X + Y * CellPerSide * 2] = Value;
 }
 
 void AGridManager::DecrementValueAt(const int X, const int Y, const float Value)
 {
-	Grid[X + Y * CellPerSide] = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
+	Grid[X + Y * CellPerSide * 2] = FMath::Max(0.0f, Grid[X + Y * CellPerSide * 2] - Value);
 }
 
 void AGridManager::SetValueAround(const FVector& Center, const int Ray)
@@ -86,9 +86,10 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 	{
 		for (int j = JStart; j < JEnd; j++)
 		{
-			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <= Ray * Ray)
+			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <=
+				Ray * Ray)
 			{
-				SetValueAt(j, j, 1.0f);
+				SetValueAt(j, i, 1.0f);
 			}
 		}
 	}
