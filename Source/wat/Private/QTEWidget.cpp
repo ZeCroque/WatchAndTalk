@@ -2,11 +2,28 @@
 
 
 #include "QTEWidget.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
+
+class AMainPlayerController;
 
 bool UQTEWidget::Initialize()
 {
     DefineInputList();
+    //Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = true;
+    TimeLeft = TimeLimit;
     return Super::Initialize();
+}
+
+void UQTEWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    if (TimeLeft > 0)
+    {
+        TimeLeft -= InDeltaTime;
+    } else
+    {
+        OnFail();
+    }
+    Super::NativeTick(MyGeometry, InDeltaTime);
 }
 
 void UQTEWidget::DefineInputList()
@@ -37,8 +54,19 @@ void UQTEWidget::OnInput(FKey PressedInput)
     }
 }
 
+float UQTEWidget::GetProgressBarCompletion()
+{
+    return float(CurrentIndex+1) / float(InputNumber);
+}
+
 void UQTEWidget::OnComplete()
 {
-    //TODO OnComplete
-    UE_LOG(LogTemp, Warning, TEXT("C FINI"));
+    ParentInteractable->InteractionEnd();
+}
+
+void UQTEWidget::OnFail()
+{
+    //TODO OnFail
+    ParentInteractable->bCanInteract = true;
+    UE_LOG(LogTemp, Warning, TEXT("FAIL FAIL FAIL"));
 }

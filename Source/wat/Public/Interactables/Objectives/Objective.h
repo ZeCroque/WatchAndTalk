@@ -23,16 +23,21 @@ protected:
 	FOnObjectiveInteractionEndDelegate OnObjectiveInteractionEnd;
 	
 	virtual void Interact() override;
-	virtual void InteractionEnd();
 
 public:
+	AObjective();
+
 	UPROPERTY(Replicated)
-	bool bCompleted = false;
+	bool bCompleted;
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
 	virtual void BeginPlay() override;
+	
+	virtual void InteractionEnd();
+	bool bCanInteract = true;
+
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

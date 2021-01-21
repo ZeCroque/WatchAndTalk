@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Characters/PlayerCharacter.h"
 
+
 void AObjective::EndGame_Implementation()
 {
     auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
@@ -19,15 +20,21 @@ void AObjective::EndGame_Implementation()
 void AObjective::Interact()
 {
     Super::Interact();
-
+    bCanInteract = false;
 	bCompleted = true;
 	InteractionEnd();
+}
+
+AObjective::AObjective()
+{
+    bCanInteract = true;
 }
 
 void AObjective::InteractionEnd()
 {
     if (PlayerController)
     {
+        bCanInteract = false;
         if (GameState->AreAllObjectivesCompleted() == true)
         {
             EndGame();
