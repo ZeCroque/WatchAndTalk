@@ -12,7 +12,7 @@ bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amou
         if (!Widget)
         {
             auto* Interactable = Cast<AQTEInteractable>(GetPawn());
-            if (Interactable)
+            if (Interactable && Interactable->bCanInteract)
             {
                 Widget = Interactable->Widget;
             }

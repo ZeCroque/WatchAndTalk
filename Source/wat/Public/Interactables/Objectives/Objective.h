@@ -25,15 +25,19 @@ protected:
 	virtual void Interact() override;
 
 public:
+	AObjective();
+
 	UPROPERTY(Replicated)
-	bool bCompleted = false;
+	bool bCompleted;
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
-	virtual void InteractionEnd();
-
 	virtual void BeginPlay() override;
+	
+	virtual void InteractionEnd();
+	bool bCanInteract = true;
+
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

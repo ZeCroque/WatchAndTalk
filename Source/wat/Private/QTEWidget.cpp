@@ -67,5 +67,6 @@ void UQTEWidget::OnComplete()
 void UQTEWidget::OnFail()
 {
     //TODO OnFail
+    ParentInteractable->bCanInteract = true;
     UE_LOG(LogTemp, Warning, TEXT("FAIL FAIL FAIL"));
 }
