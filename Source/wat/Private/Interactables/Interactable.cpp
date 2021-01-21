@@ -47,7 +47,7 @@ void AInteractable::BeginPlay()
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!PlayerCharacter)
+	if (!PlayerCharacter && bCanInteract)
 	{
 		PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 		if (PlayerCharacter)

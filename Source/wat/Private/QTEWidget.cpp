@@ -2,6 +2,10 @@
 
 
 #include "QTEWidget.h"
+
+
+#include "Characters/PlayerCharacter.h"
+#include "Core/MainPlayerController.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 
 class AMainPlayerController;
@@ -9,7 +13,6 @@ class AMainPlayerController;
 bool UQTEWidget::Initialize()
 {
     DefineInputList();
-    //Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = true;
     TimeLeft = TimeLimit;
     return Super::Initialize();
 }
@@ -61,12 +64,18 @@ float UQTEWidget::GetProgressBarCompletion()
 
 void UQTEWidget::OnComplete()
 {
+    RemoveFromParent();
+    ParentInteractable->bCompleted = true;
+    Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = false;
+    ParentInteractable->bCanInteract = false;
+    ParentInteractable->PlayerController->SetViewTargetWithBlend(ParentInteractable->PlayerCharacter, ParentInteractable->BlendTime);
     ParentInteractable->InteractionEnd();
 }
 
 void UQTEWidget::OnFail()
 {
-    //TODO OnFail
+    RemoveFromParent();
+    Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = false;
+    ParentInteractable->PlayerController->SetViewTargetWithBlend(ParentInteractable->PlayerCharacter, ParentInteractable->BlendTime);
     ParentInteractable->bCanInteract = true;
-    UE_LOG(LogTemp, Warning, TEXT("FAIL FAIL FAIL"));
 }

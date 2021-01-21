@@ -20,7 +20,6 @@ void AObjective::EndGame_Implementation()
 void AObjective::Interact()
 {
     Super::Interact();
-    bCanInteract = false;
 	bCompleted = true;
 	InteractionEnd();
 }

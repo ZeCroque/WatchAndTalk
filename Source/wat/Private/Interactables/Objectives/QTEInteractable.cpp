@@ -10,7 +10,7 @@ void AQTEInteractable::Interact()
 {
     AInteractable::Interact();
     AMainPlayerController* PC = Cast<AMainPlayerController>(PlayerController);
-    PC->Widget = CreateWidget<UQTEWidget>(PC, EndGameWidgetTemplate);
+    PC->Widget = CreateWidget<UQTEWidget>(PC, MiniGameWidgetTemplate);
     PC->Widget->AddToViewport();
     PC->Widget->ParentInteractable = this;
     PC->bIsInMiniGame = true;

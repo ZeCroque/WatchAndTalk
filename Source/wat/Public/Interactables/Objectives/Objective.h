@@ -33,10 +33,12 @@ public:
     UPROPERTY(EditAnywhere)
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> MiniGameWidgetTemplate;
+
 	virtual void BeginPlay() override;
 	
 	virtual void InteractionEnd();
-	bool bCanInteract = true;
 
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

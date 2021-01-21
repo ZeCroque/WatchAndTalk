@@ -35,9 +35,6 @@ public:
 protected:
 
 	UPROPERTY(Replicated)
-	class APlayerCharacter* PlayerCharacter;
-
-	UPROPERTY(Replicated)
 	bool bInUse;
 	
 public:	
@@ -48,6 +45,11 @@ public:
 
 	UPROPERTY(Replicated)
 	APlayerController* PlayerController;
+
+	UPROPERTY(Replicated)
+	class APlayerCharacter* PlayerCharacter;
+
+	bool bCanInteract;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
