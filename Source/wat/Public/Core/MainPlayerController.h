@@ -17,10 +17,11 @@ class WAT_API AMainPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	AMainPlayerController();
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	bool bIsInMiniGame = false;
 	UPROPERTY()
 	UQTEWidget* Widget;
-
+	UPROPERTY()
+	UUserWidget* DebugGridWidget;
 };
-

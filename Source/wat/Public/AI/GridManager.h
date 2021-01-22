@@ -27,15 +27,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, Category="Grid")
 	float GetValueAt(int X, int Y);
 
 	void SetValueAt(int X, int Y, float Value);
 
 	void DecrementValueAt(int X, int Y, float Value);
 
-	void SetValueAround(FVector Center, int Ray);
-	FVector2D GetGridCoordinate(FVector WorldCoordinate) const;
-	FVector GetWorldCoordinate(FVector2D GridCoordinate) const;
+	UFUNCTION(BlueprintCallable, Category="Grid")
+	void SetValueAround(const FVector& Center, const int Ray);
+
+	UFUNCTION(BlueprintCallable, Category="Grid")
+	bool RandomHotWorldCoordinate(FVector& Vector);
+
+	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
+	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
@@ -45,7 +51,7 @@ private:
 	float CoolingStrength = 0.05f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
-	int FloorHeight = 20;
+	int FloorHeight = 200;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
 	int GroundHeight = 0;
@@ -56,6 +62,7 @@ private:
 	float CellWidth; // X
 	float CellHeight; // Y
 
+	float SumOfWeight;
 
 	TArray<float> Grid;
 };
