@@ -13,14 +13,14 @@ AGridManager::AGridManager()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Grid Component"));
 	BoxComponent->SetupAttachment(RootComponent);
 	BoxComponent->SetHiddenInGame(true);
-
-	Grid.Init(0.f, CellPerSide * CellPerSide * 2);
 }
 
 // Called when the game starts or when spawned
 void AGridManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Grid.Init(0.f, CellPerSide * CellPerSide * 2);
 
 	MinWorld = FVector2D(BoxComponent->GetNavigationBounds().Min);
 	MaxWorld = FVector2D(BoxComponent->GetNavigationBounds().Max);
@@ -49,6 +49,7 @@ void AGridManager::Tick(float DeltaTime)
 			DecrementValueAt(j, i, CoolingStrength * DeltaTime);
 		}
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::FromInt(SumOfWeight));
 }
 
 
@@ -59,12 +60,17 @@ float AGridManager::GetValueAt(const int X, const int Y)
 
 void AGridManager::SetValueAt(const int X, const int Y, const float Value)
 {
+	SumOfWeight -= Grid[X + Y * CellPerSide];
+	SumOfWeight += Value;
 	Grid[X + Y * CellPerSide] = Value;
 }
 
 void AGridManager::DecrementValueAt(const int X, const int Y, const float Value)
 {
-	Grid[X + Y * CellPerSide] = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
+	const auto ClampValue = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
+	SumOfWeight -= Grid[X + Y * CellPerSide];
+	SumOfWeight += ClampValue;
+	Grid[X + Y * CellPerSide] = ClampValue;
 }
 
 void AGridManager::SetValueAround(const FVector& Center, const int Ray)
@@ -86,12 +92,41 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 	{
 		for (int j = 0; j < CellPerSide; j++)
 		{
-			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <= Ray * Ray)
+			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <=
+				Ray * Ray)
 			{
 				SetValueAt(j, i, 1.0f);
 			}
 		}
 	}
+}
+
+bool AGridManager::RandomHotWorldCoordinate(FVector& Vector) //TODO : Test
+{
+	if (SumOfWeight > 0)
+	{
+		float Rnd;
+		do
+		{
+			Rnd = FMath::RandRange(0.0f, SumOfWeight);
+		}
+		while (Rnd == 0.f);
+
+		for (int i = 0; i < Grid.Num(); i++)
+		{
+			if (Rnd < Grid[i])
+			{
+				const int x = i % CellPerSide;
+				const int y = i / CellPerSide;
+
+				Vector = GetWorldCoordinate(FVector2D(x, y));
+				return true;
+			}
+			Rnd -= Grid[i];
+		}
+	}
+	
+	return false;
 }
 
 FVector2D AGridManager::GetGridCoordinate(const FVector& WorldCoordinate) const

@@ -36,7 +36,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Grid")
 	void SetValueAround(const FVector& Center, const int Ray);
-	
+
+	UFUNCTION(BlueprintCallable, Category="Grid")
+	bool RandomHotWorldCoordinate(FVector& Vector);
+
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
@@ -59,6 +62,7 @@ private:
 	float CellWidth; // X
 	float CellHeight; // Y
 
+	float SumOfWeight;
 
 	TArray<float> Grid;
 };

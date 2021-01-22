@@ -110,7 +110,6 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::CreateDebugWidget()
 {
-	UE_LOG(LogTemp,Warning,TEXT("Oui"))
 	AMainPlayerController* PC = Cast<AMainPlayerController>(GetController());
 	if (!PC->DebugGridWidget)
 	{
@@ -120,7 +119,6 @@ void APlayerCharacter::CreateDebugWidget()
 	else
 	{
 		PC->DebugGridWidget->RemoveFromParent();
-		PC->DebugGridWidget->Destruct();
 		PC->DebugGridWidget = nullptr;
 	}
 }
