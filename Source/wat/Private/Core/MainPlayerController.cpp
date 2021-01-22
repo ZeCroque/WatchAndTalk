@@ -14,9 +14,8 @@ bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amou
             auto* Interactable = Cast<AQTEInteractable>(GetPawn());
             if (Interactable)
             {
-                Widget = Interactable->Widget;
+                Widget = Cast<UQTEWidget>(Interactable->MiniGameWidget->GetUserWidgetObject());
             }
-            UE_LOG(LogTemp, Warning, TEXT("%s"), *Widget->GetFName().ToString());
         }
         Widget->OnInput(Key);
         return true;

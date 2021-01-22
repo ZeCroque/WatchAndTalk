@@ -75,8 +75,7 @@ AInteractable* APlayerCharacter::GetClosestInteractable()
 	{
 		if (InteractableSetItem)
 		{
-			const float Distance = UKismetMathLibrary::Vector_Distance2D(
-				PlayerLocation, InteractableSetItem->GetActorLocation());
+			const float Distance = UKismetMathLibrary::Vector_Distance2D(PlayerLocation, InteractableSetItem->GetActorLocation());
 			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
 			{
 				ClosestInteractable.Key = Distance;
@@ -163,8 +162,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 #if WITH_EDITOR
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
-	                                 Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
 }
 
@@ -173,15 +171,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Bind jump events
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
-	PlayerInputComponent->BindAction("Return", IE_Pressed, this, &APlayerCharacter::Return);
-
-	// Bind movement events
-	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+    // Bind jump events
+    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+    
+    // Bind movement events
+    PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+    PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -266,11 +263,6 @@ void APlayerCharacter::Interact_Implementation()
 	{
 		ClosestInteractable->Interact();
 	}
-}
-
-void APlayerCharacter::Return_Implementation()
-{
-	Cast<APlayerController>(this->GetController())->SetViewTargetWithBlend(this, 1.0f);
 }
 
 void APlayerCharacter::StartSprinting()

@@ -16,9 +16,5 @@ class WAT_API AQTEInteractable : public AObjective
 	GENERATED_BODY()
 
 private:
-    virtual void Interact() override;
-
-public:
-    UPROPERTY()
-    class UQTEWidget* Widget;
+    virtual void OnInteractionBegin() override;
 };

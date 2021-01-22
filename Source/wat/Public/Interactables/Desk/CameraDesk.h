@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interactables/Interactable.h"
 #include "MonitorChildActorComponent.h"
+#include "Interactables/BlendableInteractable.h"
+
 #include "CameraDesk.generated.h"
 
 UCLASS()
-class WAT_API ACameraDesk : public AInteractable
+class WAT_API ACameraDesk : public ABlendableInteractable
 {
 	GENERATED_BODY()
 	
@@ -38,7 +39,7 @@ private:
 	void Return();
 
     //Interactable
-    virtual void Interact() override;
+    virtual void OnInteractionBegin() override;
 	
 protected:
 	// Called when the game starts or when spawned

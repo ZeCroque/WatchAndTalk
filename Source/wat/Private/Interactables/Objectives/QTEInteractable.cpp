@@ -2,16 +2,12 @@
 
 
 #include "Interactables/Objectives/QTEInteractable.h"
-
 #include "QTEWidget.h"
 #include "Core/MainPlayerController.h"
 
-void AQTEInteractable::Interact()
+void AQTEInteractable::OnInteractionBegin()
 {
-    AInteractable::Interact();
-    AMainPlayerController* PC = Cast<AMainPlayerController>(PlayerController);
-    PC->Widget = CreateWidget<UQTEWidget>(PC, MiniGameWidgetTemplate);
-    PC->Widget->AddToViewport();
-    PC->Widget->ParentInteractable = this;
-    PC->bIsInMiniGame = true;
+	Super::OnInteractionBegin();
+	Cast<UQTEWidget>(MiniGameWidget->GetUserWidgetObject())->Start();
+        PlayerController->bIsInMiniGame = true;
 }

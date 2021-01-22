@@ -63,10 +63,6 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Interact();
 
-	UFUNCTION(Server, Reliable)
-	void Return();
-
-
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void SetPlayerAsReadyForRestart();
 	

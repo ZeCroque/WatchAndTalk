@@ -16,5 +16,5 @@ class WAT_API ALeaveLobbyTrigger : public AInteractable
 
 	TArray<uint32> ReadyPlayersIds;
 	
-	virtual void Interact() override;
+	virtual void OnInteractionBegin() override;
 };
