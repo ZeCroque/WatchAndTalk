@@ -2,10 +2,9 @@
 
 
 #include "Interactables/Interactable.h"
-
-
 #include "Kismet/GameplayStatics.h"
 #include "Characters/PlayerCharacter.h"
+#include "Core/MainPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -15,10 +14,7 @@ AInteractable::AInteractable()
 	PrimaryActorTick.bCanEverTick = true;
 	bInUse = false;
 
-	BlendTime = 1.0f;
-	
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(Root);
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	
 	CollisionBox = CreateDefaultSubobject <UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -31,18 +27,15 @@ AInteractable::AInteractable()
 	StaticMesh->SetupAttachment(RootComponent);
 
 	InteractableWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionIcon"));
-	InteractableWidget->SetupAttachment(RootComponent);
-	
-	InteractableCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("InteractableCamera"));
-	InteractableCamera->SetupAttachment(RootComponent);
-	
-	
+	InteractableWidget->SetupAttachment(RootComponent);	
 }
 
 // Called when the game starts or when spawned
 void AInteractable::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bCanInteract = true;
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -71,11 +64,11 @@ void AInteractable::Interact()
 {
 	if (PlayerCharacter)
 	{
-		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
+		PlayerController = Cast<AMainPlayerController>(PlayerCharacter->GetController());
 		if (PlayerController)
 		{
 			bInUse = true;
-			PlayerController->SetViewTargetWithBlend(this, BlendTime);
+			OnInteractionBegin();
 		}
 	}
 }
@@ -93,7 +86,7 @@ void AInteractable::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(PlayerCharacter && !bInUse && PlayerCharacter->IsClosestInteractable(this))
+	if(PlayerCharacter && bCanInteract && !bInUse && PlayerCharacter->IsClosestInteractable(this))
 	 {
               InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
               return;

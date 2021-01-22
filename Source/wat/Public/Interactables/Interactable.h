@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
 #include "CoreMinimal.h"
@@ -13,13 +12,7 @@ class WAT_API AInteractable : public APawn
 {
 	GENERATED_BODY()
 	
-public:
-	UPROPERTY(EditAnywhere)
-	float BlendTime;
-	
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* Root;
-	
+public:	
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionBox;
 
@@ -28,9 +21,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* InteractableWidget;
-	
-	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* InteractableCamera;
 
 protected:
 
@@ -40,11 +30,11 @@ protected:
 public:	
 	// Sets default values for this actor's properties
 	AInteractable();
-	virtual void Interact();
+	void Interact();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(Replicated)
-	APlayerController* PlayerController;
+	class AMainPlayerController* PlayerController;
 
 	UPROPERTY(Replicated)
 	class APlayerCharacter* PlayerCharacter;
@@ -59,6 +49,8 @@ protected:
 
 	UFUNCTION()
 	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void OnInteractionBegin(){}
 
 public:	
 	// Called every frame

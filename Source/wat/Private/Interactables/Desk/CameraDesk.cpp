@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Characters/PlayerCharacter.h"
+#include "Core/MainPlayerController.h"
 #include "Interactables/Desk/Monitor.h"
 #include "wat/Interactables/Desk/MonitorDegeu.h"
 
@@ -71,7 +72,6 @@ void ACameraDesk::MoveForward(float Value)
 			MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
 			MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
 			MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-			//GetMonitorByIndex(CurrentIndex)->RenderSourceCamera->SetVisibleFlag(true);
 			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 		}
 	}
@@ -91,14 +91,12 @@ void ACameraDesk::MoveRight(float Value)
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
-				//GetMonitorByIndex(CurrentIndex)->RenderSourceCamera->SetVisibleFlag(false);
 				CurrentIndex++;
 				MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-				//GetMonitorByIndex(CurrentIndex)->RenderSourceCamera->SetVisibleFlag(true);
 				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 			}
 		}
@@ -112,14 +110,12 @@ void ACameraDesk::MoveRight(float Value)
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
-				//GetMonitorByIndex(CurrentIndex)->RenderSourceCamera->SetVisibleFlag(false);
 				CurrentIndex--;
 				MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-				//GetMonitorByIndex(CurrentIndex)->RenderSourceCamera->SetVisibleFlag(true);
 				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
 			}
 		}
@@ -146,19 +142,10 @@ void ACameraDesk::Return_Implementation()
 	}
 }
 
-void ACameraDesk::Interact()
+void ACameraDesk::OnInteractionBegin()
 {	
-	if (PlayerCharacter)
-	{
-		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
-		if (PlayerController)
-		{
-			PlayerController->Possess(this);
-			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
-			bInUse = true;
-		}
-	}
-
+	PlayerController->Possess(this);
+	PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
 }
 
 // Called every frame

@@ -20,7 +20,7 @@ public:
     virtual bool Initialize() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
     UPROPERTY()
-    AQTEInteractable* ParentInteractable;
+    AObjective* ParentInteractable;
     // Array de définition des inputs pouvant être utilisés dans le QTE
     UPROPERTY(EditAnywhere)
     TArray<FKey> PossibleInputs;
@@ -38,8 +38,13 @@ public:
     float TimeLeft;
 
     void OnInput(FKey PressedInput);
+
+	void Start();
     
 private:
+
+    bool bIsStarted;
+	
     UFUNCTION(BlueprintCallable)
     void DefineInputList();
 
@@ -47,9 +52,11 @@ private:
     FString GetCurrentInputLabel();
 
     UFUNCTION(BlueprintCallable)
-    float GetProgressBarCompletion();
-    
+    float GetProgressBarCompletion() const;
+
     void OnComplete();
 
+    void OnCancel();
+	
     void OnFail();
 };

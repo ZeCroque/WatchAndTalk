@@ -3,44 +3,37 @@
 
 #include "Interactables/LeaveLobbyTrigger.h"
 #include "Characters/PlayerCharacter.h"
-#include "Core/MainGameInstance.h"
 #include "Core/NetworkSettingsWat.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 
-void ALeaveLobbyTrigger::Interact()
+void ALeaveLobbyTrigger::OnInteractionBegin()
 {
-	if (PlayerCharacter)
+        bInUse = false;
+	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
+
+	auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
+
+	if(PlayerStates.Num() > 1)
 	{
-		PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
-		if (PlayerController)
+		int MatchingPlayersIdsCount = 0;
+		for(auto& CurrentPlayerState : PlayerStates)
 		{
-			ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
-
-			auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
-
-			if(PlayerStates.Num() > 1)
+			for(auto& ReadyPlayerId : ReadyPlayersIds)
 			{
-				int MatchingPlayersIdsCount = 0;
-				for(auto& CurrentPlayerState : PlayerStates)
+				if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
 				{
-					for(auto& ReadyPlayerId : ReadyPlayersIds)
-					{
-						if(ReadyPlayerId == CurrentPlayerState->GetPlayerId())
-						{
-							++MatchingPlayersIdsCount;
-							break;
-						}
-					}
-				}
-
-				if(MatchingPlayersIdsCount == PlayerStates.Num())
-				{
-					UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
-					const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
-					GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
+					++MatchingPlayersIdsCount;
+					break;
 				}
 			}
+		}
+
+		if(MatchingPlayersIdsCount == PlayerStates.Num())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
+			const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+			GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
 		}
 	}
 }
