@@ -5,6 +5,11 @@
 
 #include "Interactables/Objectives/QTEInteractable.h"
 
+AMainPlayerController::AMainPlayerController()
+{
+	bIsInMiniGame = false;
+}
+
 bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
     if (bIsInMiniGame && EventType == EInputEvent::IE_Pressed)
