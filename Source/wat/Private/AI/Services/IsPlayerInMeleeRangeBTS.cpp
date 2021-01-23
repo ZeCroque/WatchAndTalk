@@ -21,19 +21,17 @@ void UIsPlayerInMeleeRangeBTS::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCom
     // get NPC
     auto* const Controller = OwnerComp.GetAIOwner();
     auto* const Npc = Controller->GetPawn();
-
-
     auto const Target = Controller->GetBlackboardComponent()->GetValueAsObject(PlayerKey.SelectedKeyName);
-    //UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 
-    if (Target && !Player)
+    if (Target)
     {
-        Player = Cast<AActor>(Target);
+        if(!Player)
+	    {
+	        Player = Cast<AActor>(Target);
+	    }
+	    // write true or false depending on whether the player is withing melee range
+	    Controller->GetBlackboardComponent()->SetValueAsBool(PlayerIsInMeleeRange.SelectedKeyName, Npc->GetDistanceTo(Player) <= MeleeRange);
     }
-
-    // write true or false depending on whether the player is withing melee range
-    Controller->GetBlackboardComponent()->SetValueAsBool(PlayerIsInMeleeRange.SelectedKeyName,
-                                                         Npc->GetDistanceTo(Player) <= MeleeRange);
 }
 
 void UIsPlayerInMeleeRangeBTS::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
