@@ -69,6 +69,7 @@ void AInteractable::Interact()
 		{
 			bInUse = true;
 			OnInteractionBegin();
+			OnInteraction();
 		}
 	}
 }

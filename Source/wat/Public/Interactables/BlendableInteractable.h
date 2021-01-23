@@ -25,4 +25,18 @@ public:
 
 	virtual void OnInteractionBegin() override;
 	
+	virtual void OnInteraction() override;
+
+	virtual void OnNotFinalBlend();
+
+	virtual void OnFinalBlend();
+
+	void BlendToPlayer();
+
+private:
+
+	void OnBlendComplete();
+	
+	bool bIsFinalBlend;
+	
 };

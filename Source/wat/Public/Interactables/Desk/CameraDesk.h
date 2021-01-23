@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MonitorChildActorComponent.h"
 #include "Interactables/BlendableInteractable.h"
-
 #include "CameraDesk.generated.h"
 
 UCLASS()
@@ -16,10 +14,13 @@ class WAT_API ACameraDesk : public ABlendableInteractable
 public:
 
 	UPROPERTY(VisibleAnywhere)
-	UChildActorComponent* MapChildActorComponent;
+	class UStaticMeshComponent* MapMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* MapBorderMesh;
 	
 	UPROPERTY()
-	TArray<UMonitorChildActorComponent*> Monitors;
+	TArray<UChildActorComponent*> Monitors;
 	
 	// Sets default values for this actor's properties
 	ACameraDesk();
@@ -38,17 +39,15 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Return();
 
-    //Interactable
-    virtual void OnInteractionBegin() override;
+	bool bIsInternalBlend;
+	
+	virtual void OnNotFinalBlend() override;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* DeskInputComponent) override;
 

@@ -13,14 +13,15 @@ class WAT_API AObjective : public ABlendableInteractable
 	GENERATED_BODY()
 
 private:
-	UPROPERTY()
-	class AMainGameState* GameState;
 	
     UFUNCTION(NetMulticast, Reliable)
     void EndGame();
 
 public:
 
+	UPROPERTY()
+	class AMainGameState* GameState;
+	
 	UPROPERTY(Replicated)
 	bool bCompleted;
 
@@ -28,14 +29,17 @@ public:
     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
 	UPROPERTY(VisibleAnywhere)
-	UWidgetComponent* MiniGameWidget;
+	UWidgetComponent* MiniGameWidgetComponent;
+
+	UPROPERTY()
+	class UQTEWidget* MiniGameWidget;
 
 
 	AObjective();
 	
 	virtual void BeginPlay() override;
 
-	virtual void OnInteractionBegin() override;
+	virtual void OnInteraction() override;
 	
 	virtual void EndInteraction(bool bSuccess, bool bShouldWarnMonster);
 

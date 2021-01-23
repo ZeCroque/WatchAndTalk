@@ -86,27 +86,26 @@ void UQTEWidget::Start()
 	bIsStarted = true;
 }
 
+void UQTEWidget::Stop()
+{
+	bIsStarted = false;
+	TimeLeft = TimeLimit;
+    CurrentIndex = 0;
+	ParentInteractable->PlayerController->Widget = nullptr;
+}
+
 void UQTEWidget::OnComplete()
 {
-    bIsStarted = false;
-    Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = false;
     ParentInteractable->EndInteraction(true, true);
 }
 
 void UQTEWidget::OnCancel()
 {
-	bIsStarted = false;
-    TimeLeft = TimeLimit;
-    CurrentIndex = 0;
-    Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = false;
     ParentInteractable->EndInteraction(false, false);
 }
 
 void UQTEWidget::OnFail()
 {
-    bIsStarted = false;
-    TimeLeft = TimeLimit;
-    CurrentIndex = 0;
-    Cast<AMainPlayerController>(ParentInteractable->PlayerController)->bIsInMiniGame = false;
+
     ParentInteractable->EndInteraction(false, true);
 }

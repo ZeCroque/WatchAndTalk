@@ -3,6 +3,11 @@
 
 #include "Core/MainGameState.h"
 
+AMainGameState::AMainGameState()
+{
+	bGameEnded = false;
+}
+
 void AMainGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

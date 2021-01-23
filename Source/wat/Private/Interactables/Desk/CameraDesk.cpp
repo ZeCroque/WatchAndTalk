@@ -12,14 +12,28 @@
 // Sets default values
 ACameraDesk::ACameraDesk()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	CurrentIndex = 0;
 	bToggle = false;
+	bIsInternalBlend = false;
 	
-	MapChildActorComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("MapChildActor"));
-	MapChildActorComponent->SetupAttachment(RootComponent);
+	MapMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapMesh"));
+	MapMesh->SetupAttachment(StaticMesh);
+
+	MapBorderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapBorderMesh"));
+	MapBorderMesh->SetupAttachment(StaticMesh);
+}
+
+void ACameraDesk::OnNotFinalBlend()
+{
+	if(!bIsInternalBlend)
+	{
+		Super::OnNotFinalBlend();
+		bIsInternalBlend = true;
+	}
+	else
+	{
+		//TODO
+	}
 }
 
 // Called when the game starts or when spawned
@@ -28,7 +42,7 @@ void ACameraDesk::BeginPlay()
 	Super::BeginPlay();
 	
 	TArray<UActorComponent*> Components;
-	this->GetComponents(UMonitorChildActorComponent::StaticClass(), Components);
+	this->GetComponents(UChildActorComponent::StaticClass(), Components);
 
 	const int Length = Components.Num();
 	
@@ -36,7 +50,7 @@ void ACameraDesk::BeginPlay()
 	Monitors.SetNum(Length);
 	for (int i = 0; i < Length; i++)
 	{
-		auto* Monitor = Cast<UMonitorChildActorComponent>(Components[i]);
+		auto* Monitor = Cast<UChildActorComponent>(Components[i]);
 		if (Monitor)
 		{
 			Monitors[i] = Monitor;
@@ -63,7 +77,7 @@ void ACameraDesk::MoveForward(float Value)
 	{
 		if (Value > 0.0f)
 		{
-			PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
+			PlayerController->SetViewTargetWithBlend(this, BlendTime);
 		}
 		else if (Value < 0.0f)
 		{
@@ -129,30 +143,16 @@ void ACameraDesk::MoveRight(float Value)
 void ACameraDesk::Return_Implementation()
 {
 	if(PlayerCharacter && PlayerController)
-	{	
-		PlayerController->Possess(PlayerCharacter);
-		PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime);
+	{
+		BlendToPlayer();
 		bInUse = false;
-
+		bIsInternalBlend = false;
 		AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 		MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
 	}
-}
-
-void ACameraDesk::OnInteractionBegin()
-{	
-	PlayerController->Possess(this);
-	PlayerController->SetViewTargetWithBlend(MapChildActorComponent->GetChildActor(), BlendTime);
-}
-
-// Called every frame
-void ACameraDesk::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 void ACameraDesk::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)

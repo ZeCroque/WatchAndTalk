@@ -37,6 +37,10 @@ public:
 
 	UPROPERTY()
 	TSet<uint32> PlayersReadyForRestartIds;
+
+	bool bGameEnded;
+
+	AMainGameState();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool AreAllObjectivesCompleted() const;
