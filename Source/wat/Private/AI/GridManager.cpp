@@ -13,6 +13,8 @@ AGridManager::AGridManager()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Grid Component"));
 	BoxComponent->SetupAttachment(RootComponent);
 	BoxComponent->SetHiddenInGame(true);
+
+	SumOfWeight = 0;
 }
 
 // Called when the game starts or when spawned

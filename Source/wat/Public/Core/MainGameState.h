@@ -11,10 +11,10 @@
 USTRUCT()
 struct FCameraZone
 {
-	GENERATED_USTRUCT_BODY()
+    GENERATED_USTRUCT_BODY()
 
-	UPROPERTY()
-	TArray<class ASecurityCamera*> ZoneCameras;
+    UPROPERTY()
+    TArray<class ASecurityCamera*> ZoneCameras;
 };
 
 /**
@@ -23,22 +23,24 @@ struct FCameraZone
 UCLASS()
 class WAT_API AMainGameState : public AGameStateBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(Replicated)
-	TArray<FCameraZone> Cameras;
+    UPROPERTY(Replicated)
+    TArray<FCameraZone> Cameras;
 
-	UPROPERTY(Replicated)
-	TArray<AObjective*> Objectives;
+    UPROPERTY(Replicated)
+    TArray<AObjective*> Objectives;
 
-	UPROPERTY(Replicated)
-	class AMonsterCharacter* MonsterCharacter;
+    UPROPERTY(Replicated)
+    class AMonsterCharacter* MonsterCharacter;
 
-	UPROPERTY()
-	TSet<uint32> PlayersReadyForRestartIds;
-	
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	bool AreAllObjectivesCompleted() const;
+    UPROPERTY(Replicated)
+    class AGridManager* GridManager;
 
+    UPROPERTY()
+    TSet<uint32> PlayersReadyForRestartIds;
+
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    bool AreAllObjectivesCompleted() const;
 };

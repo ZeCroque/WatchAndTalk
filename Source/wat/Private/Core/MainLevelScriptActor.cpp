@@ -3,18 +3,19 @@
 
 #include "Core/MainLevelScriptActor.h"
 #include "SecurityCamera.h"
+#include "AI/GridManager.h"
 #include "Characters/MonsterCharacter.h"
-#include "Characters/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/MainGameState.h"
 
 
 class AMainGameState;
+
 void AMainLevelScriptActor::PostInitializeComponents()
 {
     Super::PostInitializeComponents();
 
-    if(GetWorld()->IsServer())
+    if (GetWorld()->IsServer())
     {
         auto* GameState = GetWorld()->GetGameState();
         AMainGameState* MainGameState = Cast<AMainGameState>(GameState);
@@ -35,7 +36,7 @@ void AMainLevelScriptActor::PostInitializeComponents()
             }
         }
 
-    	FoundActors.Empty();
+        FoundActors.Empty();
         UGameplayStatics::GetAllActorsOfClass(GetWorld(), AObjective::StaticClass(), FoundActors);
         if (FoundActors.Num() != 0)
         {
@@ -50,20 +51,18 @@ void AMainLevelScriptActor::PostInitializeComponents()
                 }
             }
         }
-    	
-        FoundActors.Empty();
-        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonsterCharacter::StaticClass(), FoundActors);
-        if (FoundActors.Num() == 1)
-        {
-            AMonsterCharacter* FoundMonster = Cast<AMonsterCharacter>(FoundActors.Last());
-            MainGameState->MonsterCharacter = FoundMonster;
-        }
+
+
+        MainGameState->MonsterCharacter = Cast<AMonsterCharacter>(
+            UGameplayStatics::GetActorOfClass(GetWorld(), AMonsterCharacter::StaticClass()));
+        MainGameState->GridManager = Cast<AGridManager>(
+            UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
     }
 
-	auto* PlayerController = GetWorld()->GetFirstPlayerController();
-	if(PlayerController)
-	{
-		PlayerController->EnableInput(nullptr);
-		PlayerController->SetInputMode(FInputModeGameOnly());
+    auto* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (PlayerController)
+    {
+        PlayerController->EnableInput(nullptr);
+        PlayerController->SetInputMode(FInputModeGameOnly());
     }
 }

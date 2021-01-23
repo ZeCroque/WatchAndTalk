@@ -6,45 +6,51 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Runtime/NavigationSystem/Public/NavigationSystem.h"
 #include "AI/MonsterAIController.h"
+#include "Core/MainGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
 {
-	NodeName = TEXT("Find Random Location");
+    NodeName = TEXT("Find Random Location");
 }
 
 EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// get AI controller and its NPC
-	auto const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
-	auto const NPC = Controller->GetPawn();
+    if (!GridManager)
+    {
+        GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+    }
 
-	// obtain npc location to use as an origin location
-	FVector const Origin = NPC->GetActorLocation();
-	FNavLocation NavLocation;
+    if (GridManager)
+    {
+        auto const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+        FVector Location;
 
-	// get the navigation system and generate a random location on the navMesh
-	UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+        if (!GridManager->RandomHotWorldCoordinate(Location))
+        {
+            auto const NPC = Controller->GetPawn();
+            FVector const Origin = NPC->GetActorLocation();
 
-	AGridManager* GridManager = Cast<AGridManager>(
-		UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
+            GridManager->SetValueAround(Origin, SearchRadius);
+            GridManager->RandomHotWorldCoordinate(Location);
+        }
 
 
-	FVector Location;
-	if (!GridManager->RandomHotWorldCoordinate(Location))
-	{
-		GridManager->SetValueAround(Origin, SearchRadius);
-		GridManager->RandomHotWorldCoordinate(Location);
-	}
+        FNavLocation NavLocation;
+        UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 
-	if (NavSys->GetRandomPointInNavigableRadius(Location, 100, NavLocation,
-	                                            nullptr))
-	{
-		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation.Location);
-	}
+        if (NavSys->GetRandomPointInNavigableRadius(Location, 100, NavLocation,
+                                                    nullptr))
+        {
+            Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation.Location);
+        }
 
-	// finish with success
-	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 
-	return EBTNodeResult::Succeeded;
+        FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+        return EBTNodeResult::Succeeded;
+    }
+
+
+    FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+    return EBTNodeResult::Failed;
 }

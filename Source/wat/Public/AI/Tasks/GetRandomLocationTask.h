@@ -22,4 +22,7 @@ public:
 private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Search", meta= (AllowPrivateAccess = "true"))
     int SearchRadius = 2;
+
+    UPROPERTY()
+    AGridManager* GridManager;
 };
