@@ -21,7 +21,7 @@ EBTNodeResult::Type UMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
         if (MontageHasFinished(Npc))
         {
         	auto* Target = Cast<APlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName));
-        	if(Target)
+        	if(Target && Target->IsAlive())
         	{
 				Npc->MeleeAttack(Target);
             }
