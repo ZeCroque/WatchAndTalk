@@ -51,7 +51,7 @@ void AGridManager::Tick(float DeltaTime)
 			DecrementValueAt(j, i, CoolingStrength * DeltaTime);
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::FromInt(SumOfWeight));
+	// GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::FromInt(SumOfWeight));
 }
 
 
@@ -127,7 +127,7 @@ bool AGridManager::RandomHotWorldCoordinate(FVector& Vector) //TODO : Test
 			Rnd -= Grid[i];
 		}
 	}
-	
+
 	return false;
 }
 
