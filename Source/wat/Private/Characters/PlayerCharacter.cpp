@@ -2,6 +2,8 @@
 
 
 #include "Characters/PlayerCharacter.h"
+
+#include "Laser.h"
 #include "Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -104,6 +106,7 @@ void APlayerCharacter::BeginPlay()
 	if (!IsLocallyControlled())
 	{
 		GetMesh()->SetVisibility(true);
+
 	}
 }
 
@@ -120,6 +123,21 @@ void APlayerCharacter::CreateDebugWidget()
 		PC->DebugGridWidget->RemoveFromParent();
 		PC->DebugGridWidget = nullptr;
 	}
+}
+
+void APlayerCharacter::UseLaser()
+{
+	bIsUsingLaser = true;
+}
+
+void APlayerCharacter::StopLaser()
+{
+	if(LaserPointer)
+	{
+		LaserPointer->Destroy();
+		LaserPointer = nullptr;
+	}
+	bIsUsingLaser = false;
 }
 
 void APlayerCharacter::SetPlayerAsReadyForRestart()
@@ -164,6 +182,36 @@ void APlayerCharacter::Tick(float DeltaTime)
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
+	if(bIsUsingLaser)
+	{
+		FHitResult Result;
+		FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+		FVector End = ((ForwardVector * 1000.f) + Start);
+		FCollisionQueryParams CollisionParams;
+
+		if(GetWorld()->LineTraceSingleByChannel(Result, Start, End, ECC_Visibility, CollisionParams))
+		{
+			if(Result.bBlockingHit)
+			{
+				if (!LaserPointer)
+				{
+					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
+				} else
+				{
+					LaserPointer->SetActorLocation(Result.ImpactPoint);
+					LaserPointer->SetActorRotation(Result.Normal.Rotation());
+				}
+			} else
+			{
+				if (LaserPointer)
+				{
+					LaserPointer->Destroy();
+					LaserPointer = nullptr;
+				}
+			}
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -193,6 +241,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
+	PlayerInputComponent->BindAction("Laser", IE_Pressed, this, &APlayerCharacter::UseLaser);
+	PlayerInputComponent->BindAction("Laser", IE_Released, this, &APlayerCharacter::StopLaser);
 
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &APlayerCharacter::CreateDebugWidget);
 }

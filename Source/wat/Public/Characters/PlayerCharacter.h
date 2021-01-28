@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/Character.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "PlayerCharacter.generated.h"
@@ -34,6 +35,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	float SprintAdditionalSpeedValue;
 
+
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
 	AInteractable* GetClosestInteractable();
@@ -63,6 +65,10 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Interact();
 
+	//Laser pointer
+	void UseLaser();
+	void StopLaser();
+	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void SetPlayerAsReadyForRestart();
 	
@@ -93,8 +99,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> GridDebugWidget;
 
+	UPROPERTY()
+	class ALaser* LaserPointer;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ALaser> LaserPointerClass;
+
     UPROPERTY()
     TSet<AInteractable*> InteractablesSet;
+
+	UPROPERTY()
+	bool bIsUsingLaser;
 
     void SetupStimulus();
 
