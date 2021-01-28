@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/Character.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "PlayerCharacter.generated.h"
@@ -33,6 +34,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float SprintAdditionalSpeedValue;
+
 
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
@@ -83,6 +85,7 @@ public:
 private:
 
 	bool bIsAlive;
+	bool bIsSprinting;
 	
     UPROPERTY()
     class UAIPerceptionStimuliSourceComponent* Stimulus;
@@ -100,4 +103,6 @@ private:
 
     void OnDistract();
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShake> SprintShake;
 };

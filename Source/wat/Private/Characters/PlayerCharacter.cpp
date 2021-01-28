@@ -2,6 +2,7 @@
 
 
 #include "Characters/PlayerCharacter.h"
+
 #include "Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -164,6 +165,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
+	if (bIsSprinting)
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, 1.0f);
+	}
 }
 
 // Called to bind functionality to input
@@ -193,7 +198,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
-
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &APlayerCharacter::CreateDebugWidget);
 }
 
@@ -268,10 +272,12 @@ void APlayerCharacter::Interact_Implementation()
 void APlayerCharacter::StartSprinting()
 {
 	GetCharacterMovement()->MaxWalkSpeed += SprintAdditionalSpeedValue;
+	bIsSprinting = true;
 }
 
 void APlayerCharacter::StopSprinting()
 {
+	bIsSprinting = false;
 	GetCharacterMovement()->MaxWalkSpeed -= SprintAdditionalSpeedValue;
 }
 
