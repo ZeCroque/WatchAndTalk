@@ -18,12 +18,13 @@ ABlendableInteractable::ABlendableInteractable()
 void ABlendableInteractable::OnInteractionBegin()
 {
 	bIsFinalBlend = false;
+	PlayerCharacter->DisableInput(PlayerController);
 	PlayerController->PlayerCameraManager->OnBlendComplete().AddUObject(this, &ABlendableInteractable::OnBlendComplete);
 }
 
 void ABlendableInteractable::OnInteraction()
 {
-	PlayerController->SetViewTargetWithBlend(this, BlendTime);
+	PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
 }
 
 void ABlendableInteractable::OnBlendComplete()
@@ -47,11 +48,12 @@ void ABlendableInteractable::OnNotFinalBlend()
 void ABlendableInteractable::OnFinalBlend()
 {
 	PlayerController->Possess(PlayerCharacter);
+	PlayerCharacter->EnableInput(PlayerController);
     PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
 }
 
 void ABlendableInteractable::BlendToPlayer()
 {
 	bIsFinalBlend = true;
-	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime);
+	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
 }

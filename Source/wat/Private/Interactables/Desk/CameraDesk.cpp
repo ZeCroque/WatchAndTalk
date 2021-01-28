@@ -12,28 +12,13 @@
 // Sets default values
 ACameraDesk::ACameraDesk()
 {
-	CurrentIndex = 0;
-	bToggle = false;
-	bIsInternalBlend = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	MapMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapMesh"));
 	MapMesh->SetupAttachment(StaticMesh);
 
 	MapBorderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapBorderMesh"));
 	MapBorderMesh->SetupAttachment(StaticMesh);
-}
-
-void ACameraDesk::OnNotFinalBlend()
-{
-	if(!bIsInternalBlend)
-	{
-		Super::OnNotFinalBlend();
-		bIsInternalBlend = true;
-	}
-	else
-	{
-		//TODO
-	}
 }
 
 // Called when the game starts or when spawned
@@ -56,6 +41,65 @@ void ACameraDesk::BeginPlay()
 			Monitors[i] = Monitor;
 		}
 	}
+
+	Initialize();
+}
+
+void ACameraDesk::Tick(float DeltaSeconds)
+{
+	if(bIsBlendingHorizontally)
+	{
+		ElapsedBlendTime += DeltaSeconds;
+
+		const bool bHasHoveredScreen = static_cast<int>(ElapsedBlendTime / BlendTime) > 0;
+		ElapsedBlendTime -= BlendTime * bHasHoveredScreen;	
+		LastHoveredScreenIndex = BlendDirection == EBlendDirection::Right ? LastHoveredScreenIndex + bHasHoveredScreen : BlendDirection == EBlendDirection::Left ? LastHoveredScreenIndex - bHasHoveredScreen : CurrentIndex;
+	}
+}
+
+void ACameraDesk::Initialize()
+{
+	CurrentIndex = 0;
+	TargetIndex = 0;
+	bToggle = false;
+	bIsInternalBlend = false;
+	bIsBlendingHorizontally = false;
+	bIsBlendingVertically = false;
+	LastHoveredScreenIndex = 0;
+	BlendDirection = EBlendDirection::Unset;
+	ElapsedBlendTime = 0.f;
+	TimeToTargetScreen = 0.f;
+}
+
+void ACameraDesk::OnNotFinalBlend()
+{
+	if(!bIsInternalBlend)
+	{
+		Super::OnNotFinalBlend();
+		bIsInternalBlend = true;	
+	}
+	else
+	{
+		if(bIsBlendingHorizontally)
+		{
+			bIsBlendingHorizontally = false;
+			ElapsedBlendTime = 0.f;	
+			CurrentIndex = TargetIndex;
+			LastHoveredScreenIndex = CurrentIndex;
+			TimeToTargetScreen = 0.f;
+			BlendDirection = EBlendDirection::Unset;
+		}
+		else
+		{
+			bIsBlendingVertically = false;
+		}
+
+		const auto MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
+		MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
+		MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
+		MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
+		MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
+	}
 }
 
 AMonitor* ACameraDesk::GetMonitorByIndex(const int Index)
@@ -71,66 +115,107 @@ AMonitor* ACameraDesk::GetMonitorByIndex(const int Index)
 	return nullptr;
 }
 
+void ACameraDesk::BlendToTargetMonitor()
+{
+	bIsBlendingHorizontally = true;
+
+	const int IndexDelta = TargetIndex - LastHoveredScreenIndex;
+
+	EBlendDirection CurrentBlendDirection;
+	if(IndexDelta)
+	{
+		bIsSwitchingBetweenAdjoiningScreensMoreThanOnce = false;
+		if(IndexDelta > 0)
+		{
+			CurrentBlendDirection = EBlendDirection::Right;
+		}
+		else
+		{
+			CurrentBlendDirection = EBlendDirection::Left;
+		}
+
+		if(BlendDirection == CurrentBlendDirection)
+		{		
+			TimeToTargetScreen = BlendTime * FMath::Abs(IndexDelta) - ElapsedBlendTime;
+		}
+		else
+		{		
+			TimeToTargetScreen = BlendTime * FMath::Abs(IndexDelta) + ElapsedBlendTime;
+		}
+	}
+	else
+	{	
+		LastHoveredScreenIndex = BlendDirection == EBlendDirection::Right ? FMath::Min(LastHoveredScreenIndex + 1, Monitors.Num() - 1) : FMath::Max(LastHoveredScreenIndex - 1, 0);
+		if(!bIsSwitchingBetweenAdjoiningScreensMoreThanOnce)
+		{
+			TimeToTargetScreen = ElapsedBlendTime;
+			bIsSwitchingBetweenAdjoiningScreensMoreThanOnce = true;
+		}
+		else
+		{
+			TimeToTargetScreen = BlendTime - TimeToTargetScreen + ElapsedBlendTime;
+		}
+		ElapsedBlendTime = 0.f;	
+		
+		CurrentBlendDirection = BlendDirection == EBlendDirection::Right ? EBlendDirection::Left : EBlendDirection::Right;
+	}
+
+	BlendDirection = CurrentBlendDirection;
+	PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(TargetIndex), TimeToTargetScreen, VTBlend_Linear, 0, true);
+}
+
 void ACameraDesk::MoveForward(float Value)
 {
-	if (PlayerController)
+	if (bIsInternalBlend && !bIsBlendingHorizontally && PlayerController)
 	{
 		if (Value > 0.0f)
 		{
-			PlayerController->SetViewTargetWithBlend(this, BlendTime);
+			bIsBlendingVertically = true;
+			PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
+			AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
+			MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
+			MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
+			MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
+			MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
 		}
 		else if (Value < 0.0f)
 		{
-			AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
-			MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
-			MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
-			MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
-			MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+			bIsBlendingVertically = true;
+			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime, VTBlend_Linear, 0, true);
 		}
 	}
 }
 
 void ACameraDesk::MoveRight(float Value)
 {
-	if (PlayerController)
+	if (bIsInternalBlend && !bIsBlendingVertically && PlayerController)
 	{
 		if (Value > 0.0f && !bToggle)
 		{
 			bToggle = true;
-			if (CurrentIndex < Monitors.Num() - 1)
+			if (TargetIndex < Monitors.Num() - 1)
 			{
 				AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
-				CurrentIndex++;
-				MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
-				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+				++TargetIndex;
+				BlendToTargetMonitor();
 			}
 		}
 		else if (Value < 0.0f && !bToggle)
 		{
 			bToggle = true;
-			if (CurrentIndex > 0)
+			if (TargetIndex > 0)
 			{
 				AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
-				CurrentIndex--;
-				MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
-				MonitorDegeu->RenderSourceCamera->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(true);
-				MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(true);
-				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime);
+				--TargetIndex;
+				BlendToTargetMonitor();
 			}
 		}
 		else if (Value == 0.0f && bToggle)
@@ -145,8 +230,7 @@ void ACameraDesk::Return_Implementation()
 	if(PlayerCharacter && PlayerController)
 	{
 		BlendToPlayer();
-		bInUse = false;
-		bIsInternalBlend = false;
+		Initialize();
 		AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 		MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);

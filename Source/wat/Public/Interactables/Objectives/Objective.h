@@ -39,7 +39,7 @@ public:
 	
 	virtual void BeginPlay() override;
 
-	virtual void OnInteraction() override;
+	virtual void OnInteractionBegin() override;
 	
 	virtual void EndInteraction(bool bSuccess, bool bShouldWarnMonster);
 

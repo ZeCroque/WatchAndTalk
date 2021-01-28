@@ -30,10 +30,9 @@ void AObjective::BeginPlay()
         GameState = Cast<AMainGameState>(GetWorld()->GetGameState());      
 }
 
-void AObjective::OnInteraction()
+void AObjective::OnInteractionBegin()
 {
-	PlayerController->SetViewTargetWithBlend(this, BlendTime);
-
+	Super::OnInteractionBegin();
 	if(!MiniGameWidget)
 	{
 	    MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());

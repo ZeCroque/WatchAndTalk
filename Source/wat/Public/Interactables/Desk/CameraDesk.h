@@ -6,6 +6,8 @@
 #include "Interactables/BlendableInteractable.h"
 #include "CameraDesk.generated.h"
 
+enum class EBlendDirection {Unset = 0, Right = 1, Left = 2};
+
 UCLASS()
 class WAT_API ACameraDesk : public ABlendableInteractable
 {
@@ -21,34 +23,56 @@ public:
 	
 	UPROPERTY()
 	TArray<UChildActorComponent*> Monitors;
-	
-	// Sets default values for this actor's properties
-	ACameraDesk();
 
 private:
-	UPROPERTY()
-	int CurrentIndex;
-	bool bToggle;
 	
-	class AMonitor* GetMonitorByIndex(const int Index);
-
-    //Inputs
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-
-	UFUNCTION(Server, Reliable)
-	void Return();
+	int CurrentIndex;
+	int TargetIndex;
+	int LastHoveredScreenIndex;
 
 	bool bIsInternalBlend;
-	
-	virtual void OnNotFinalBlend() override;
+	bool bIsBlendingHorizontally;
+	bool bIsBlendingVertically;
+	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
+
+	EBlendDirection BlendDirection;
+
+	float TimeToTargetScreen;
+	float ElapsedBlendTime;
+
+	//Inputs
+	bool bToggle;
+
+public:
+	// Sets default values for this actor's properties
+	ACameraDesk();
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+	virtual void Tick(float DeltaSeconds) override;
+
+private:
+	void Initialize();
+	
+	virtual void OnNotFinalBlend() override;
+	
+	class AMonitor* GetMonitorByIndex(const int Index);
+
+	void BlendToTargetMonitor();
+
+public:
+	//Inputs
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+
+	UFUNCTION(Server, Reliable)
+	void Return();
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* DeskInputComponent) override;
+
+
 
 };
