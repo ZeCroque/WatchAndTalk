@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Characters/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AI/GridClearComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -15,6 +16,11 @@ AMonsterCharacter::AMonsterCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	//CreateClearGridComponent
+	GridClearComponent = CreateDefaultSubobject<UGridClearComponent>(TEXT("GridClearComponent"));
+	GridClearComponent->SetupAttachment(RootComponent);
+	GridClearComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f));
 }
 
 void AMonsterCharacter::MeleeAttack(APlayerCharacter* Player)

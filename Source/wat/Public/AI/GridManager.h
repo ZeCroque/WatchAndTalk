@@ -38,10 +38,15 @@ public:
 	void SetValueAround(const FVector& Center, const int Ray);
 
 	UFUNCTION(BlueprintCallable, Category="Grid")
+	void CleanPolygon(const TArray<FVector>& WorldPolygon);
+
+	UFUNCTION(BlueprintCallable, Category="Grid")
 	bool RandomHotWorldCoordinate(FVector& Vector);
 
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
+
+	static bool IsInsidePolygon(const TArray<FVector2D> &Polygon, const  FVector2D &Point);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))

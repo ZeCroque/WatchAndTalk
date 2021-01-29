@@ -2,6 +2,8 @@
 
 
 #include "AI/GridManager.h"
+#include "Containers/Array.h"
+
 
 // Sets default values
 AGridManager::AGridManager()
@@ -103,7 +105,39 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 	}
 }
 
-bool AGridManager::RandomHotWorldCoordinate(FVector& Vector) //TODO : Test
+void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
+{
+	int XMin = (CellPerSide * 2) + 1;
+	int XMax = -1;
+	int YMin = (CellPerSide * 2) + 1;
+	int YMax = -1;
+
+	TArray<FVector2D> GridPolygon;
+	for (auto WorldPoint : WorldPolygon)
+	{
+		auto GridPoint = GetGridCoordinate(WorldPoint);
+
+		XMin = GridPoint.X < XMin ? GridPoint.X : XMin;
+		XMax = GridPoint.X > XMax ? GridPoint.X : XMax;
+		YMin = GridPoint.Y < YMin ? GridPoint.Y : YMin;
+		YMax = GridPoint.Y > YMax ? GridPoint.Y : YMax;
+
+		GridPolygon.Add(GridPoint);
+	}
+
+	for (int i = YMin; i < YMax + 1; i++)
+	{
+		for (int j = XMin; j < XMax + 1; j++)
+		{
+			if (IsInsidePolygon(GridPolygon, FVector2D(j, i)))
+			{
+				SetValueAt(j, i, 0.0f);
+			}
+		}
+	}
+}
+
+bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 {
 	if (SumOfWeight > 0)
 	{
@@ -159,3 +193,22 @@ FVector AGridManager::GetWorldCoordinate(const FVector2D& GridCoordinate) const
 
 	return FVector(WorldX, WorldY, WorldZ);
 }
+
+
+bool AGridManager::IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point)
+{
+	int i, j;
+	auto c = false;
+	const int Size = Polygon.Num();
+
+	for (i = 0, j = Size - 1; i < Size; j = i++)
+	{
+		if (((Polygon[i].Y >= Point.Y) != (Polygon[j].Y >= Point.Y)) &&
+			(Point.X <= (Polygon[j].X - Polygon[i].X) * (Point.Y - Polygon[i].Y) / (Polygon[j].Y - Polygon[i].Y) +
+				Polygon[i].X)
+		)
+			c = !c;
+	}
+
+	return c;
+};

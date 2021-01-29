@@ -34,6 +34,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(EditAnywhere)
+	class UGridClearComponent* GridClearComponent = nullptr;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void KillPlayer(class APlayerCharacter* Player);
 
