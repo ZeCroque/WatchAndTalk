@@ -12,8 +12,6 @@
 // Sets default values
 ACameraDesk::ACameraDesk()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	
 	MapMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapMesh"));
 	MapMesh->SetupAttachment(StaticMesh);
 
@@ -47,6 +45,7 @@ void ACameraDesk::BeginPlay()
 
 void ACameraDesk::Tick(float DeltaSeconds)
 {
+        Super::Tick(DeltaSeconds);
 	if(bIsBlendingHorizontally)
 	{
 		ElapsedBlendTime += DeltaSeconds;
@@ -229,13 +228,13 @@ void ACameraDesk::Return()
 {
 	if(PlayerCharacter && PlayerController)
 	{
-		BlendToPlayer();
-		Initialize();
 		AMonitorDegeu* MonitorDegeu = Cast<AMonitorDegeu>(GetMonitorByIndex(CurrentIndex));
 		MonitorDegeu->RenderSourceCamera->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera1->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera2->SetVisibleFlag(false);
 		MonitorDegeu->RenderSourceCamera3->SetVisibleFlag(false);
+		BlendToPlayer();
+		Initialize();
 	}
 }
 
