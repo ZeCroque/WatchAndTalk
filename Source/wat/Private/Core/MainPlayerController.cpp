@@ -8,6 +8,11 @@ AMainPlayerController::AMainPlayerController()
 	Widget = nullptr;
 }
 
+void AMainPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
+{
+	Possess(PawnToPossess);
+}
+
 bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
     if (Widget && EventType == EInputEvent::IE_Pressed)

@@ -66,8 +66,6 @@ public:
 	//Inputs
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-
-	UFUNCTION(Server, Reliable)
 	void Return();
 	
 	// Called to bind functionality to input

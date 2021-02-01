@@ -15,41 +15,37 @@ ABlendableInteractable::ABlendableInteractable()
 	InteractableCamera->SetupAttachment(RootComponent);
 }
 
+void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AMainPlayerController* TargetController)
+{
+	if(TargetController == GetWorld()->GetFirstPlayerController())
+	{
+		TargetController->PlayerCameraManager->OnBlendComplete().AddUObject(this, &ABlendableInteractable::OnBlendComplete);
+	}
+}
+
 void ABlendableInteractable::OnInteractionBegin()
 {
 	bIsFinalBlend = false;
 	PlayerCharacter->DisableInput(PlayerController);
-	PlayerController->PlayerCameraManager->OnBlendComplete().AddUObject(this, &ABlendableInteractable::OnBlendComplete);
-}
+	RegisterBlendCompleteCallback(PlayerController);
+}	
 
 void ABlendableInteractable::OnInteraction()
 {
 	PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
 }
 
-void ABlendableInteractable::OnBlendComplete()
-{
-	UE_LOG(LogTemp, Warning, TEXT("BlendEnded"));
-	if(!bIsFinalBlend)
-	{
-		OnNotFinalBlend();		
-	}
-    else
-    {
-    	OnFinalBlend();
-    }	
-}
-
 void ABlendableInteractable::OnNotFinalBlend()
 {
-	PlayerController->Possess(this);
+	PlayerController->PossessRPC(this);
 }
 
 void ABlendableInteractable::OnFinalBlend()
 {
-	PlayerController->Possess(PlayerCharacter);
+	bIsFinalBlend = false;
+	PlayerController->PossessRPC(PlayerCharacter);
 	PlayerCharacter->EnableInput(PlayerController);
-    PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
+        PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
 }
 
 void ABlendableInteractable::BlendToPlayer()
@@ -57,3 +53,16 @@ void ABlendableInteractable::BlendToPlayer()
 	bIsFinalBlend = true;
 	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
 }
+
+void ABlendableInteractable::OnBlendComplete()
+{
+
+        if(!bIsFinalBlend)
+        {
+	        OnNotFinalBlend();		
+        }
+        else
+        {
+    	        OnFinalBlend();
+        }	
+    }

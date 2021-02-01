@@ -23,10 +23,15 @@ public:
 
 	ABlendableInteractable();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void RegisterBlendCompleteCallback(AMainPlayerController* TargetController);
+	
 	virtual void OnInteractionBegin() override;
 	
 	virtual void OnInteraction() override;
 
+	void OnBlendComplete();
+	
 	virtual void OnNotFinalBlend();
 
 	virtual void OnFinalBlend();
@@ -34,9 +39,6 @@ public:
 	void BlendToPlayer();
 
 private:
-
-	void OnBlendComplete();
 	
 	bool bIsFinalBlend;
-	
 };

@@ -225,7 +225,7 @@ void ACameraDesk::MoveRight(float Value)
 	}
 }
 
-void ACameraDesk::Return_Implementation()
+void ACameraDesk::Return()
 {
 	if(PlayerCharacter && PlayerController)
 	{

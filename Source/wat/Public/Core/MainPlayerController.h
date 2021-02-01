@@ -18,7 +18,10 @@ class WAT_API AMainPlayerController : public APlayerController
 
 public:
 	AMainPlayerController();
-	
+
+	UFUNCTION(Server, Reliable)
+	void PossessRPC(APawn* PawnToPossess);
+
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	
 	bool bIsInMiniGame;
