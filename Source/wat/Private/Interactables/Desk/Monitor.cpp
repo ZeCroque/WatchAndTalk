@@ -6,6 +6,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Core/MainGameState.h"
 #include "SecurityCamera.h"
+#include "Engine/Canvas.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 // Sets default values
 AMonitor::AMonitor()
@@ -35,19 +37,37 @@ void AMonitor::BeginPlay()
 {
 	Super::BeginPlay();
 
+	auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+
+        const auto CameraCount = GameState->Cameras[DebugZoneIndex].ZoneCameras.Num();
+        RenderSourceCameras.Reserve(CameraCount);
+        CameraRenderMaterials.Reserve(CameraCount);
+        CameraRenderTargets.Reserve(CameraCount);
+        for(auto* SourceCamera : GameState->Cameras[DebugZoneIndex].ZoneCameras) 
+	{
+	    auto* RenderMaterial = UMaterialInstanceDynamic::Create(BaseRenderMaterial, this);
+            RenderMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+	    CameraRenderMaterials.Add(RenderMaterial);
+
+	    auto* RenderTarget = NewObject<UTextureRenderTarget2D>(this);
+            RenderTarget->InitAutoFormat(512, 512);
+            CameraRenderTargets.Add(RenderTarget);
+
+            auto* SceneCapture = SourceCamera->GetCaptureComponent2D();
+            SceneCapture->TextureTarget = RenderTarget;
+	    SceneCapture->SetVisibleFlag(true);
+            RenderSourceCameras.Add(SceneCapture);
+
+	    RenderMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget));
+        }
+
 	ScreenMaterial = ScreenMesh->CreateAndSetMaterialInstanceDynamic(0);
 	ScreenMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
 
-	RenderTarget = NewObject<UTextureRenderTarget2D>(this);
-	RenderTarget->InitAutoFormat(512, 512);
+	ScreenRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+	ScreenRenderTarget->InitAutoFormat(1024, 1024);
 
-	auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
-
-	RenderSourceCamera = GameState->Cameras[DebugZoneIndex].ZoneCameras[0]->GetCaptureComponent2D();
-	RenderSourceCamera->TextureTarget = RenderTarget;
-	RenderSourceCamera->SetVisibleFlag(false);
-
-	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget));
+	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(ScreenRenderTarget));
 }
 
 // Called every frame
@@ -55,5 +75,14 @@ void AMonitor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+        auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+        auto CanvasSize = FVector2D();
+        auto Context = FDrawToRenderTargetContext();
+        UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, ScreenRenderTarget, Canvas, CanvasSize, Context);
+        Canvas->K2_DrawMaterial(CameraRenderMaterials[0], FVector2D(0.f,0.f), FVector2D(512.f,512.f),FVector2D(0.f,0.f));
+        Canvas->K2_DrawMaterial(CameraRenderMaterials[1], FVector2D(512.f,0.f), FVector2D(512.f,512.f),FVector2D(0.f,0.f));
+        Canvas->K2_DrawMaterial(CameraRenderMaterials[2], FVector2D(0.f,512.f), FVector2D(512.f,512.f),FVector2D(0.f,0.f));
+        Canvas->K2_DrawMaterial(CameraRenderMaterials[3], FVector2D(512.f,512.f), FVector2D(512.f,512.f),FVector2D(0.f,0.f));
+        UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 

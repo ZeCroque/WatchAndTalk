@@ -14,28 +14,38 @@ class WAT_API AMonitor : public AActor
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Debug")
-		int DebugZoneIndex;
+	int DebugZoneIndex;
 
 	UPROPERTY(VisibleAnywhere)
-		USceneComponent* Root;
+	USceneComponent* Root;
 	
 	UPROPERTY(VisibleAnywhere)
-		UCameraComponent* BlendTargetCamera;
+	UCameraComponent* BlendTargetCamera;
 	
 	UPROPERTY(VisibleAnywhere)
-		UStaticMeshComponent* MonitorMesh;
+	UStaticMeshComponent* MonitorMesh;
 
 	UPROPERTY(VisibleAnywhere)
-		UStaticMeshComponent* ScreenMesh;
+	UStaticMeshComponent* ScreenMesh;
+
+	UPROPERTY(EditAnywhere)
+        UMaterialInterface* BaseRenderMaterial;
+
+        UPROPERTY()
+        UMaterialInstanceDynamic* ScreenMaterial;
+
+        UPROPERTY()
+        UTextureRenderTarget2D* ScreenRenderTarget;
+
 
 	UPROPERTY()
-		UMaterialInstanceDynamic* ScreenMaterial;
+	TArray<UMaterialInstanceDynamic*> CameraRenderMaterials;
 
 	UPROPERTY()
-		USceneCaptureComponent2D* RenderSourceCamera;
+	TArray<class USceneCaptureComponent2D*> RenderSourceCameras;
 
 	UPROPERTY()
-		UTextureRenderTarget2D* RenderTarget;
+	TArray<UTextureRenderTarget2D*> CameraRenderTargets;
 
 	AMonitor();
 

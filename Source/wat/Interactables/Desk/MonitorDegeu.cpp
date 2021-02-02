@@ -7,7 +7,9 @@
 #include "SecurityCamera.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Core/MainGameState.h"
+#include "Engine/Canvas.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 AMonitorDegeu::AMonitorDegeu()
 {
@@ -34,7 +36,7 @@ void AMonitorDegeu::BeginPlay()
     RenderSourceCamera1 = GameState->Cameras[DebugZoneIndex].ZoneCameras[1]->GetCaptureComponent2D();
     RenderSourceCamera1->TextureTarget = RenderTarget1;
     RenderSourceCamera1->SetVisibleFlag(false);
-    ScreenMaterial1->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget1));
+   // ScreenMaterial1->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget1));
 
 
   
@@ -61,4 +63,21 @@ void AMonitorDegeu::BeginPlay()
     RenderSourceCamera3->TextureTarget = RenderTarget3;
     RenderSourceCamera3->SetVisibleFlag(false);
     ScreenMaterial3->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget3));
+
+  
+    NewRenderTarget1 = NewObject<UTextureRenderTarget2D>(this);
+    NewRenderTarget1->InitAutoFormat(1024, 1024);
+
+    auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+    auto CanvasSize = FVector2D();
+    auto Context = FDrawToRenderTargetContext();
+    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, NewRenderTarget1, Canvas, CanvasSize, Context);
+    Canvas->K2_DrawMaterial(ScreenMaterial1, FVector2D(), FVector2D(512.f,512.f),FVector2D());
+    Canvas->K2_DrawMaterial(ScreenMaterial1, FVector2D(512.f,0.f), FVector2D(512.f,512.f),FVector2D());
+    Canvas->K2_DrawMaterial(ScreenMaterial1, FVector2D(0.f,512.f), FVector2D(512.f,512.f),FVector2D());
+    Canvas->K2_DrawMaterial(ScreenMaterial1, FVector2D(512.f,512.f), FVector2D(512.f,512.f),FVector2D());
+    //TODO actually draw
+    
+    UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+    ScreenMaterial1->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(NewRenderTarget1));
 }

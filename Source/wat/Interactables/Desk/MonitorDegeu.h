@@ -53,6 +53,8 @@ public:
         UPROPERTY()
         UTextureRenderTarget2D* RenderTarget3;
 
+        UPROPERTY()
+        UTextureRenderTarget2D* NewRenderTarget1;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
