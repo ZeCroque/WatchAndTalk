@@ -36,14 +36,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseRenderMaterial;
 
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+    UMaterialInterface* BaseSnowMaterial;
+
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float PaddingPercentage;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "2", ClampMax = "12"))
 	int GraphicQuality;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0"))
+	float SnowTransitionTime;
 	
     UPROPERTY()
     UMaterialInstanceDynamic* ScreenMaterial;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* SnowMaterial;
 
     UPROPERTY()
     UTextureRenderTarget2D* ScreenRenderTarget;
@@ -54,7 +63,11 @@ public:
 	UPROPERTY()
 	TArray<UTextureRenderTarget2D*> CameraRenderTargets;
 
-	bool bShowSnow;
+	bool bStartSnowGrowth;
+
+	bool bStartSnowFading;
+
+
 private:
 
 	UPROPERTY()
@@ -63,6 +76,12 @@ private:
 	float RenderTargetWidth;
 
 	float RenderTargetHeight;
+
+	float ElapsedTime;
+
+	bool bIsInSnowFadingMode;
+
+	bool bIsInSnowGrowthMode;
 	
 public:
 	AMonitor();

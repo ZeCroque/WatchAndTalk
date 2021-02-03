@@ -18,7 +18,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* InteractableCamera;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "WAT BlendableInteractable", meta = (ClampMin = "0.0"))
 	float BlendTime;
 
 	ABlendableInteractable();
