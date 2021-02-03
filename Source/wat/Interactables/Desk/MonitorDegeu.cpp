@@ -25,7 +25,7 @@ void AMonitorDegeu::BeginPlay()
 {
     Super::BeginPlay();
 
-    auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+    //GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
 
     ScreenMaterial1 = ScreenMesh1->CreateAndSetMaterialInstanceDynamic(0);
     ScreenMaterial1->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
@@ -33,7 +33,7 @@ void AMonitorDegeu::BeginPlay()
     RenderTarget1 = NewObject<UTextureRenderTarget2D>(this);
     RenderTarget1->InitAutoFormat(512, 512);
 
-    RenderSourceCamera1 = GameState->Cameras[DebugZoneIndex].ZoneCameras[1]->GetCaptureComponent2D();
+    //RenderSourceCamera1 = GameState->Cameras[ZoneIndex].ZoneCameras[1]->GetCaptureComponent2D();
     RenderSourceCamera1->TextureTarget = RenderTarget1;
     RenderSourceCamera1->SetVisibleFlag(false);
    // ScreenMaterial1->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget1));
@@ -46,7 +46,7 @@ void AMonitorDegeu::BeginPlay()
     RenderTarget2 = NewObject<UTextureRenderTarget2D>(this);
     RenderTarget2->InitAutoFormat(512, 512);
 
-    RenderSourceCamera2 = GameState->Cameras[DebugZoneIndex].ZoneCameras[2]->GetCaptureComponent2D();
+    //RenderSourceCamera2 = GameState->Cameras[ZoneIndex].ZoneCameras[2]->GetCaptureComponent2D();
     RenderSourceCamera2->TextureTarget = RenderTarget2;
     RenderSourceCamera2->SetVisibleFlag(false);
     ScreenMaterial2->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget2));
@@ -59,7 +59,7 @@ void AMonitorDegeu::BeginPlay()
     RenderTarget3 = NewObject<UTextureRenderTarget2D>(this);
     RenderTarget3->InitAutoFormat(512, 512);
 
-    RenderSourceCamera3 = GameState->Cameras[DebugZoneIndex].ZoneCameras[3]->GetCaptureComponent2D();
+    //RenderSourceCamera3 = GameState->Cameras[ZoneIndex].ZoneCameras[3]->GetCaptureComponent2D();
     RenderSourceCamera3->TextureTarget = RenderTarget3;
     RenderSourceCamera3->SetVisibleFlag(false);
     ScreenMaterial3->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(RenderTarget3));

@@ -17,9 +17,11 @@ class WAT_API ASecurityCamera : public ASceneCapture2D
 public:
 	UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* CameraMesh;
-	UPROPERTY(EditAnywhere, Category = "Gameplay")
+	UPROPERTY(EditAnywhere, Category = "WAT CameraSettings")
 		int32 CameraNumber;
-	UPROPERTY(EditAnywhere, Category = "Debug")
+	UPROPERTY(EditAnywhere, Category = "WAT CameraSettings")
 		int32 ZoneNumber;
+	UPROPERTY(EditAnywhere, Category = "WAT CameraSettings")
+		int32 FloorNumber;
 	ASecurityCamera();
 };

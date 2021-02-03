@@ -8,13 +8,24 @@
 #include "Net/UnrealNetwork.h"
 #include "MainGameState.generated.h"
 
+
+
 USTRUCT()
-struct FCameraZone
+struct FZoneCameras
 {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY()
 	TArray<class ASecurityCamera*> ZoneCameras;
+};
+
+USTRUCT()
+struct FFloorZones
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	TArray<FZoneCameras> FloorZones;
 };
 
 /**
@@ -27,7 +38,7 @@ class WAT_API AMainGameState : public AGameStateBase
 
 public:
 	UPROPERTY(Replicated)
-	TArray<FCameraZone> Cameras;
+	TArray<FFloorZones> Cameras;
 
 	UPROPERTY(Replicated)
 	TArray<AObjective*> Objectives;

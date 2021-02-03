@@ -22,7 +22,7 @@ public:
 	class UStaticMeshComponent* MapBorderMesh;
 	
 	UPROPERTY()
-	TArray<UChildActorComponent*> Monitors;
+	TArray<class AMonitor*> Monitors;
 
 private:
 	
@@ -34,6 +34,7 @@ private:
 	bool bIsBlendingHorizontally;
 	bool bIsBlendingVertically;
 	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
+	bool bIsOnMap;
 
 	EBlendDirection BlendDirection;
 
@@ -62,11 +63,14 @@ private:
 
 	void BlendToTargetMonitor();
 
+	void SetCurrentMonitorRenderingState(bool bShouldRender);
+
 public:
 	//Inputs
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Return();
+	void SwitchFloor();
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* DeskInputComponent) override;

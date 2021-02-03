@@ -13,8 +13,7 @@ class WAT_API AMonitor : public AActor
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, Category = "Debug")
-	int DebugZoneIndex;
+
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
@@ -28,26 +27,49 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ScreenMesh;
 
-	UPROPERTY(EditAnywhere)
-        UMaterialInterface* BaseRenderMaterial;
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0", ClampMax = "4"))
+	int ZoneIndex;
 
-        UPROPERTY()
-        UMaterialInstanceDynamic* ScreenMaterial;
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0", ClampMax = "1"))
+	int FloorIndex;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+    UMaterialInterface* BaseRenderMaterial;
 
-        UPROPERTY()
-        UTextureRenderTarget2D* ScreenRenderTarget;
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float PaddingPercentage;
 
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "2", ClampMax = "12"))
+	int GraphicQuality;
+	
+    UPROPERTY()
+    UMaterialInstanceDynamic* ScreenMaterial;
+
+    UPROPERTY()
+    UTextureRenderTarget2D* ScreenRenderTarget;
 
 	UPROPERTY()
 	TArray<UMaterialInstanceDynamic*> CameraRenderMaterials;
 
 	UPROPERTY()
-	TArray<class USceneCaptureComponent2D*> RenderSourceCameras;
-
-	UPROPERTY()
 	TArray<UTextureRenderTarget2D*> CameraRenderTargets;
 
+	bool bShowSnow;
+private:
+
+	UPROPERTY()
+	class AMainGameState* GameState;
+
+	float RenderTargetWidth;
+
+	float RenderTargetHeight;
+	
+public:
 	AMonitor();
+
+	void SwitchFloor();
+
+	void SetRenderingState(bool bShouldRender);
 
 protected:
 	// Called when the game starts or when spawned
