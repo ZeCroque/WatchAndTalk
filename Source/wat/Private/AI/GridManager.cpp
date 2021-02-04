@@ -31,6 +31,8 @@ void AGridManager::BeginPlay()
 
 	CellHeight = (MaxWorld.Y - MinWorld.Y) / CellPerSide;
 	CellWidth = (MaxWorld.X - MinWorld.X) / CellPerSide;
+
+	Timer = CoolingInterval;
 }
 
 // Called every frame
@@ -38,22 +40,27 @@ void AGridManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	for (int i = 0; i < CellPerSide; i++)
+	Timer += DeltaTime;
+	if (Timer >= CoolingInterval)
 	{
-		for (int j = 0; j < CellPerSide; j++)
-		{
-			DecrementValueAt(j, i, CoolingStrength * DeltaTime);
-		}
-	}
+		Timer = 0;
 
-	for (int i = CellPerSide; i < CellPerSide * 2; i++)
-	{
-		for (int j = 0; j < CellPerSide; j++)
+		for (int i = 0; i < CellPerSide; i++)
 		{
-			DecrementValueAt(j, i, CoolingStrength * DeltaTime);
+			for (int j = 0; j < CellPerSide; j++)
+			{
+				DecrementValueAt(j, i, CoolingStrength * DeltaTime);
+			}
+		}
+
+		for (int i = CellPerSide; i < CellPerSide * 2; i++)
+		{
+			for (int j = 0; j < CellPerSide; j++)
+			{
+				DecrementValueAt(j, i, CoolingStrength * DeltaTime);
+			}
 		}
 	}
-	// GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::FromInt(SumOfWeight));
 }
 
 

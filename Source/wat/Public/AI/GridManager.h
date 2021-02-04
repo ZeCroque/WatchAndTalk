@@ -53,13 +53,16 @@ private:
 	int CellPerSide = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
-	float CoolingStrength = 0.05f;
+	float CoolingStrength = 0.40f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
-	int FloorHeight = 200;
+	float CoolingInterval = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
-	int GroundHeight = 0;
+	int FloorHeight = 405;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	int GroundHeight = 94;
 
 	FVector2D MinWorld;
 	FVector2D MaxWorld;
@@ -68,6 +71,8 @@ private:
 	float CellHeight; // Y
 
 	float SumOfWeight;
+
+	float Timer;
 
 	TArray<float> Grid;
 };
