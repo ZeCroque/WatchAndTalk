@@ -105,6 +105,7 @@ void APlayerCharacter::BeginPlay()
 	{
 		GetMesh()->SetVisibility(true);
 	}
+	OriginalMaxSpeed = GetCharacterMovement()->GetMaxSpeed();
 }
 
 void APlayerCharacter::CreateDebugWidget()
@@ -164,6 +165,20 @@ void APlayerCharacter::Tick(float DeltaTime)
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
+	if (bIsSprinting && !GetVelocity().IsZero())
+	{
+		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
+		{
+			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate/DeltaTime;
+		} else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
+		}
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
+	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate/DeltaTime;
+	}
 }
 
 // Called to bind functionality to input
@@ -193,7 +208,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
-
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &APlayerCharacter::CreateDebugWidget);
 }
 
@@ -267,12 +281,12 @@ void APlayerCharacter::Interact_Implementation()
 
 void APlayerCharacter::StartSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed += SprintAdditionalSpeedValue;
+	bIsSprinting = true;
 }
 
 void APlayerCharacter::StopSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed -= SprintAdditionalSpeedValue;
+	bIsSprinting = false;
 }
 
 void APlayerCharacter::StartCrouching()
