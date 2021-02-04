@@ -8,6 +8,7 @@
 #include "SecurityCamera.h"
 #include "Engine/Canvas.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Interactables/Desk/CameraDesk.h"
 
 // Sets default values
 AMonitor::AMonitor()
@@ -32,7 +33,10 @@ AMonitor::AMonitor()
 
 	PaddingPercentage = 0.05;
 	GraphicQuality = 6;
-	SnowTransitionTime = 0.3f;
+	BlendingModeSnowTransitionTime = 0.3f;
+	FloorSwitchModeSnowTransitionTime = 0.15f;
+	MaxSnowOpacity = 0.3f;
+	MinSnowOpacity = 0.17f;
 }
 
 void AMonitor::SwitchFloor()
@@ -78,6 +82,8 @@ void AMonitor::BeginPlay()
 	Super::BeginPlay();
 
 	FloorIndex = 0;
+
+	ParentDesk = Cast<ACameraDesk>(GetParentActor());
 	
 	GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
 
@@ -121,6 +127,9 @@ void AMonitor::BeginPlay()
 
 	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(ScreenRenderTarget));
 
+	ElapsedTimeSinceSnowTransitionStart = 0.f;
+	ElapsedTime = 0.f;
+	
 	SnowMaterial = UMaterialInstanceDynamic::Create(BaseSnowMaterial, this);
     SnowMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
 	
@@ -151,48 +160,66 @@ void AMonitor::Tick(float DeltaTime)
 	if(bIsInSnowGrowthMode || bIsInSnowFadingMode)
 	{
 		
-		ElapsedTime += DeltaTime;
-	
-		const auto OpacityRatio = DeltaTime  / SnowTransitionTime;
+		ElapsedTimeSinceSnowTransitionStart += DeltaTime;
 
+		const auto TransitionTime = ParentDesk->bIsSwitchingFloors ? FloorSwitchModeSnowTransitionTime : BlendingModeSnowTransitionTime;
+		const auto OpacityRatio = DeltaTime * (MaxSnowOpacity - MinSnowOpacity) / TransitionTime;
+			
 		float CurrentOpacity;
 		SnowMaterial->GetScalarParameterValue(FName("Opacity"), CurrentOpacity);
 		
 		if(bIsInSnowFadingMode)
 		{
-			SnowMaterial->SetScalarParameterValue("Opacity",  FMath::Max(0.f, CurrentOpacity - OpacityRatio));
+			SnowMaterial->SetScalarParameterValue("Opacity",  FMath::Max(MinSnowOpacity, CurrentOpacity - OpacityRatio));
 		}
 		else if(bIsInSnowGrowthMode)
 		{
-			SnowMaterial->SetScalarParameterValue("Opacity", FMath::Min(1.f ,CurrentOpacity + OpacityRatio));
+			SnowMaterial->SetScalarParameterValue("Opacity", FMath::Min(MaxSnowOpacity ,CurrentOpacity + OpacityRatio));
 		}
 
-		if(ElapsedTime >= SnowTransitionTime)
+		if(ElapsedTimeSinceSnowTransitionStart >= TransitionTime)
 		{
-			OnTransitionEnd.Broadcast(bIsInSnowGrowthMode);
+			bool bWasOn = bIsInSnowGrowthMode;
 			bIsInSnowFadingMode = false;
 			bIsInSnowGrowthMode = false;
-			ElapsedTime = 0.f;
+			ElapsedTimeSinceSnowTransitionStart = 0.f;
+			OnTransitionEnd.Broadcast(bWasOn);
 		}
 	}
 
-    auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
-    auto CanvasSize = FVector2D();
-    auto Context = FDrawToRenderTargetContext();
-    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, ScreenRenderTarget, Canvas, CanvasSize, Context);
+	ElapsedTime += DeltaTime;
 
-	//Cameras
-    Canvas->K2_DrawMaterial(CameraRenderMaterials[0], FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(CameraRenderMaterials[1], FVector2D(CanvasSize.X - RenderTargetWidth,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(CameraRenderMaterials[2], FVector2D(0.f,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(CameraRenderMaterials[3], FVector2D(CanvasSize.X - RenderTargetWidth,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+	if(ElapsedTime >= 1.f / 30.f)
+	{
+		ElapsedTime = 0.f;
 
-	//Snow
-    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
-	
-	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+		auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+	    auto CanvasSize = FVector2D();
+	    auto Context = FDrawToRenderTargetContext();
+	    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, ScreenRenderTarget, Canvas, CanvasSize, Context);
+		
+		if(bIsInSnowGrowthMode || bIsInSnowFadingMode)
+		{
+			for(auto* Camera : GameState->Cameras[FloorIndex].FloorZones[ZoneIndex].ZoneCameras)
+			{
+				Camera->GetCaptureComponent2D()->CaptureScene();
+			}
+
+			//Cameras
+		    Canvas->K2_DrawMaterial(CameraRenderMaterials[0], FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+		    Canvas->K2_DrawMaterial(CameraRenderMaterials[1], FVector2D(CanvasSize.X - RenderTargetWidth,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+		    Canvas->K2_DrawMaterial(CameraRenderMaterials[2], FVector2D(0.f,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+		    Canvas->K2_DrawMaterial(CameraRenderMaterials[3], FVector2D(CanvasSize.X - RenderTargetWidth,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+		}
+			
+		//Snow
+	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+		
+		UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+
+	}
 }
 

@@ -49,7 +49,16 @@ public:
 	int GraphicQuality;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0"))
-	float SnowTransitionTime;
+	float BlendingModeSnowTransitionTime;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0"))
+	float FloorSwitchModeSnowTransitionTime;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MaxSnowOpacity;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MinSnowOpacity;
 	
     UPROPERTY()
     UMaterialInstanceDynamic* ScreenMaterial;
@@ -70,10 +79,17 @@ public:
 
 	bool bStartSnowFading;
 
+	bool bIsInSnowFadingMode;
+
+	bool bIsInSnowGrowthMode;
+	
 	FSnowTransitionEndDelegate OnTransitionEnd;
 	
 private:
 
+	UPROPERTY()
+	class ACameraDesk* ParentDesk;
+	
 	UPROPERTY()
 	class AMainGameState* GameState;
 
@@ -81,11 +97,9 @@ private:
 
 	float RenderTargetHeight;
 
+	float ElapsedTimeSinceSnowTransitionStart;
+
 	float ElapsedTime;
-
-	bool bIsInSnowFadingMode;
-
-	bool bIsInSnowGrowthMode;
 
 public:
 	AMonitor();

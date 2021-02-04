@@ -101,8 +101,10 @@ void ACameraDesk::OnNotFinalBlend()
 		{
 			bIsBlendingVertically = false;
 		}
-
-		SetCurrentMonitorRenderingState(true);
+		if(!bIsOnMap)
+		{
+			SetCurrentMonitorRenderingState(true);
+		}
 	}
 }
 
@@ -162,7 +164,6 @@ void ACameraDesk::BlendToTargetMonitor()
 		
 		CurrentBlendDirection = BlendDirection == EBlendDirection::Right ? EBlendDirection::Left : EBlendDirection::Right;
 	}
-
 	BlendDirection = CurrentBlendDirection;
 	PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(TargetIndex), TimeToTargetScreen, VTBlend_Linear, 0, true);
 }
@@ -178,16 +179,21 @@ void ACameraDesk::SetCurrentMonitorRenderingState(bool bShouldRender)
 
 void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
 {
-	for(auto* Monitor : Monitors)
+	if(bWasOn)
 	{
-		Monitor->SwitchFloor();
+		for(auto* Monitor : Monitors)
+		{
+			Monitor->SwitchFloor();
+		}
+		if(!bIsOnMap)
+		{
+			SetCurrentMonitorRenderingState(true);
+			return;
+		}
 	}
-	if(!bIsOnMap)
-	{	
-		SetCurrentMonitorRenderingState(true);
-	}
+
 	GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
-	bIsSwitchingFloors = false;
+	bIsSwitchingFloors = false;	
 }
 
 void ACameraDesk::MoveForward(float Value)
@@ -254,10 +260,11 @@ void ACameraDesk::Return()
 
 void ACameraDesk::SwitchFloor()
 {
-	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically)
+	const auto Monitor = GetMonitorByIndex(CurrentIndex);
+	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically && !Monitor->bIsInSnowGrowthMode && !Monitor->bIsInSnowFadingMode)
 	{
 		bIsSwitchingFloors = true;
-		if(GetMonitorByIndex(CurrentIndex)->FloorIndex != 0)
+		if(Monitor->FloorIndex != 0)
 		{
 			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), FirstFloor);
 		}
@@ -266,8 +273,8 @@ void ACameraDesk::SwitchFloor()
 			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), SecondFloor);
 		}
 		
+		Monitor->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
 		SetCurrentMonitorRenderingState(false);
-		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
 	}
 }
 

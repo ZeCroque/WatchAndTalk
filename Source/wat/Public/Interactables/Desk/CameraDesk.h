@@ -33,6 +33,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT Debug")
 	UTexture* SecondFloor;
+
+	bool bIsSwitchingFloors;
 	
 private:
 	
@@ -40,12 +42,12 @@ private:
 	int TargetIndex;
 	int LastHoveredScreenIndex;
 
-	bool bIsInternalBlend;
 	bool bIsBlendingHorizontally;
 	bool bIsBlendingVertically;
+	bool bIsInternalBlend;
 	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
 	bool bIsOnMap;
-	bool bIsSwitchingFloors;
+
 
 	EBlendDirection BlendDirection;
 
