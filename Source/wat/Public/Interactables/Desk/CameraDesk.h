@@ -20,13 +20,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* MapBorderMesh;
-	
-	UPROPERTY()
-	TArray<class AMonitor*> Monitors;
 
-	//TODO
-	UPROPERTY()
-	UMaterialInstanceDynamic* MapMaterial;
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "2", ClampMax = "12"))
+	int MapGraphicQuality;
 	
 	UPROPERTY(EditAnywhere, Category = "WAT Debug")
 	UTexture* FirstFloor;
@@ -37,6 +33,18 @@ public:
 	bool bIsSwitchingFloors;
 	
 private:
+
+	UPROPERTY()
+	TArray<class AMonitor*> Monitors;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MapMaterial;
+
+	UPROPERTY()
+	UTextureRenderTarget2D* MapRenderTarget;
+
+	UPROPERTY()
+	UTexture* CurrentFloor;
 	
 	int CurrentIndex;
 	int TargetIndex;
@@ -48,11 +56,13 @@ private:
 	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
 	bool bIsOnMap;
 
-
 	EBlendDirection BlendDirection;
 
 	float TimeToTargetScreen;
 	float ElapsedBlendTime;
+
+	float RenderingWidth;
+	float RenderingHeight;
 
 	//Inputs
 	bool bToggle;

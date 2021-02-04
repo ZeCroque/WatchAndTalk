@@ -6,7 +6,10 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Characters/PlayerCharacter.h"
 #include "Core/MainPlayerController.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Interactables/Desk/Monitor.h"
+#include "Engine/Canvas.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()
@@ -16,6 +19,8 @@ ACameraDesk::ACameraDesk()
 
 	MapBorderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapBorderMesh"));
 	MapBorderMesh->SetupAttachment(StaticMesh);
+
+	MapGraphicQuality = 8;
 }
 
 // Called when the game starts or when spawned
@@ -39,9 +44,21 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
-	//TODO
+	FVector ScreenStart;
+	FVector ScreenEnd;
+	MapMesh->GetLocalBounds(ScreenStart, ScreenEnd);
+	const auto ScreenDimensions = (ScreenEnd - ScreenStart) * MapMesh->GetComponentScale();
+	const auto AspectRatio = ScreenDimensions.Z / ScreenDimensions.Y;
+	RenderingWidth = FMath::Pow(2,MapGraphicQuality);
+	RenderingHeight = RenderingWidth * AspectRatio;
+	
 	MapMaterial = MapMesh->CreateAndSetMaterialInstanceDynamic(0);
 	MapMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+
+	MapRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+	MapRenderTarget->InitAutoFormat(RenderingWidth, RenderingHeight);
+
+	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(MapRenderTarget));
 	
 	Initialize();
 }
@@ -57,6 +74,20 @@ void ACameraDesk::Tick(float DeltaSeconds)
 		ElapsedBlendTime -= BlendTime * bHasHoveredScreen;	
 		LastHoveredScreenIndex = BlendDirection == EBlendDirection::Right ? LastHoveredScreenIndex + bHasHoveredScreen : BlendDirection == EBlendDirection::Left ? LastHoveredScreenIndex - bHasHoveredScreen : CurrentIndex;
 	}
+
+	auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+    auto CanvasSize = FVector2D();
+    auto Context = FDrawToRenderTargetContext();
+    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, MapRenderTarget, Canvas, CanvasSize, Context);
+
+	//Cameras
+	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
+
+	//TODO Post process
+	//Canvas->K2_DrawMaterial(MapMaterial, FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+   
+	
+	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 
 void ACameraDesk::Initialize()
@@ -74,8 +105,7 @@ void ACameraDesk::Initialize()
 	ElapsedBlendTime = 0.f;
 	TimeToTargetScreen = 0.f;
 
-	//TODO
-	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(FirstFloor));
+	CurrentFloor = FirstFloor;
 }
 
 void ACameraDesk::OnNotFinalBlend()
@@ -269,11 +299,11 @@ void ACameraDesk::SwitchFloor()
 	{		
 		if(Monitor->FloorIndex != 0)
 		{
-			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), FirstFloor);
+			CurrentFloor = FirstFloor;
 		}
 		else
 		{
-			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), SecondFloor);
+			CurrentFloor = SecondFloor;
 		}
 
 		if(!bIsOnMap)
