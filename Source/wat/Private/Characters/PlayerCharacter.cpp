@@ -2,7 +2,6 @@
 
 
 #include "Characters/PlayerCharacter.h"
-
 #include "Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -170,7 +169,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
 		{
-			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate;
+			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate/DeltaTime;
 		} else
 		{
 			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
@@ -178,8 +177,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
 	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
 	{
-		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate;
+		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate/DeltaTime;
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("%f"), GetCharacterMovement()->GetMaxSpeed()));
 }
 
 // Called to bind functionality to input
