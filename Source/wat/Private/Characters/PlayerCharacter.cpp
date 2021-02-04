@@ -106,6 +106,7 @@ void APlayerCharacter::BeginPlay()
 	{
 		GetMesh()->SetVisibility(true);
 	}
+	OriginalMaxSpeed = GetCharacterMovement()->GetMaxSpeed();
 }
 
 void APlayerCharacter::CreateDebugWidget()
@@ -165,9 +166,19 @@ void APlayerCharacter::Tick(float DeltaTime)
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
-	if (bIsSprinting)
+	if (bIsSprinting && !GetVelocity().IsZero())
 	{
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, 1.0f);
+		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
+		{
+			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate;
+		} else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
+		}
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
+	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate;
 	}
 }
 
@@ -271,14 +282,12 @@ void APlayerCharacter::Interact_Implementation()
 
 void APlayerCharacter::StartSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed += SprintAdditionalSpeedValue;
 	bIsSprinting = true;
 }
 
 void APlayerCharacter::StopSprinting()
 {
 	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed -= SprintAdditionalSpeedValue;
 }
 
 void APlayerCharacter::StartCrouching()

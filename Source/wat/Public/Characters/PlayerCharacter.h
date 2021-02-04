@@ -35,6 +35,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	float SprintAdditionalSpeedValue;
 
+	UPROPERTY(EditAnywhere)
+	float SprintSpeedIncreaseRate;
+
+	UPROPERTY(EditAnywhere)
+	float SprintSpeedDecreaseRate;
+
+	UPROPERTY()
+	float OriginalMaxSpeed;
+
 
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
