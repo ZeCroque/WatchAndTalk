@@ -12,6 +12,10 @@ AInteractable::AInteractable()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	AutoPossessAI = EAutoPossessAI::Disabled;
+        AIControllerClass = nullptr;
+
 	bInUse = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -69,6 +73,7 @@ void AInteractable::Interact()
 		{
 			bInUse = true;
 			OnInteractionBegin();
+			OnInteraction();
 		}
 	}
 }

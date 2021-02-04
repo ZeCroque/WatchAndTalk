@@ -16,5 +16,8 @@ class WAT_API AQTEInteractable : public AObjective
 	GENERATED_BODY()
 
 private:
-    virtual void OnInteractionBegin() override;
+
+	virtual void OnNotFinalBlend() override;
+
+	virtual void OnFinalBlend() override;
 };

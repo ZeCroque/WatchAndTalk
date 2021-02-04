@@ -4,10 +4,21 @@
 #include "Interactables/Objectives/QTEInteractable.h"
 #include "QTEWidget.h"
 #include "Core/MainPlayerController.h"
+#include "Core/MainGameState.h"
 
-void AQTEInteractable::OnInteractionBegin()
+void AQTEInteractable::OnNotFinalBlend()
 {
-	Super::OnInteractionBegin();
-	Cast<UQTEWidget>(MiniGameWidget->GetUserWidgetObject())->Start();
-        PlayerController->bIsInMiniGame = true;
+	Super::OnNotFinalBlend();
+	MiniGameWidget->Start();
+    PlayerController->Widget = MiniGameWidget;
+}
+
+void AQTEInteractable::OnFinalBlend()
+{
+	Super::OnFinalBlend();
+
+	if(!GameState->bGameEnded)
+	{
+		PlayerController->SetInputMode(FInputModeGameOnly());
+	}
 }

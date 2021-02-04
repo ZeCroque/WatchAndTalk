@@ -18,11 +18,27 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* InteractableCamera;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "WAT BlendableInteractable", meta = (ClampMin = "0.0"))
 	float BlendTime;
 
 	ABlendableInteractable();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void RegisterBlendCompleteCallback(AMainPlayerController* TargetController);
+	
 	virtual void OnInteractionBegin() override;
 	
+	virtual void OnInteraction() override;
+
+	void OnBlendComplete();
+	
+	virtual void OnNotFinalBlend();
+
+	virtual void OnFinalBlend();
+
+	void BlendToPlayer();
+
+protected:
+	
+	bool bIsFinalBlend;
 };

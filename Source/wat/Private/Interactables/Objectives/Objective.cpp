@@ -11,6 +11,7 @@ void AObjective::EndGame_Implementation()
     auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
     if (EndGameWidget != nullptr && !EndGameWidget->GetIsVisible())
     {
+    	GameState->bGameEnded = true;
         EndGameWidget->AddToViewport();
         PlayerController->SetInputMode(FInputModeUIOnly());
         PlayerController->bShowMouseCursor = true;
@@ -19,8 +20,8 @@ void AObjective::EndGame_Implementation()
 
 AObjective::AObjective()
 {
-	MiniGameWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniGameWidget"));
-	MiniGameWidget->SetupAttachment(RootComponent);
+	MiniGameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniGameWidget"));
+	MiniGameWidgetComponent->SetupAttachment(RootComponent);
 }
 
 void AObjective::BeginPlay()
@@ -31,9 +32,12 @@ void AObjective::BeginPlay()
 
 void AObjective::OnInteractionBegin()
 {
-	PlayerController->Possess(this);
-	PlayerController->SetViewTargetWithBlend(this, BlendTime);
-        Cast<UQTEWidget>(MiniGameWidget->GetUserWidgetObject())->ParentInteractable = this;
+	Super::OnInteractionBegin();
+	if(!MiniGameWidget)
+	{
+	    MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
+		MiniGameWidget->ParentInteractable = this;
+    }
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
@@ -41,6 +45,8 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
     if (PlayerController)
     {
         bInUse = false;
+    	MiniGameWidget->Stop();
+    	BlendToPlayer();
     	if(bSuccess)
     	{
     		bCompleted = true;
@@ -54,9 +60,6 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
         {
 	        GameState->MonsterCharacter->StartGoalReaction(PlayerCharacter);
         }
-        PlayerController->Possess(PlayerCharacter);
-    	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime);
-    	PlayerController->SetInputMode(FInputModeGameOnly());
     }
 }
 

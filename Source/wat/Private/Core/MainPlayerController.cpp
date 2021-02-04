@@ -3,25 +3,20 @@
 
 #include "Core/MainPlayerController.h"
 
-#include "Interactables/Objectives/QTEInteractable.h"
-
 AMainPlayerController::AMainPlayerController()
 {
-	bIsInMiniGame = false;
+	Widget = nullptr;
+}
+
+void AMainPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
+{
+	Possess(PawnToPossess);
 }
 
 bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
-    if (bIsInMiniGame && EventType == EInputEvent::IE_Pressed)
+    if (Widget && EventType == EInputEvent::IE_Pressed)
     {
-        if (!Widget)
-        {
-            auto* Interactable = Cast<AQTEInteractable>(GetPawn());
-            if (Interactable)
-            {
-                Widget = Cast<UQTEWidget>(Interactable->MiniGameWidget->GetUserWidgetObject());
-            }
-        }
         Widget->OnInput(Key);
         return true;
     }

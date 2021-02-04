@@ -40,6 +40,8 @@ public:
     void OnInput(FKey PressedInput);
 
 	void Start();
+
+	void Stop();
     
 private:
 

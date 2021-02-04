@@ -7,7 +7,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 
-void ALeaveLobbyTrigger::OnInteractionBegin()
+void ALeaveLobbyTrigger::OnInteraction()
 {
         bInUse = false;
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());

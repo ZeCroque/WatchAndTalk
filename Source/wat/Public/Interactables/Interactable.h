@@ -51,6 +51,8 @@ protected:
 	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	virtual void OnInteractionBegin(){}
+	
+	virtual void OnInteraction(){}
 
 public:	
 	// Called every frame

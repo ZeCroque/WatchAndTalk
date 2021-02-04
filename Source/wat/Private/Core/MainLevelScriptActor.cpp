@@ -24,14 +24,20 @@ void AMainLevelScriptActor::PostInitializeComponents()
         UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
         if (FoundActors.Num() != 0)
         {
-            MainGameState->Cameras.Reserve(FoundActors.Num());
-            MainGameState->Cameras.SetNum(FoundActors.Num());
+        	MainGameState->Cameras.Reserve(2);
+        	MainGameState->Cameras.SetNum(2);
+        	for(auto& Floor : MainGameState->Cameras)
+        	{
+        		Floor.FloorZones.Reserve(4);
+        		Floor.FloorZones.SetNum(4);
+        	}
+        	
             for (auto* FoundActor : FoundActors)
             {
                 auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
                 if (FoundCameraActor)
                 {
-                    MainGameState->Cameras[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
+                    MainGameState->Cameras[FoundCameraActor->FloorNumber].FloorZones[FoundCameraActor->ZoneNumber].ZoneCameras.Add(FoundCameraActor);
                 }
             }
         }

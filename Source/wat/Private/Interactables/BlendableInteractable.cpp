@@ -4,6 +4,7 @@
 #include "Interactables/BlendableInteractable.h"
 
 #include "Camera/CameraComponent.h"
+#include "Characters/PlayerCharacter.h"
 #include "Core/MainPlayerController.h"
 
 ABlendableInteractable::ABlendableInteractable()
@@ -14,7 +15,54 @@ ABlendableInteractable::ABlendableInteractable()
 	InteractableCamera->SetupAttachment(RootComponent);
 }
 
+void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AMainPlayerController* TargetController)
+{
+	if(TargetController == GetWorld()->GetFirstPlayerController())
+	{
+		TargetController->PlayerCameraManager->OnBlendComplete().AddUObject(this, &ABlendableInteractable::OnBlendComplete);
+	}
+}
+
 void ABlendableInteractable::OnInteractionBegin()
 {
-	PlayerController->SetViewTargetWithBlend(this, BlendTime);
+	bIsFinalBlend = false;
+	PlayerCharacter->DisableInput(PlayerController);
+	RegisterBlendCompleteCallback(PlayerController);
+}	
+
+void ABlendableInteractable::OnInteraction()
+{
+	PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
 }
+
+void ABlendableInteractable::OnNotFinalBlend()
+{
+	PlayerController->PossessRPC(this);
+}
+
+void ABlendableInteractable::OnFinalBlend()
+{
+	bIsFinalBlend = false;
+	PlayerController->PossessRPC(PlayerCharacter);
+	PlayerCharacter->EnableInput(PlayerController);
+        PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
+}
+
+void ABlendableInteractable::BlendToPlayer()
+{
+	bIsFinalBlend = true;
+	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
+}
+
+void ABlendableInteractable::OnBlendComplete()
+{
+
+        if(!bIsFinalBlend)
+        {
+	        OnNotFinalBlend();		
+        }
+        else
+        {
+    	        OnFinalBlend();
+        }	
+    }
