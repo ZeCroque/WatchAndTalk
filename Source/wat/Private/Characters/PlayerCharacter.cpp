@@ -179,7 +179,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate/DeltaTime;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("%f"), GetCharacterMovement()->GetMaxSpeed()));
 }
 
 // Called to bind functionality to input
