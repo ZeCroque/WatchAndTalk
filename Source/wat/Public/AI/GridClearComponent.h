@@ -31,7 +31,7 @@ private:
 	int RayNumber = 32;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	int RaySize = 1500;
+	int RaySize = 3000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
 	int FieldOfView = 210;
@@ -47,9 +47,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Debug", meta = (AllowPrivateAccess = "true"))
 	bool bDebug = false;
-
-	UPROPERTY()
-	AActor* Owner = GetOwner();
 
 	UPROPERTY()
 	AGridManager* GridManager;

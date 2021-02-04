@@ -27,7 +27,6 @@ void UGridClearComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Owner = GetOwner();
 	Timer = Cooldown;
 }
 
@@ -42,25 +41,25 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
 	}
-	
+
 	Timer += DeltaTime;
 	if (Timer >= Cooldown && GridManager)
 	{
 		Timer = 0;
 
-		auto const Start = Owner->GetActorLocation() + (FVector::UpVector * ViewUpOffset) + (Owner->GetActorForwardVector() *
-			ViewForwardOffset);
+		auto const Start = GetOwner()->GetActorLocation() + (FVector::UpVector * ViewUpOffset) + (GetOwner()->
+			GetActorForwardVector() * ViewForwardOffset);
 
 		TArray<FVector> Polygon;
 		Polygon.Add(Start);
 		for (int i = 0; i < RayNumber; ++i)
 		{
-			const float Angle = (FieldOfView / 2) + (i * (FieldOfView / RayNumber)) - FieldOfView;
+			const float Angle = (i * (FieldOfView / RayNumber)) - (FieldOfView / 2);
 
 			FRotator Rotator = FRotator(GetComponentRotation().Pitch * -1,
 			                            GetComponentRotation().Yaw + Angle,
 			                            0);
-			FVector Direction = Rotator.Vector() * RaySize * 2;
+			FVector Direction = Rotator.Vector() * RaySize;
 			auto const End = Start + Direction;
 
 			if (bDebug)

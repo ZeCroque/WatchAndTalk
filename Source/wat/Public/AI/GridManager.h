@@ -27,20 +27,20 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category="Grid")
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	float GetValueAt(int X, int Y);
 
 	void SetValueAt(int X, int Y, float Value);
 
 	void DecrementValueAt(int X, int Y, float Value);
 
-	UFUNCTION(BlueprintCallable, Category="Grid")
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	void SetValueAround(const FVector& Center, const int Ray);
 
-	UFUNCTION(BlueprintCallable, Category="Grid")
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	void CleanPolygon(const TArray<FVector>& WorldPolygon);
 
-	UFUNCTION(BlueprintCallable, Category="Grid")
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	bool RandomHotWorldCoordinate(FVector& Vector);
 
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
@@ -49,19 +49,19 @@ public:
 	static bool IsInsidePolygon(const TArray<FVector2D> &Polygon, const  FVector2D &Point);
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int CellPerSide = 10;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	float CoolingStrength = 0.40f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	float CoolingInterval = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int FloorHeight = 405;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int GroundHeight = 94;
 
 	FVector2D MinWorld;

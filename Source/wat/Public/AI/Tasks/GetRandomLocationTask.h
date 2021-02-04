@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "AI/GridManager.h"
+#include "AI/MonsterAIController.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "GetRandomLocationTask.generated.h"
@@ -25,4 +26,7 @@ private:
 
     UPROPERTY()
     AGridManager* GridManager;
+
+    UPROPERTY()
+    AMonsterAIController* Controller;
 };
