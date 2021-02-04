@@ -7,6 +7,9 @@
 #include "GameFramework/Actor.h"
 #include "Monitor.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSnowTransitionEndDelegate, bool, bWasOn);
+
 UCLASS()
 class WAT_API AMonitor : public AActor
 {
@@ -67,7 +70,8 @@ public:
 
 	bool bStartSnowFading;
 
-
+	FSnowTransitionEndDelegate OnTransitionEnd;
+	
 private:
 
 	UPROPERTY()
@@ -82,7 +86,7 @@ private:
 	bool bIsInSnowFadingMode;
 
 	bool bIsInSnowGrowthMode;
-	
+
 public:
 	AMonitor();
 

@@ -38,7 +38,7 @@ public:
 
 	void BlendToPlayer();
 
-private:
+protected:
 	
 	bool bIsFinalBlend;
 };

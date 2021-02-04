@@ -39,6 +39,10 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
+	//TODO
+	MapMaterial = MapMesh->CreateAndSetMaterialInstanceDynamic(0);
+	MapMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+	
 	Initialize();
 }
 
@@ -63,10 +67,15 @@ void ACameraDesk::Initialize()
 	bIsInternalBlend = false;
 	bIsBlendingHorizontally = false;
 	bIsBlendingVertically = false;
+	bIsOnMap = true;
+	bIsSwitchingFloors = false;
 	LastHoveredScreenIndex = 0;
 	BlendDirection = EBlendDirection::Unset;
 	ElapsedBlendTime = 0.f;
 	TimeToTargetScreen = 0.f;
+
+	//TODO
+	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(FirstFloor));
 }
 
 void ACameraDesk::OnNotFinalBlend()
@@ -167,9 +176,23 @@ void ACameraDesk::SetCurrentMonitorRenderingState(bool bShouldRender)
 	}
 }
 
+void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
+{
+	for(auto* Monitor : Monitors)
+	{
+		Monitor->SwitchFloor();
+	}
+	if(!bIsOnMap)
+	{	
+		SetCurrentMonitorRenderingState(true);
+	}
+	GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
+	bIsSwitchingFloors = false;
+}
+
 void ACameraDesk::MoveForward(float Value)
 {
-	if (bIsInternalBlend && !bIsBlendingHorizontally && PlayerController)
+	if (bIsInternalBlend && !bIsBlendingHorizontally && !bIsSwitchingFloors && PlayerController)
 	{
 		if (Value > 0.0f)
 		{
@@ -189,7 +212,7 @@ void ACameraDesk::MoveForward(float Value)
 
 void ACameraDesk::MoveRight(float Value)
 {
-	if (bIsInternalBlend && !bIsBlendingVertically && PlayerController)
+	if (bIsInternalBlend && !bIsBlendingVertically && !bIsSwitchingFloors && PlayerController)
 	{
 		if (Value > 0.0f && !bToggle)
 		{
@@ -223,6 +246,7 @@ void ACameraDesk::Return()
 	if(PlayerCharacter && PlayerController)
 	{
 		SetCurrentMonitorRenderingState(false);
+		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
 		BlendToPlayer();
 		Initialize();
 	}
@@ -230,13 +254,20 @@ void ACameraDesk::Return()
 
 void ACameraDesk::SwitchFloor()
 {
-	for(auto* Monitor : Monitors)
+	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically)
 	{
-		Monitor->SwitchFloor();
-	}
-	if(!bIsOnMap)
-	{
-		SetCurrentMonitorRenderingState(true);
+		bIsSwitchingFloors = true;
+		if(GetMonitorByIndex(CurrentIndex)->FloorIndex != 0)
+		{
+			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), FirstFloor);
+		}
+		else
+		{
+			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), SecondFloor);
+		}
+		
+		SetCurrentMonitorRenderingState(false);
+		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
 	}
 }
 

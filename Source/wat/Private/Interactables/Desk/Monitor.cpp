@@ -169,6 +169,7 @@ void AMonitor::Tick(float DeltaTime)
 
 		if(ElapsedTime >= SnowTransitionTime)
 		{
+			OnTransitionEnd.Broadcast(bIsInSnowGrowthMode);
 			bIsInSnowFadingMode = false;
 			bIsInSnowGrowthMode = false;
 			ElapsedTime = 0.f;

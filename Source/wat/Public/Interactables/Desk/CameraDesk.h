@@ -24,6 +24,16 @@ public:
 	UPROPERTY()
 	TArray<class AMonitor*> Monitors;
 
+	//TODO
+	UPROPERTY()
+	UMaterialInstanceDynamic* MapMaterial;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT Debug")
+	UTexture* FirstFloor;
+
+	UPROPERTY(EditAnywhere, Category = "WAT Debug")
+	UTexture* SecondFloor;
+	
 private:
 	
 	int CurrentIndex;
@@ -35,6 +45,7 @@ private:
 	bool bIsBlendingVertically;
 	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
 	bool bIsOnMap;
+	bool bIsSwitchingFloors;
 
 	EBlendDirection BlendDirection;
 
@@ -64,6 +75,9 @@ private:
 	void BlendToTargetMonitor();
 
 	void SetCurrentMonitorRenderingState(bool bShouldRender);
+
+	UFUNCTION()
+	void OnSnowTransitionEnd(bool bWasOn);
 
 public:
 	//Inputs
