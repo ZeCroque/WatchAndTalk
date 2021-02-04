@@ -21,13 +21,16 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* MapBorderMesh;
 
+	UPROPERTY(EditAnywhere,  Category = "WAT MonitorSettings")
+	UMaterialInstance* PostProcessMaterialBase;
+
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "2", ClampMax = "12"))
 	int MapGraphicQuality;
 	
-	UPROPERTY(EditAnywhere, Category = "WAT Debug")
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
 	UTexture* FirstFloor;
 
-	UPROPERTY(EditAnywhere, Category = "WAT Debug")
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
 	UTexture* SecondFloor;
 
 	bool bIsSwitchingFloors;
@@ -45,6 +48,9 @@ private:
 
 	UPROPERTY()
 	UTexture* CurrentFloor;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* PostProcessMaterial;
 	
 	int CurrentIndex;
 	int TargetIndex;

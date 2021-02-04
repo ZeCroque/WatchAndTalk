@@ -59,6 +59,10 @@ void ACameraDesk::BeginPlay()
 	MapRenderTarget->InitAutoFormat(RenderingWidth, RenderingHeight);
 
 	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(MapRenderTarget));
+
+	PostProcessMaterial = UMaterialInstanceDynamic::Create(PostProcessMaterialBase, this);
+    PostProcessMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+	PostProcessMaterial->SetScalarParameterValue("OffSet White Line", FMath::RandRange(0, 50));
 	
 	Initialize();
 }
@@ -80,13 +84,9 @@ void ACameraDesk::Tick(float DeltaSeconds)
     auto Context = FDrawToRenderTargetContext();
     UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, MapRenderTarget, Canvas, CanvasSize, Context);
 
-	//Cameras
 	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
-
-	//TODO Post process
-	//Canvas->K2_DrawMaterial(MapMaterial, FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+	Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
    
-	
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 

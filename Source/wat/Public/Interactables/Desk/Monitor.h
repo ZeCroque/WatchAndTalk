@@ -42,6 +42,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseSnowMaterial;
 
+	UPROPERTY(EditAnywhere,  Category = "WAT MonitorSettings")
+	UMaterialInstance* PostProcessMaterialBase;
+
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float PaddingPercentage;
 
@@ -65,6 +68,9 @@ public:
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* SnowMaterial;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* PostProcessMaterial;
 
     UPROPERTY()
     UTextureRenderTarget2D* ScreenRenderTarget;
@@ -93,6 +99,10 @@ private:
 	UPROPERTY()
 	class AMainGameState* GameState;
 
+	float ScreenWidth;
+	
+	float AspectRatio;
+	
 	float RenderTargetWidth;
 
 	float RenderTargetHeight;

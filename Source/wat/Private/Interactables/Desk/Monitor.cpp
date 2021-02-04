@@ -90,13 +90,15 @@ void AMonitor::BeginPlay()
 	FVector ScreenStart;
 	FVector ScreenEnd;
 	ScreenMesh->GetLocalBounds(ScreenStart, ScreenEnd);
-	const auto ScreenDimensions = ScreenEnd - ScreenStart;
-	const auto AspectRatio = ScreenDimensions.Z / ScreenDimensions.X;
+	const auto ScreenDimensions = (ScreenEnd - ScreenStart) * GetActorScale();
+	AspectRatio = ScreenDimensions.Z / ScreenDimensions.Y;
 	const auto RenderingSize = FMath::Pow(2,GraphicQuality);
 	const auto ScreenPadding = RenderingSize * PaddingPercentage;
 
 	RenderTargetWidth = RenderingSize - ScreenPadding;
 	RenderTargetHeight = RenderTargetWidth * AspectRatio;
+
+	ScreenWidth = RenderingSize * 2.f + ScreenPadding;
 	
     const auto CameraCount = GameState->Cameras[FloorIndex].FloorZones[ZoneIndex].ZoneCameras.Num();
     CameraRenderMaterials.Reserve(CameraCount);
@@ -123,7 +125,7 @@ void AMonitor::BeginPlay()
 	ScreenMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
 
 	ScreenRenderTarget = NewObject<UTextureRenderTarget2D>(this);
-	ScreenRenderTarget->InitAutoFormat(RenderingSize * 2.f + ScreenPadding, (RenderingSize * 2.f + ScreenPadding) * AspectRatio);
+	ScreenRenderTarget->InitAutoFormat(ScreenWidth, ScreenWidth * AspectRatio);
 
 	ScreenMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(ScreenRenderTarget));
 
@@ -138,6 +140,10 @@ void AMonitor::BeginPlay()
 
 	bIsInSnowGrowthMode = false;
 	bIsInSnowFadingMode = false;
+
+	PostProcessMaterial = UMaterialInstanceDynamic::Create(PostProcessMaterialBase, this);
+    PostProcessMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+	PostProcessMaterial->SetScalarParameterValue("OffSet White Line", FMath::RandRange(0, 50));
 }
 
 // Called every frame
@@ -217,6 +223,8 @@ void AMonitor::Tick(float DeltaTime)
 	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
 	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
 	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(CanvasSize.X - RenderTargetWidth,CanvasSize.Y - RenderTargetHeight), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
+
+		Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(ScreenWidth,ScreenWidth * AspectRatio),FVector2D(0.f,0.f));
 		
 		UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 
