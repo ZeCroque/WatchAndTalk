@@ -78,6 +78,8 @@ private:
 
 	void SetCurrentMonitorRenderingState(bool bShouldRender);
 
+	void SwitchFloorInMonitors();
+	
 	UFUNCTION()
 	void OnSnowTransitionEnd(bool bWasOn);
 

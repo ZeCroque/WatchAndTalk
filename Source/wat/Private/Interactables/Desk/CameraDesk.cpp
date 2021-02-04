@@ -177,23 +177,27 @@ void ACameraDesk::SetCurrentMonitorRenderingState(bool bShouldRender)
 	}
 }
 
+void ACameraDesk::SwitchFloorInMonitors()
+{
+	for(auto* Monitor : Monitors)
+	{
+		Monitor->SwitchFloor();
+	}
+}
+
 void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
 {
 	if(bWasOn)
 	{
-		for(auto* Monitor : Monitors)
-		{
-			Monitor->SwitchFloor();
-		}
-		if(!bIsOnMap)
-		{
-			SetCurrentMonitorRenderingState(true);
-			return;
-		}
-	}
+		SwitchFloorInMonitors();
 
-	GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
-	bIsSwitchingFloors = false;	
+		SetCurrentMonitorRenderingState(true);
+	}
+	else
+	{
+		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
+		bIsSwitchingFloors = false;
+	}
 }
 
 void ACameraDesk::MoveForward(float Value)
@@ -262,8 +266,7 @@ void ACameraDesk::SwitchFloor()
 {
 	const auto Monitor = GetMonitorByIndex(CurrentIndex);
 	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically && !Monitor->bIsInSnowGrowthMode && !Monitor->bIsInSnowFadingMode)
-	{
-		bIsSwitchingFloors = true;
+	{		
 		if(Monitor->FloorIndex != 0)
 		{
 			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), FirstFloor);
@@ -272,9 +275,17 @@ void ACameraDesk::SwitchFloor()
 		{
 			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), SecondFloor);
 		}
-		
-		Monitor->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
-		SetCurrentMonitorRenderingState(false);
+
+		if(!bIsOnMap)
+		{
+			bIsSwitchingFloors = true;
+			Monitor->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
+			SetCurrentMonitorRenderingState(false);
+		}
+		else
+		{
+			SwitchFloorInMonitors();
+		}
 	}
 }
 
