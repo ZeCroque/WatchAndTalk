@@ -35,6 +35,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0", ClampMax = "1"))
 	int FloorIndex;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+    UFont* Font;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	FString CameraNumberPrefix;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings",  meta = (ClampMin = "0.0") )
+	float TextMargin;
 	
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseRenderMaterial;
