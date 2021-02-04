@@ -20,37 +20,55 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* MapBorderMesh;
+
+	UPROPERTY(EditAnywhere,  Category = "WAT MonitorSettings")
+	UMaterialInstance* PostProcessMaterialBase;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "2", ClampMax = "12"))
+	int MapGraphicQuality;
 	
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	UTexture* FirstFloor;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	UTexture* SecondFloor;
+
+	bool bIsSwitchingFloors;
+	
+private:
+
 	UPROPERTY()
 	TArray<class AMonitor*> Monitors;
 
-	//TODO
 	UPROPERTY()
 	UMaterialInstanceDynamic* MapMaterial;
-	
-	UPROPERTY(EditAnywhere, Category = "WAT Debug")
-	UTexture* FirstFloor;
 
-	UPROPERTY(EditAnywhere, Category = "WAT Debug")
-	UTexture* SecondFloor;
-	
-private:
+	UPROPERTY()
+	UTextureRenderTarget2D* MapRenderTarget;
+
+	UPROPERTY()
+	UTexture* CurrentFloor;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* PostProcessMaterial;
 	
 	int CurrentIndex;
 	int TargetIndex;
 	int LastHoveredScreenIndex;
 
-	bool bIsInternalBlend;
 	bool bIsBlendingHorizontally;
 	bool bIsBlendingVertically;
+	bool bIsInternalBlend;
 	bool bIsSwitchingBetweenAdjoiningScreensMoreThanOnce;
 	bool bIsOnMap;
-	bool bIsSwitchingFloors;
 
 	EBlendDirection BlendDirection;
 
 	float TimeToTargetScreen;
 	float ElapsedBlendTime;
+
+	float RenderingWidth;
+	float RenderingHeight;
 
 	//Inputs
 	bool bToggle;
@@ -76,6 +94,8 @@ private:
 
 	void SetCurrentMonitorRenderingState(bool bShouldRender);
 
+	void SwitchFloorInMonitors();
+	
 	UFUNCTION()
 	void OnSnowTransitionEnd(bool bWasOn);
 

@@ -35,12 +35,24 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0", ClampMax = "1"))
 	int FloorIndex;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+    UFont* Font;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	FString CameraNumberPrefix;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings",  meta = (ClampMin = "0.0") )
+	float TextMargin;
 	
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseRenderMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseSnowMaterial;
+
+	UPROPERTY(EditAnywhere,  Category = "WAT MonitorSettings")
+	UMaterialInstance* PostProcessMaterialBase;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float PaddingPercentage;
@@ -49,13 +61,25 @@ public:
 	int GraphicQuality;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0"))
-	float SnowTransitionTime;
+	float BlendingModeSnowTransitionTime;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0"))
+	float FloorSwitchModeSnowTransitionTime;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MaxSnowOpacity;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MinSnowOpacity;
 	
     UPROPERTY()
     UMaterialInstanceDynamic* ScreenMaterial;
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* SnowMaterial;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* PostProcessMaterial;
 
     UPROPERTY()
     UTextureRenderTarget2D* ScreenRenderTarget;
@@ -70,22 +94,31 @@ public:
 
 	bool bStartSnowFading;
 
+	bool bIsInSnowFadingMode;
+
+	bool bIsInSnowGrowthMode;
+	
 	FSnowTransitionEndDelegate OnTransitionEnd;
 	
 private:
 
 	UPROPERTY()
+	class ACameraDesk* ParentDesk;
+	
+	UPROPERTY()
 	class AMainGameState* GameState;
 
+	float ScreenWidth;
+	
+	float AspectRatio;
+	
 	float RenderTargetWidth;
 
 	float RenderTargetHeight;
 
+	float ElapsedTimeSinceSnowTransitionStart;
+
 	float ElapsedTime;
-
-	bool bIsInSnowFadingMode;
-
-	bool bIsInSnowGrowthMode;
 
 public:
 	AMonitor();

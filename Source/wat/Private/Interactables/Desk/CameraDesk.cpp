@@ -6,7 +6,10 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Characters/PlayerCharacter.h"
 #include "Core/MainPlayerController.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Interactables/Desk/Monitor.h"
+#include "Engine/Canvas.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()
@@ -16,6 +19,8 @@ ACameraDesk::ACameraDesk()
 
 	MapBorderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapBorderMesh"));
 	MapBorderMesh->SetupAttachment(StaticMesh);
+
+	MapGraphicQuality = 8;
 }
 
 // Called when the game starts or when spawned
@@ -39,9 +44,25 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
-	//TODO
+	FVector ScreenStart;
+	FVector ScreenEnd;
+	MapMesh->GetLocalBounds(ScreenStart, ScreenEnd);
+	const auto ScreenDimensions = (ScreenEnd - ScreenStart) * MapMesh->GetComponentScale();
+	const auto AspectRatio = ScreenDimensions.Z / ScreenDimensions.Y;
+	RenderingWidth = FMath::Pow(2,MapGraphicQuality);
+	RenderingHeight = RenderingWidth * AspectRatio;
+	
 	MapMaterial = MapMesh->CreateAndSetMaterialInstanceDynamic(0);
 	MapMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+
+	MapRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+	MapRenderTarget->InitAutoFormat(RenderingWidth, RenderingHeight);
+
+	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(MapRenderTarget));
+
+	PostProcessMaterial = UMaterialInstanceDynamic::Create(PostProcessMaterialBase, this);
+    PostProcessMaterial->ShadingModels = FMaterialShadingModelField(EMaterialShadingModel::MSM_Unlit);
+	PostProcessMaterial->SetScalarParameterValue("OffSet White Line", FMath::RandRange(0, 50));
 	
 	Initialize();
 }
@@ -57,6 +78,16 @@ void ACameraDesk::Tick(float DeltaSeconds)
 		ElapsedBlendTime -= BlendTime * bHasHoveredScreen;	
 		LastHoveredScreenIndex = BlendDirection == EBlendDirection::Right ? LastHoveredScreenIndex + bHasHoveredScreen : BlendDirection == EBlendDirection::Left ? LastHoveredScreenIndex - bHasHoveredScreen : CurrentIndex;
 	}
+
+	auto* Canvas  = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+    auto CanvasSize = FVector2D();
+    auto Context = FDrawToRenderTargetContext();
+    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, MapRenderTarget, Canvas, CanvasSize, Context);
+
+	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
+	Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
+   
+	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 
 void ACameraDesk::Initialize()
@@ -74,8 +105,7 @@ void ACameraDesk::Initialize()
 	ElapsedBlendTime = 0.f;
 	TimeToTargetScreen = 0.f;
 
-	//TODO
-	MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), Cast<UTexture>(FirstFloor));
+	CurrentFloor = FirstFloor;
 }
 
 void ACameraDesk::OnNotFinalBlend()
@@ -101,8 +131,10 @@ void ACameraDesk::OnNotFinalBlend()
 		{
 			bIsBlendingVertically = false;
 		}
-
-		SetCurrentMonitorRenderingState(true);
+		if(!bIsOnMap)
+		{
+			SetCurrentMonitorRenderingState(true);
+		}
 	}
 }
 
@@ -162,7 +194,6 @@ void ACameraDesk::BlendToTargetMonitor()
 		
 		CurrentBlendDirection = BlendDirection == EBlendDirection::Right ? EBlendDirection::Left : EBlendDirection::Right;
 	}
-
 	BlendDirection = CurrentBlendDirection;
 	PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(TargetIndex), TimeToTargetScreen, VTBlend_Linear, 0, true);
 }
@@ -176,18 +207,27 @@ void ACameraDesk::SetCurrentMonitorRenderingState(bool bShouldRender)
 	}
 }
 
-void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
+void ACameraDesk::SwitchFloorInMonitors()
 {
 	for(auto* Monitor : Monitors)
 	{
 		Monitor->SwitchFloor();
 	}
-	if(!bIsOnMap)
-	{	
+}
+
+void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
+{
+	if(bWasOn)
+	{
+		SwitchFloorInMonitors();
+
 		SetCurrentMonitorRenderingState(true);
 	}
-	GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
-	bIsSwitchingFloors = false;
+	else
+	{
+		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
+		bIsSwitchingFloors = false;
+	}
 }
 
 void ACameraDesk::MoveForward(float Value)
@@ -254,20 +294,28 @@ void ACameraDesk::Return()
 
 void ACameraDesk::SwitchFloor()
 {
-	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically)
-	{
-		bIsSwitchingFloors = true;
-		if(GetMonitorByIndex(CurrentIndex)->FloorIndex != 0)
+	const auto Monitor = GetMonitorByIndex(CurrentIndex);
+	if(!bIsFinalBlend && !bIsSwitchingFloors && !bIsBlendingHorizontally && !bIsBlendingVertically && !Monitor->bIsInSnowGrowthMode && !Monitor->bIsInSnowFadingMode)
+	{		
+		if(Monitor->FloorIndex != 0)
 		{
-			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), FirstFloor);
+			CurrentFloor = FirstFloor;
 		}
 		else
 		{
-			MapMaterial->SetTextureParameterValue(TEXT("RenderTexture"), SecondFloor);
+			CurrentFloor = SecondFloor;
 		}
-		
-		SetCurrentMonitorRenderingState(false);
-		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
+
+		if(!bIsOnMap)
+		{
+			bIsSwitchingFloors = true;
+			Monitor->OnTransitionEnd.AddDynamic(this, &ACameraDesk::OnSnowTransitionEnd);
+			SetCurrentMonitorRenderingState(false);
+		}
+		else
+		{
+			SwitchFloorInMonitors();
+		}
 	}
 }
 
