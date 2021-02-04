@@ -114,9 +114,9 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 
 void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 {
-	int XMin = (CellPerSide * 2) + 1;
+	int XMin = (CellPerSide * 2);
 	int XMax = -1;
-	int YMin = (CellPerSide * 2) + 1;
+	int YMin = (CellPerSide * 2);
 	int YMax = -1;
 
 	TArray<FVector2D> GridPolygon;
@@ -205,7 +205,7 @@ FVector AGridManager::GetWorldCoordinate(const FVector2D& GridCoordinate) const
 bool AGridManager::IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point)
 {
 	int i, j;
-	auto c = false;
+	auto bIsInside = false;
 	const int Size = Polygon.Num();
 
 	for (i = 0, j = Size - 1; i < Size; j = i++)
@@ -214,8 +214,8 @@ bool AGridManager::IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVect
 			(Point.X <= (Polygon[j].X - Polygon[i].X) * (Point.Y - Polygon[i].Y) / (Polygon[j].Y - Polygon[i].Y) +
 				Polygon[i].X)
 		)
-			c = !c;
+			bIsInside = !bIsInside;
 	}
 
-	return c;
+	return bIsInside;
 };

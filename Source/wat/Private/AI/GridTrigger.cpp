@@ -28,11 +28,11 @@ void AGridTrigger::BeginPlay()
 
 	FHitResult HitResult;
 	auto const ActorLocation = GetActorLocation();
-	auto const HaveHit = GetWorld()->LineTraceSingleByChannel(HitResult, GetActorLocation(),
+	auto const bHaveHit = GetWorld()->LineTraceSingleByChannel(HitResult, GetActorLocation(),
 	                                                          FVector(ActorLocation.X, ActorLocation.Y,
 	                                                                  ActorLocation.Z - 1000), ECC_Visibility);
 
-	if (HaveHit)
+	if (bHaveHit)
 	{
 		Origin = FVector(ActorLocation.X, ActorLocation.Y, HitResult.ImpactPoint.Z);
 	}

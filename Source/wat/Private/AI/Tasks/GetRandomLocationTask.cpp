@@ -21,9 +21,13 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
 	}
 
-	if (GridManager)
+	if (!Controller)
 	{
-		auto const Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+		Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+	}
+
+	if (GridManager && Controller)
+	{
 		FVector Location;
 
 		if (!GridManager->RandomHotWorldCoordinate(Location))
