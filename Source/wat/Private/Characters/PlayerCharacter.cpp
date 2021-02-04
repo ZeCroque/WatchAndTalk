@@ -169,7 +169,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
 		{
-			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate/DeltaTime;
+			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate*DeltaTime;
 		} else
 		{
 			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
@@ -177,7 +177,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
 	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
 	{
-		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate/DeltaTime;
+		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate*DeltaTime;
 	}
 }
 
