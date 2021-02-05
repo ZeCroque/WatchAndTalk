@@ -54,6 +54,8 @@ protected:
 	
 	virtual void OnInteraction(){}
 
+	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -19,7 +19,7 @@ AInteractable::AInteractable()
 	PrimaryActorTick.bCanEverTick = true;
 
 	AutoPossessAI = EAutoPossessAI::Disabled;
-        AIControllerClass = nullptr;
+	AIControllerClass = nullptr;
 
 	bInUse = false;
 
@@ -46,14 +46,7 @@ void AInteractable::BeginPlay()
 
 	bCanInteract = true;
 
-	TArray<FInputActionKeyMapping> ActionsMappings;
-    UInputSettings::GetInputSettings()->GetActionMappingByName("Interact", ActionsMappings);
-	
-	const auto* InputSettingsWat = GetDefault<UWatInputSettings>();
-    const auto* InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionsMappings[0].Key);
-	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	
-	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(Cast<UTexture2D>(AssetData.GetAsset()));
-	
+	RefreshIconWidgetForCurrentDevice(false);
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -64,6 +57,8 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 		if (PlayerCharacter)
 		{
 			PlayerCharacter->AddInteractable(this);
+			PlayerController = Cast<AMainPlayerController>(PlayerCharacter->GetController());
+			RefreshIconWidgetForCurrentDevice(PlayerController->bIsUsingController);
 		}
 	}
 }
@@ -80,15 +75,11 @@ void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
 
 void AInteractable::Interact()
 {
-	if (PlayerCharacter)
+	if (PlayerCharacter && PlayerController)
 	{
-		PlayerController = Cast<AMainPlayerController>(PlayerCharacter->GetController());
-		if (PlayerController)
-		{
-			bInUse = true;
-			OnInteractionBegin();
-			OnInteraction();
-		}
+		bInUse = true;
+		OnInteractionBegin();
+		OnInteraction();		
 	}
 }
 
@@ -100,6 +91,33 @@ void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AInteractable, PlayerController);
 }
 
+void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad)
+{
+	TArray<FInputActionKeyMapping> ActionsMappings;
+    UInputSettings::GetInputSettings()->GetActionMappingByName("Interact", ActionsMappings);
+	
+	const auto* InputSettingsWat = GetDefault<UWatInputSettings>();
+    const FSoftObjectPath* InputTexturePath = nullptr;
+
+	for(auto ActionMapping : ActionsMappings)
+	{
+		InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
+		if(!bIsGamePad && !ActionMapping.Key.IsGamepadKey())
+		{
+			InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
+			break;
+		}
+		else if(bIsGamePad && ActionMapping.Key.IsGamepadKey())
+		{
+			InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
+			break;
+		}
+	}
+	
+	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	
+	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(Cast<UTexture2D>(AssetData.GetAsset()));
+}
+
 // Called every frame
 void AInteractable::Tick(float DeltaTime)
 {
@@ -108,7 +126,7 @@ void AInteractable::Tick(float DeltaTime)
 	if(PlayerCharacter && bCanInteract && !bInUse && PlayerCharacter->IsClosestInteractable(this))
 	 {
               InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
-			  InteractableWidget->SetRelativeRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
+			  InteractableWidget->SetWorldRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
               return;
 	 }
 
