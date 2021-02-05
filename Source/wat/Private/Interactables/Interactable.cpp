@@ -5,7 +5,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "Characters/PlayerCharacter.h"
 #include "Core/MainPlayerController.h"
+#include "Engine/AssetManager.h"
+#include "GameFramework/InputSettings.h"
+#include "Interactables/InteractableWidget.h"
 #include "Net/UnrealNetwork.h"
+#include "Slate/SlateGameResources.h"
+#include "wat/Core/WatInputSettings.h"
 
 // Sets default values
 AInteractable::AInteractable()
@@ -31,7 +36,7 @@ AInteractable::AInteractable()
 	StaticMesh->SetupAttachment(RootComponent);
 
 	InteractableWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionIcon"));
-	InteractableWidget->SetupAttachment(RootComponent);	
+	InteractableWidget->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +45,15 @@ void AInteractable::BeginPlay()
 	Super::BeginPlay();
 
 	bCanInteract = true;
+
+	TArray<FInputActionKeyMapping> ActionsMappings;
+    UInputSettings::GetInputSettings()->GetActionMappingByName("Interact", ActionsMappings);
+	
+	const auto* InputSettingsWat = GetDefault<UWatInputSettings>();
+    const auto* InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionsMappings[0].Key);
+	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	
+	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(Cast<UTexture2D>(AssetData.GetAsset()));
+	
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -94,6 +108,7 @@ void AInteractable::Tick(float DeltaTime)
 	if(PlayerCharacter && bCanInteract && !bInUse && PlayerCharacter->IsClosestInteractable(this))
 	 {
               InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+			  InteractableWidget->SetRelativeRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
               return;
 	 }
 
