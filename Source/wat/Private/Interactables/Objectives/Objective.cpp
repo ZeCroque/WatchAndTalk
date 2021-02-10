@@ -51,6 +51,7 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
     	{
     		bCompleted = true;
     		bCanInteract = false;
+    		PlayerCharacter->RemoveInteractable(this);
 	        if (GameState->AreAllObjectivesCompleted() == true)
 	        {
 	            EndGame();
