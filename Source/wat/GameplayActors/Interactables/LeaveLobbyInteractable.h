@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
-#include "LeaveLobbyTrigger.generated.h"
+#include "LeaveLobbyInteractable.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API ALeaveLobbyTrigger : public AInteractable
+class WAT_API ALeaveLobbyInteractable : public AInteractable
 {
 	GENERATED_BODY()
 

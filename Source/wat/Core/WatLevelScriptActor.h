@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Engine/LevelScriptActor.h"
-#include "MainLevelScriptActor.generated.h"
+#include "WatLevelScriptActor.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class AMainLevelScriptActor : public ALevelScriptActor
+class AWatLevelScriptActor : public ALevelScriptActor
 {
 	GENERATED_BODY()
 

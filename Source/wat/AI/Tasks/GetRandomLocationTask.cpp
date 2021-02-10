@@ -6,7 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Runtime/NavigationSystem/Public/NavigationSystem.h"
 #include "wat/AI/MonsterAIController.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
@@ -18,7 +18,7 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 {
 	if (!GridManager)
 	{
-		GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+		GridManager = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
 	}
 
 	if (!Controller)

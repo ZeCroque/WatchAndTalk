@@ -1,24 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core/WatPlayerController.h"
 
-AMainPlayerController::AMainPlayerController()
+AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
 }
 
-void AMainPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
+void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
 {
 	Possess(PawnToPossess);
 }
 
-void AMainPlayerController::BeginPlay()
+void AWatPlayerController::BeginPlay()
 {
 	bIsUsingController = false;
 }
 
-bool AMainPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
+bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
     if (Widget && EventType == EInputEvent::IE_Pressed)

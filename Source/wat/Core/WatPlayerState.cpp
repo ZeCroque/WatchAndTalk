@@ -1,11 +1,11 @@
-#include "wat/Core/MainPlayerState.h"
+#include "wat/Core/WatPlayerState.h"
 
 
 #include "wat/Core/NetworkSettingsWat.h"
 #include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 
-void AMainPlayerState::OnDeactivated()
+void AWatPlayerState::OnDeactivated()
 {
     if(!HasLocalNetOwner())
     {

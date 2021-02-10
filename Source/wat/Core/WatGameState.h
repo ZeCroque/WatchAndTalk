@@ -6,7 +6,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 #include "Net/UnrealNetwork.h"
-#include "MainGameState.generated.h"
+#include "WatGameState.generated.h"
 
 
 
@@ -32,7 +32,7 @@ struct FFloorZones
  * 
  */
 UCLASS()
-class WAT_API AMainGameState : public AGameStateBase
+class WAT_API AWatGameState : public AGameStateBase
 {
     GENERATED_BODY()
 
@@ -54,7 +54,7 @@ public:
 
     bool bGameEnded;
     
-    AMainGameState();
+    AWatGameState();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     bool AreAllObjectivesCompleted() const;

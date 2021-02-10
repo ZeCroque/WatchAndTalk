@@ -1,24 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wat/Core/MainLevelScriptActor.h"
+#include "wat/Core/WatLevelScriptActor.h"
 #include "wat/GameplayActors/Interactables/Desk/SecurityCamera.h"
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "Kismet/GameplayStatics.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 
 
-class AMainGameState;
+class AWatGameState;
 
-void AMainLevelScriptActor::PostInitializeComponents()
+void AWatLevelScriptActor::PostInitializeComponents()
 {
     Super::PostInitializeComponents();
 
     if (GetWorld()->IsServer())
     {
         auto* GameState = GetWorld()->GetGameState();
-        AMainGameState* MainGameState = Cast<AMainGameState>(GameState);
+        AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
 
         TArray<AActor*> FoundActors;
         UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);

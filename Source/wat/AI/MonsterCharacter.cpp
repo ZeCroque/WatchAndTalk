@@ -2,10 +2,8 @@
 
 
 #include "MonsterCharacter.h"
-#include "wat/AI/MonsterCharacter.h"
-
 #include "Blueprint/UserWidget.h"
-#include "wat/Core/PlayerCharacter.h"
+#include "wat/Core/WatPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "wat/AI/GridClearComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -24,7 +22,7 @@ AMonsterCharacter::AMonsterCharacter()
 	GridClearComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f));
 }
 
-void AMonsterCharacter::MeleeAttack(APlayerCharacter* Player)
+void AMonsterCharacter::MeleeAttack(AWatPlayerCharacter* Player)
 {
 	//todo : Execute Melee Attack Animation
 
@@ -60,7 +58,7 @@ void AMonsterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AMonsterCharacter::KillPlayer_Implementation(APlayerCharacter* Player)
+void AMonsterCharacter::KillPlayer_Implementation(AWatPlayerCharacter* Player)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Player %s was kill"), *Player->GetName());
 	Player->Die();
@@ -78,7 +76,7 @@ void AMonsterCharacter::KillPlayer_Implementation(APlayerCharacter* Player)
 void AMonsterCharacter::StartGoalReaction(ACharacter* Character)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Purple,TEXT("Start Goal Reaction"));
-	PlayerToChase = Cast<APlayerCharacter>(Character);
+	PlayerToChase = Cast<AWatPlayerCharacter>(Character);
 }
 
 void AMonsterCharacter::StopGoalReaction()

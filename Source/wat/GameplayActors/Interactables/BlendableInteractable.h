@@ -24,7 +24,7 @@ public:
 	ABlendableInteractable();
 
 	UFUNCTION(NetMulticast, Reliable)
-	void RegisterBlendCompleteCallback(AMainPlayerController* TargetController);
+	void RegisterBlendCompleteCallback(AWatPlayerController* TargetController);
 	
 	virtual void OnInteractionBegin() override;
 	

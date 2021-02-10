@@ -20,7 +20,7 @@ private:
 public:
 
 	UPROPERTY()
-	class AMainGameState* GameState;
+	class AWatGameState* GameState;
 	
 	UPROPERTY(Replicated)
 	bool bCompleted;

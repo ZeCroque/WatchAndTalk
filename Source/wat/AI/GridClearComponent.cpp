@@ -7,7 +7,7 @@
 #include "EngineUtils.h"
 #include "wat/AI/GridManager.h"
 #include "Containers/Array.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -39,7 +39,7 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (!GridManager)
 	{
-		GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+		GridManager = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
 	}
 
 	Timer += DeltaTime;

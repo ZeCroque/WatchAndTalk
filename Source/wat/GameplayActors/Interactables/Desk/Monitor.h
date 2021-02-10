@@ -106,7 +106,7 @@ private:
 	class ACameraDesk* ParentDesk;
 	
 	UPROPERTY()
-	class AMainGameState* GameState;
+	class AWatGameState* GameState;
 
 	float ScreenWidth;
 	

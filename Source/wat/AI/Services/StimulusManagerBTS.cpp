@@ -10,7 +10,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "wat/Core/PlayerCharacter.h"
+#include "wat/Core/WatPlayerCharacter.h"
 #include "Perception/AISense_Sight.h"
 #include "wat/AI/MonsterCharacter.h"
 
@@ -47,7 +47,7 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
 		for (AActor* Actor : Actors)
 		{
-			auto * PerceivedPlayer = Cast<APlayerCharacter>(Actor);
+			auto * PerceivedPlayer = Cast<AWatPlayerCharacter>(Actor);
 			if (PerceivedPlayer && PerceivedPlayer->IsAlive())
 			{
 				FActorPerceptionBlueprintInfo Infos;
@@ -79,7 +79,7 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
 		for (AActor* Actor : Actors)
 		{
-			auto* PerceivedPlayer = Cast<APlayerCharacter>(Actor);
+			auto* PerceivedPlayer = Cast<AWatPlayerCharacter>(Actor);
 			if(PerceivedPlayer && PerceivedPlayer->IsAlive())
 			{			
 				FActorPerceptionBlueprintInfo Infos;

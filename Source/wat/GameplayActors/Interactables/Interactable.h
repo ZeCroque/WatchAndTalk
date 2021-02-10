@@ -20,7 +20,7 @@ public:
 	UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(VisibleAnywhere)
-	UWidgetComponent* InteractableWidget;
+	UWidgetComponent* KeyIconWidget;
 
 protected:
 
@@ -34,10 +34,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(Replicated)
-	class AMainPlayerController* PlayerController;
+	class AWatPlayerController* PlayerController;
 
 	UPROPERTY(Replicated)
-	class APlayerCharacter* PlayerCharacter;
+	class AWatPlayerCharacter* PlayerCharacter;
 
 	bool bCanInteract;
 protected:

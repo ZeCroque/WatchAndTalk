@@ -6,17 +6,17 @@
 
 #include "GameFramework/Character.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "PlayerCharacter.generated.h"
+#include "WatPlayerCharacter.generated.h"
 
 class AInteractable;
 UCLASS()
-class WAT_API APlayerCharacter : public ACharacter
+class WAT_API AWatPlayerCharacter : public ACharacter
 {
     GENERATED_BODY()
 
 public:
     // Sets default values for this character's properties
-    APlayerCharacter();
+    AWatPlayerCharacter();
 
     UPROPERTY(VisibleDefaultsOnly)
     class UCameraComponent* FirstPersonCameraComponent = nullptr;

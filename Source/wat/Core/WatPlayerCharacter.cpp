@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wat/Core/PlayerCharacter.h"
+#include "wat/Core/WatPlayerCharacter.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -10,21 +10,21 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 #include "wat/Core/NetworkSettingsWat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core/WatPlayerController.h"
 
 #if WITH_EDITOR
-#include "wat/Core/MainGameInstance.h"
+#include "wat/Core/WatGameInstance.h"
 #endif
 
 // Sets default values
-APlayerCharacter::APlayerCharacter()
+AWatPlayerCharacter::AWatPlayerCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -55,18 +55,18 @@ APlayerCharacter::APlayerCharacter()
 	bIsAlive = true;
 }
 
-bool APlayerCharacter::AddInteractable(AInteractable* Interactable)
+bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
 {
 	InteractablesSet.Add(Interactable);
 	return IsClosestInteractable(Interactable);
 }
 
-void APlayerCharacter::RemoveInteractable(AInteractable* Interactable)
+void AWatPlayerCharacter::RemoveInteractable(AInteractable* Interactable)
 {
 	InteractablesSet.Remove(Interactable);
 }
 
-AInteractable* APlayerCharacter::GetClosestInteractable()
+AInteractable* AWatPlayerCharacter::GetClosestInteractable()
 {
 	const FVector PlayerLocation = GetActorLocation();
 	TPair<float, AInteractable*> ClosestInteractable(-1.0f, nullptr);
@@ -86,7 +86,7 @@ AInteractable* APlayerCharacter::GetClosestInteractable()
 	return ClosestInteractable.Value;
 }
 
-bool APlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
+bool AWatPlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
 {
 	if (GetClosestInteractable() == Interactable)
 	{
@@ -97,7 +97,7 @@ bool APlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
 }
 
 // Called when the game starts or when spawned
-void APlayerCharacter::BeginPlay()
+void AWatPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -108,9 +108,9 @@ void APlayerCharacter::BeginPlay()
 	OriginalMaxSpeed = GetCharacterMovement()->GetMaxSpeed();
 }
 
-void APlayerCharacter::CreateDebugWidget()
+void AWatPlayerCharacter::CreateDebugWidget()
 {
-	AMainPlayerController* PC = Cast<AMainPlayerController>(GetController());
+	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
 	if (!PC->DebugGridWidget)
 	{
 		PC->DebugGridWidget = CreateWidget<UUserWidget>(PC, GridDebugWidget);
@@ -123,15 +123,15 @@ void APlayerCharacter::CreateDebugWidget()
 	}
 }
 
-void APlayerCharacter::SetPlayerAsReadyForRestart()
+void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 {
 	RestartGame(GetPlayerState()->GetPlayerId());
 }
 
 
-void APlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
+void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 {
-	auto* GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	GameState->PlayersReadyForRestartIds.Add(PlayerId);
 
 	int MatchingPlayersIdsCount = 0;
@@ -158,12 +158,12 @@ void APlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 
 
 // Called every frame
-void APlayerCharacter::Tick(float DeltaTime)
+void AWatPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 #if WITH_EDITOR
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UMainGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
 	if (bIsSprinting && !GetVelocity().IsZero())
 	{
@@ -182,55 +182,55 @@ void APlayerCharacter::Tick(float DeltaTime)
 }
 
 // Called to bind functionality to input
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
     // Bind jump events
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
     
     // Bind movement events
-    PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+    PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
+    PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnRate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("TurnRate", this, &AWatPlayerCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &AWatPlayerCharacter::LookUpAtRate);
 
-	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::StartSprinting);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
-	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &APlayerCharacter::CreateDebugWidget);
+	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::StartCrouching);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AWatPlayerCharacter::StopCrouching);
+	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
 }
 
-bool APlayerCharacter::IsAlive() const
+bool AWatPlayerCharacter::IsAlive() const
 {
 	return bIsAlive;
 }
 
-void APlayerCharacter::Die()
+void AWatPlayerCharacter::Die()
 {
 	//TODO trigger die anim
 	bIsAlive = false;
 	DisableInput(nullptr);
 }
 
-void APlayerCharacter::SetupStimulus()
+void AWatPlayerCharacter::SetupStimulus()
 {
 	Stimulus = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
 	Stimulus->RegisterForSense(TSubclassOf<UAISense_Sight>());
 	Stimulus->RegisterWithPerceptionSystem();
 }
 
-void APlayerCharacter::OnDistract()
+void AWatPlayerCharacter::OnDistract()
 {
 	if (DistractionSound)
 	{
@@ -240,7 +240,7 @@ void APlayerCharacter::OnDistract()
 	}
 }
 
-void APlayerCharacter::MoveForward(float Value)
+void AWatPlayerCharacter::MoveForward(float Value)
 {
 	if (Value != 0.0f)
 	{
@@ -249,7 +249,7 @@ void APlayerCharacter::MoveForward(float Value)
 	}
 }
 
-void APlayerCharacter::MoveRight(float Value)
+void AWatPlayerCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f)
 	{
@@ -258,19 +258,19 @@ void APlayerCharacter::MoveRight(float Value)
 	}
 }
 
-void APlayerCharacter::TurnAtRate(float Rate)
+void AWatPlayerCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::LookUpAtRate(float Rate)
+void AWatPlayerCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::Interact_Implementation()
+void AWatPlayerCharacter::Interact_Implementation()
 {
 	auto* ClosestInteractable = GetClosestInteractable();
 	if (ClosestInteractable)
@@ -279,22 +279,22 @@ void APlayerCharacter::Interact_Implementation()
 	}
 }
 
-void APlayerCharacter::StartSprinting()
+void AWatPlayerCharacter::StartSprinting()
 {
 	bIsSprinting = true;
 }
 
-void APlayerCharacter::StopSprinting()
+void AWatPlayerCharacter::StopSprinting()
 {
 	bIsSprinting = false;
 }
 
-void APlayerCharacter::StartCrouching()
+void AWatPlayerCharacter::StartCrouching()
 {
 	Crouch();
 }
 
-void APlayerCharacter::StopCrouching()
+void AWatPlayerCharacter::StopCrouching()
 {
 	UnCrouch();
 }

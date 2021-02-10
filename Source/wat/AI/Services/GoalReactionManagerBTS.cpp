@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "wat/AI/MonsterCharacter.h"
-#include "wat/Core/PlayerCharacter.h"
+#include "wat/Core/WatPlayerCharacter.h"
 
 UGoalReactionManagerBTS::UGoalReactionManagerBTS()
 {

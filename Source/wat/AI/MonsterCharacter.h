@@ -16,7 +16,7 @@ public:
 	// Sets default values for this character's properties
 	AMonsterCharacter();
 
-	void MeleeAttack(class APlayerCharacter* Player);
+	void MeleeAttack(class AWatPlayerCharacter* Player);
 
 	UAnimMontage* GetMontage() const;
 
@@ -38,13 +38,13 @@ public:
 	class UGridClearComponent* GridClearComponent = nullptr;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void KillPlayer(class APlayerCharacter* Player);
+	void KillPlayer(class AWatPlayerCharacter* Player);
 
 	void StartGoalReaction(ACharacter* Character);
 	void StopGoalReaction();
 
 	UPROPERTY()
-	APlayerCharacter* PlayerToChase;
+	AWatPlayerCharacter* PlayerToChase;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))

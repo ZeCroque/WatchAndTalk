@@ -1,27 +1,27 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wat/Core/MainGameInstance.h"
+#include "wat/Core/WatGameInstance.h"
 #include "OnlineSessionSettings.h"
 #include "wat/Core/NetworkSettingsWat.h"
 #include "Kismet/GameplayStatics.h"
 
-UMainGameInstance::UMainGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+UWatGameInstance::UWatGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnCreateSessionComplete);
-    OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnStartSessionComplete);
-    OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnFindSessionsComplete);
-    OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnJoinSessionComplete);
-    OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UMainGameInstance::OnDestroySessionComplete);
+    OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnCreateSessionComplete);
+    OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnStartSessionComplete);
+    OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnFindSessionsComplete);
+    OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnJoinSessionComplete);
+    OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnDestroySessionComplete);
 }
 
-void UMainGameInstance::BeginDestroy()
+void UWatGameInstance::BeginDestroy()
 {
     Super::BeginDestroy();
     DestroySessionAndLeaveGame();
 }
 
-bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, bool bIsLAN,
+bool UWatGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, bool bIsLAN,
                                     bool bIsPresence, int32 MaxNumPlayers)
 {
     //Get subsystem
@@ -63,7 +63,7 @@ bool UMainGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName
     return false;
 }
 
-void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool bIsLAN, bool bIsPresence)
+void UWatGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool bIsLAN, bool bIsPresence)
 {
     SubsystemName = bIsLAN ? L"NULL": L"WAT";
     IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
@@ -101,7 +101,7 @@ void UMainGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, bool
     }
 }
 
-bool UMainGameInstance::ConnectToSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName,
+bool UWatGameInstance::ConnectToSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName,
     const FOnlineSessionSearchResult& SearchResult)
 {
     bool bSuccessful = false;
@@ -123,7 +123,7 @@ bool UMainGameInstance::ConnectToSession(TSharedPtr<const FUniqueNetId> UserId, 
     return bSuccessful;
 }
 
-void UMainGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+void UWatGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
     {
         UE_LOG(LogTemp, Warning, TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
@@ -147,7 +147,7 @@ void UMainGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucc
 
 }
 
-void UMainGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
+void UWatGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("OFindSessionsComplete bSuccess: %d"), bWasSuccessful);
 
@@ -174,7 +174,7 @@ void UMainGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
     }
 }
 
-void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
+void UWatGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("OnStartSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
@@ -194,7 +194,7 @@ void UMainGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucce
     }
 }
 
-void UMainGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+void UWatGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
     UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result));
 
@@ -219,7 +219,7 @@ void UMainGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
     }
 }
 
-void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+void UWatGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful);
 
@@ -244,7 +244,7 @@ void UMainGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
     }
 }
 
-bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
+bool UWatGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
 {
 #if WITH_EDITOR
 	bIsHost = true;
@@ -255,20 +255,20 @@ bool UMainGameInstance::StartOnlineGame(FName SessionName, bool bIsLan)
     return HostSession(Player->GetPreferredUniqueNetId()->AsShared(), CurrentSessionName, bIsLan, true, 2);
 }
 
-void UMainGameInstance::FindOnlineGames(bool bIsLAN)
+void UWatGameInstance::FindOnlineGames(bool bIsLAN)
 {
 #if WITH_EDITOR
 	bIsHost = false;
 #endif
 
     GetEngine()->OnNetworkFailure().Clear();
-    GetEngine()->OnNetworkFailure().AddUObject(this, &UMainGameInstance::HandleNetworkFailure);
+    GetEngine()->OnNetworkFailure().AddUObject(this, &UWatGameInstance::HandleNetworkFailure);
 
     ULocalPlayer* const Player = GetFirstGamePlayer();
     FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), bIsLAN, true);
 }
 
-TArray<FBlueprintSessionResult> UMainGameInstance::GetActiveSession()
+TArray<FBlueprintSessionResult> UWatGameInstance::GetActiveSession()
 {
 
     TArray<FBlueprintSessionResult> Result;
@@ -286,7 +286,7 @@ TArray<FBlueprintSessionResult> UMainGameInstance::GetActiveSession()
     return Result;
 }
 
-void UMainGameInstance::JoinOnlineGame(FName SessionName)
+void UWatGameInstance::JoinOnlineGame(FName SessionName)
 {
     CurrentSessionName = SessionName;
     ULocalPlayer* const Player = GetFirstGamePlayer();
@@ -304,7 +304,7 @@ void UMainGameInstance::JoinOnlineGame(FName SessionName)
     }	
 }
 
-void UMainGameInstance::DestroySessionAndLeaveGame() const
+void UWatGameInstance::DestroySessionAndLeaveGame() const
 {
     IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get(SubsystemName);
     if (OnlineSub)
@@ -318,7 +318,7 @@ void UMainGameInstance::DestroySessionAndLeaveGame() const
     }
 }
 
-void UMainGameInstance::HandleNetworkFailure(UWorld *World, UNetDriver *NetDriver, ENetworkFailure::Type FailureType, const FString &ErrorString)
+void UWatGameInstance::HandleNetworkFailure(UWorld *World, UNetDriver *NetDriver, ENetworkFailure::Type FailureType, const FString &ErrorString)
 {
     if(IOnlineSubsystem::Get(SubsystemName)->GetSessionInterface()->GetNamedSession(CurrentSessionName))
     {

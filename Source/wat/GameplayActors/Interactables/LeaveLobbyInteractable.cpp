@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wat/GameplayActors/Interactables/LeaveLobbyTrigger.h"
-#include "wat/Core//PlayerCharacter.h"
+#include "wat/GameplayActors/Interactables/LeaveLobbyInteractable.h"
+#include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/NetworkSettingsWat.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 
-void ALeaveLobbyTrigger::OnInteraction()
+void ALeaveLobbyInteractable::OnInteraction()
 {
         bInUse = false;
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());

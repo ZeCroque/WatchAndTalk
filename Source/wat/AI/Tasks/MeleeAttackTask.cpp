@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "wat/AI/MonsterCharacter.h"
-#include "wat/Core/PlayerCharacter.h"
+#include "wat/Core/WatPlayerCharacter.h"
 
 UMeleeAttackTask::UMeleeAttackTask(FObjectInitializer const& ObjectInitializer)
 {
@@ -21,7 +21,7 @@ EBTNodeResult::Type UMeleeAttackTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
     {
         if (MontageHasFinished(Npc))
         {
-        	auto* Target = Cast<APlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName));
+        	auto* Target = Cast<AWatPlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName));
         	if(Target && Target->IsAlive())
         	{
 				Npc->MeleeAttack(Target);

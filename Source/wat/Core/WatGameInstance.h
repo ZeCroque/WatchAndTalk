@@ -8,7 +8,7 @@
 #include "Engine/GameInstance.h"
 #include "FindSessionsCallbackProxy.h"
 #include "Interfaces/OnlineSessionInterface.h"
-#include "MainGameInstance.generated.h"
+#include "WatGameInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHostListUpdate);
 
@@ -16,12 +16,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHostListUpdate);
  * 
  */
 UCLASS()
-class WAT_API UMainGameInstance : public UGameInstance
+class WAT_API UWatGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	
 public:
-	UMainGameInstance(const FObjectInitializer& ObjectInitializer);
+	UWatGameInstance(const FObjectInitializer& ObjectInitializer);
 	virtual void BeginDestroy() override;
 
 	

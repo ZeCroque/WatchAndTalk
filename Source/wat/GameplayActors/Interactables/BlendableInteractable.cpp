@@ -4,8 +4,8 @@
 #include "wat/GameplayActors/Interactables/BlendableInteractable.h"
 
 #include "Camera/CameraComponent.h"
-#include "wat/Core/PlayerCharacter.h"
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core/WatPlayerCharacter.h"
+#include "wat/Core/WatPlayerController.h"
 
 ABlendableInteractable::ABlendableInteractable()
 {
@@ -15,7 +15,7 @@ ABlendableInteractable::ABlendableInteractable()
 	InteractableCamera->SetupAttachment(RootComponent);
 }
 
-void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AMainPlayerController* TargetController)
+void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AWatPlayerController* TargetController)
 {
 	if(TargetController == GetWorld()->GetFirstPlayerController())
 	{

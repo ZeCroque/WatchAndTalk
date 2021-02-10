@@ -3,13 +3,13 @@
 
 #include "QTEWidget.h"
 #include "Blueprint/WidgetTree.h"
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core/WatPlayerController.h"
 #include "GameFramework/InputSettings.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
-#include "wat/Widgets/InteractableWidget.h"
+#include "wat/Widgets/KeyIconWidget.h"
 #include "wat/Core/WatStaticUtils.h"
 
-class AMainPlayerController;
+class AWatPlayerController;
 
 void UQTEWidget::NativeConstruct()
 {

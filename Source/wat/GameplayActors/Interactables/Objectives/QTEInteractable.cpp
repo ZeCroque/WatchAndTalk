@@ -3,8 +3,8 @@
 
 #include "wat/GameplayActors/Interactables/Objectives/QTEInteractable.h"
 #include "wat/Widgets/QTEWidget.h"
-#include "wat/Core/MainPlayerController.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatPlayerController.h"
+#include "wat/Core/WatGameState.h"
 
 void AQTEInteractable::OnNotFinalBlend()
 {

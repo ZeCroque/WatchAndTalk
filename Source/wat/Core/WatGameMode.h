@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "MainGameMode.generated.h"
+#include "WatGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API AMainGameMode : public AGameModeBase
+class WAT_API AWatGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 	
 public:
-	AMainGameMode();
+	AWatGameMode();
 
 
 };

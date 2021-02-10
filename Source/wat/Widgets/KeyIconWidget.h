@@ -6,13 +6,13 @@
 #include "Blueprint/UserWidget.h"
 #include "Brushes/SlateImageBrush.h"
 
-#include "InteractableWidget.generated.h"
+#include "KeyIconWidget.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API UInteractableWidget : public UUserWidget
+class WAT_API UKeyIconWidget : public UUserWidget
 {
 	GENERATED_BODY()
 

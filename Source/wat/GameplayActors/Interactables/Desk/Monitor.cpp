@@ -4,7 +4,7 @@
 #include "wat/GameplayActors/Interactables/Desk/Monitor.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 #include "SecurityCamera.h"
 #include "Engine/Canvas.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -87,7 +87,7 @@ void AMonitor::BeginPlay()
 
 	ParentDesk = Cast<ACameraDesk>(GetParentActor());
 	
-	GameState = Cast<AMainGameState>(GetWorld()->GetGameState());
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 
 	FVector ScreenStart;
 	FVector ScreenEnd;

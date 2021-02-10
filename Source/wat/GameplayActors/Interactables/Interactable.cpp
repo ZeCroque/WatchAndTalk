@@ -3,14 +3,12 @@
 
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Kismet/GameplayStatics.h"
-#include "wat/Core//PlayerCharacter.h"
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core//WatPlayerCharacter.h"
+#include "wat/Core/WatPlayerController.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/InputSettings.h"
-#include "wat/Widgets/InteractableWidget.h"
+#include "wat/Widgets/KeyIconWidget.h"
 #include "Net/UnrealNetwork.h"
-#include "Slate/SlateGameResources.h"
-#include "wat/Core/WatInputSettings.h"
 #include "wat/Core/WatStaticUtils.h"
 
 // Sets default values
@@ -36,8 +34,8 @@ AInteractable::AInteractable()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Renderer"));
 	StaticMesh->SetupAttachment(RootComponent);
 
-	InteractableWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionIcon"));
-	InteractableWidget->SetupAttachment(RootComponent);
+	KeyIconWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionIcon"));
+	KeyIconWidget->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -54,11 +52,11 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 {
 	if (!PlayerCharacter && bCanInteract)
 	{
-		PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+		PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
 		if (PlayerCharacter)
 		{
 			PlayerCharacter->AddInteractable(this);
-			PlayerController = Cast<AMainPlayerController>(PlayerCharacter->GetController());
+			PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
 			RefreshIconWidgetForCurrentDevice(PlayerController->bIsUsingController);
 		}
 	}
@@ -94,7 +92,7 @@ void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad) const
 {
-	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
+	Cast<UKeyIconWidget>(KeyIconWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
 }
 
 // Called every frame
@@ -104,12 +102,12 @@ void AInteractable::Tick(float DeltaTime)
 
 	if(PlayerCharacter && bCanInteract && !bInUse && PlayerCharacter->IsClosestInteractable(this))
 	 {
-              InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
-			  InteractableWidget->SetWorldRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
+              KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+			  KeyIconWidget->SetWorldRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
               return;
 	 }
 
-	InteractableWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
+	KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
 
 }
 

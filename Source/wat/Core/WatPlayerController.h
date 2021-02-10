@@ -6,18 +6,18 @@
 
 #include "wat/Widgets/QTEWidget.h"
 #include "GameFramework/PlayerController.h"
-#include "MainPlayerController.generated.h"
+#include "WatPlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API AMainPlayerController : public APlayerController
+class WAT_API AWatPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
 public:
-	AMainPlayerController();
+	AWatPlayerController();
 
 	UFUNCTION(Server, Reliable)
 	void PossessRPC(APawn* PawnToPossess);

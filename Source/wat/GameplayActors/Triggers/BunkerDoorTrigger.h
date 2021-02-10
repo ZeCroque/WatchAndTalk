@@ -6,16 +6,16 @@
 
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
-#include "TriggerDoor.generated.h"
+#include "BunkerDoorTrigger.generated.h"
 
 UCLASS()
-class WAT_API ATriggerDoor : public AActor
+class WAT_API ABunkerDoorTrigger : public AActor
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	ATriggerDoor();
+	ABunkerDoorTrigger();
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,5 +34,5 @@ public:
 
 private:
 	UPROPERTY()
-	class AMainGameState* GameState;
+	class AWatGameState* GameState;
 };

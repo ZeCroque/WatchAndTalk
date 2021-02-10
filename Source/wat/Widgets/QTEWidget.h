@@ -48,7 +48,7 @@ public:
     float TimeLeft;
 
 	UPROPERTY(meta=(BindWidget))
-	class UInteractableWidget* KeyIconWidget;
+	class UKeyIconWidget* KeyIconWidget;
 
     void OnInput(FKey PressedInput);
 

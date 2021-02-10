@@ -4,8 +4,8 @@
 #include "wat/GameplayActors/Triggers//GridTrigger.h"
 
 #include "DrawDebugHelpers.h"
-#include "wat/Core//PlayerCharacter.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core//WatPlayerCharacter.h"
+#include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -70,10 +70,10 @@ void AGridTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 		Timer = 0;
 		if (!GridManager)
 		{
-			GridManager = Cast<AMainGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+			GridManager = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
 		}
 
-		if (OtherActor->IsA(APlayerCharacter::StaticClass()) && GridManager)
+		if (OtherActor->IsA(AWatPlayerCharacter::StaticClass()) && GridManager)
 		{
 			auto const Center = GetActorLocation() + (SweepResult.Normal * DistanceFromBox);
 			auto const FinalCenter = FVector(Center.X, Center.Y, Origin.Z);

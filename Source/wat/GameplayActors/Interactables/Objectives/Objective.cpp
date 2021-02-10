@@ -1,9 +1,9 @@
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 #include "wat/AI/MonsterCharacter.h"
-#include "wat/Core/MainGameState.h"
+#include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
-#include "wat/Core//PlayerCharacter.h"
-#include "wat/Core/MainPlayerController.h"
+#include "wat/Core//WatPlayerCharacter.h"
+#include "wat/Core/WatPlayerController.h"
 
 
 void AObjective::EndGame_Implementation()
@@ -27,7 +27,7 @@ AObjective::AObjective()
 void AObjective::BeginPlay()
 {
         Super::BeginPlay();
-        GameState = Cast<AMainGameState>(GetWorld()->GetGameState());      
+        GameState = Cast<AWatGameState>(GetWorld()->GetGameState());      
 }
 
 void AObjective::OnInteractionBegin()
