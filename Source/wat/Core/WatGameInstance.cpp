@@ -3,7 +3,7 @@
 
 #include "wat/Core/WatGameInstance.h"
 #include "OnlineSessionSettings.h"
-#include "wat/Core/NetworkSettingsWat.h"
+#include "wat/Core/WatSettings.h"
 #include "Kismet/GameplayStatics.h"
 
 UWatGameInstance::UWatGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -49,7 +49,7 @@ bool UWatGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName 
             SessionSettings-> bShouldAdvertise = true;
             SessionSettings->bAllowJoinViaPresence = true;
             SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
-        	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+        	const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
             SessionSettings->Set(SETTING_MAPNAME, NetworkSettingsWat->LobbyLevel.GetAssetName(), EOnlineDataAdvertisementType::ViaOnlineService);
 
             OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
@@ -189,7 +189,7 @@ void UWatGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucces
     }
     if (bWasSuccessful)
     {
-    	const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+    	const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
         UGameplayStatics::OpenLevel(GetWorld(), *NetworkSettingsWat->LobbyLevel.GetAssetName(), true, "listen");
     }
 }
@@ -236,7 +236,7 @@ void UWatGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
                 auto* World = GetWorld();
             	if(World)
                 {
-            		const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+            		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
 				    UGameplayStatics::OpenLevel(World, *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
 				}
             }

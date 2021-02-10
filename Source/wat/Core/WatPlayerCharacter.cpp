@@ -11,7 +11,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
 #include "wat/Core/WatGameState.h"
-#include "wat/Core/NetworkSettingsWat.h"
+#include "wat/Core/WatSettings.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -150,7 +150,7 @@ void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 	if (MatchingPlayersIdsCount == GameState->PlayerArray.Num())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
-		const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();
+		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
 		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
 		GameState->PlayersReadyForRestartIds.Empty();
 	}

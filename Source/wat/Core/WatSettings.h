@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
-#include "NetworkSettingsWat.generated.h"
+#include "WatSettings.generated.h"
 
 /**
  * 
  */
 UCLASS(Config=Game, defaultconfig)
-class WAT_API UNetworkSettingsWat : public UDeveloperSettings
+class WAT_API UWatSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(config, Category=InputSettings, EditAnywhere, meta=(AllowedClasses="Texture"))
+	TMap<FKey, FSoftObjectPath> KeysVisuals;
+
 	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath LobbyLevel;
 

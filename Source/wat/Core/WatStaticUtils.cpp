@@ -2,14 +2,14 @@
 
 
 #include "WatStaticUtils.h"
-#include "WatInputSettings.h"
+#include "WatSettings.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
 
 UTexture2D* UWatStaticUtils::GetKeyIcon(FName ActionMappingName, bool bIsGamePad)
 {
-	const auto* InputSettingsWat = GetDefault<UWatInputSettings>();
+	const auto* InputSettingsWat = GetDefault<UWatSettings>();
 	const FSoftObjectPath* InputTexturePath = InputSettingsWat->KeysVisuals.Find(GetKeyForDevice(ActionMappingName, bIsGamePad));
 	
 	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	

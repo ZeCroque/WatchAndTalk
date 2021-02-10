@@ -3,7 +3,7 @@
 
 #include "wat/GameplayActors/Interactables/LeaveLobbyInteractable.h"
 #include "wat/Core//WatPlayerCharacter.h"
-#include "wat/Core/NetworkSettingsWat.h"
+#include "wat/Core/WatSettings.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 
@@ -32,7 +32,7 @@ void ALeaveLobbyInteractable::OnInteraction()
 		if(MatchingPlayersIdsCount == PlayerStates.Num())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
-			const auto* NetworkSettingsWat = GetDefault<UNetworkSettingsWat>();				
+			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
 			GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
 		}
 	}
