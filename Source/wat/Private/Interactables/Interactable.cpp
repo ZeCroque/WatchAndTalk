@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Slate/SlateGameResources.h"
 #include "wat/Core/WatInputSettings.h"
+#include "wat/Core/WatStaticUtils.h"
 
 // Sets default values
 AInteractable::AInteractable()
@@ -91,31 +92,9 @@ void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AInteractable, PlayerController);
 }
 
-void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad)
+void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad) const
 {
-	TArray<FInputActionKeyMapping> ActionsMappings;
-    UInputSettings::GetInputSettings()->GetActionMappingByName("Interact", ActionsMappings);
-	
-	const auto* InputSettingsWat = GetDefault<UWatInputSettings>();
-    const FSoftObjectPath* InputTexturePath = nullptr;
-
-	for(auto ActionMapping : ActionsMappings)
-	{
-		InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
-		if(!bIsGamePad && !ActionMapping.Key.IsGamepadKey())
-		{
-			InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
-			break;
-		}
-		else if(bIsGamePad && ActionMapping.Key.IsGamepadKey())
-		{
-			InputTexturePath = InputSettingsWat->KeysVisuals.Find(ActionMapping.Key);
-			break;
-		}
-	}
-	
-	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	
-	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(Cast<UTexture2D>(AssetData.GetAsset()));
+	Cast<UInteractableWidget>(InteractableWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
 }
 
 // Called every frame

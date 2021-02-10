@@ -17,25 +17,38 @@ class WAT_API UQTEWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-    virtual bool Initialize() override;
+	virtual void NativeConstruct() override;
+
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	
     UPROPERTY()
     AObjective* ParentInteractable;
+	
     // Array de définition des inputs pouvant être utilisés dans le QTE
     UPROPERTY(EditAnywhere)
-    TArray<FKey> PossibleInputs;
+    TArray<FName> PossibleActionsName;
+
+	UPROPERTY()
+    TMap<FKey, UTexture2D*> PossibleInputs;
+	
     UPROPERTY(BlueprintReadOnly)
-    TArray<FKey> InputList;    
-    
+    TArray<FKey> InputList;
+	
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int InputNumber;
+	
     UPROPERTY(BlueprintReadOnly)
     int CurrentIndex = 0;
+	
     //TIMER
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float TimeLimit;
+	
     UPROPERTY(BlueprintReadWrite)
     float TimeLeft;
+
+	UPROPERTY(meta=(BindWidget))
+	class UInteractableWidget* KeyIconWidget;
 
     void OnInput(FKey PressedInput);
 
@@ -49,9 +62,6 @@ private:
 	
     UFUNCTION(BlueprintCallable)
     void DefineInputList();
-
-    UFUNCTION(BlueprintCallable)
-    FString GetCurrentInputLabel();
 
     UFUNCTION(BlueprintCallable)
     float GetProgressBarCompletion() const;

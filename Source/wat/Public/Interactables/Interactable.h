@@ -54,7 +54,7 @@ protected:
 	
 	virtual void OnInteraction(){}
 
-	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad);
+	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad) const;
 
 public:	
 	// Called every frame

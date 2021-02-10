@@ -2,18 +2,21 @@
 
 
 #include "QTEWidget.h"
+#include "Blueprint/WidgetTree.h"
 #include "Core/MainPlayerController.h"
 #include "GameFramework/InputSettings.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "Interactables/InteractableWidget.h"
+#include "wat/Core/WatStaticUtils.h"
 
 class AMainPlayerController;
 
-bool UQTEWidget::Initialize()
+void UQTEWidget::NativeConstruct()
 {
-    DefineInputList();
+	Super::NativeConstruct();
+
     TimeLeft = TimeLimit;
     bIsStarted = false;
-    return Super::Initialize();
 }
 
 void UQTEWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -34,24 +37,25 @@ void UQTEWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UQTEWidget::DefineInputList()
 {
+	TArray<FKey> Keys;
+    PossibleInputs.GetKeys(Keys);
+	
     for (int i = 0; i < InputNumber; ++i)
     {
-        InputList.Push(PossibleInputs[rand() % PossibleInputs.Num()]);
-    }    
+        InputList.Push(Keys[rand() % Keys.Num()]);
+    }
+	KeyIconWidget->SetBrushTexture(*PossibleInputs.Find(InputList[CurrentIndex]));   
 }
 
-FString UQTEWidget::GetCurrentInputLabel()
-{
-    return InputList[CurrentIndex].GetFName().ToString();
-}
 
 void UQTEWidget::OnInput(FKey PressedInput)
 {
     if (PressedInput == InputList[CurrentIndex])
     {
         if (CurrentIndex < InputList.Num()-1)
-        {
+        {  	
             CurrentIndex++;
+        	KeyIconWidget->SetBrushTexture(*PossibleInputs.Find(InputList[CurrentIndex])); 
         }
         else
         {
@@ -60,17 +64,9 @@ void UQTEWidget::OnInput(FKey PressedInput)
     }
     else
     {
-    	TArray<FInputActionKeyMapping> ActionsMappings;
-
-    	UInputSettings::GetInputSettings()->GetActionMappingByName("Return", ActionsMappings);
-
-    	for(auto ActionMapping : ActionsMappings)
+    	if(PressedInput == UWatStaticUtils::GetKeyForDevice("Return", ParentInteractable->PlayerController->bIsUsingController))
     	{
-    		if(PressedInput == ActionMapping.Key)
-    		{
-    			OnCancel();
-    			break;
-    		}
+    		OnCancel();
     	}
     	
     }
@@ -84,6 +80,15 @@ float UQTEWidget::GetProgressBarCompletion() const
 void UQTEWidget::Start()
 {
 	bIsStarted = true;
+
+	InputList.Empty();
+	PossibleInputs.Empty();
+	for(const auto ActionName : PossibleActionsName)
+	{
+		PossibleInputs.Add(UWatStaticUtils::GetKeyForDevice(ActionName, ParentInteractable->PlayerController->bIsUsingController), UWatStaticUtils::GetKeyIcon(ActionName, ParentInteractable->PlayerController->bIsUsingController));
+	}
+	DefineInputList();
+
 }
 
 void UQTEWidget::Stop()
