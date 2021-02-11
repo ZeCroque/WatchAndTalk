@@ -105,7 +105,6 @@ void AWatPlayerCharacter::BeginPlay()
 	{
 		GetMesh()->SetVisibility(true);
 	}
-	OriginalMaxSpeed = GetCharacterMovement()->GetMaxSpeed();
 }
 
 void AWatPlayerCharacter::CreateDebugWidget()
@@ -157,6 +156,11 @@ void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 }
 
 
+void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
+{
+        Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
+
 // Called every frame
 void AWatPlayerCharacter::Tick(float DeltaTime)
 {
@@ -165,19 +169,44 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
-	if (bIsSprinting && !GetVelocity().IsZero())
-	{
-		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
-		{
-			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate*DeltaTime;
-		} else
-		{
-			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
-		}
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
-	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
-	{
-		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate*DeltaTime;
+
+	auto* LocalCharacterMovement = GetCharacterMovement();
+
+        if(IsLocallyControlled())
+        {
+	        if(!OriginalMaxSpeed)
+	        {
+		        OriginalMaxSpeed = LocalCharacterMovement->GetMaxSpeed();
+	        }
+	        
+	        if ( bIsSprinting && !GetVelocity().IsZero())
+	        {
+		        if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
+		        {
+			        LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
+				if(!HasAuthority())
+		                {
+			                UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+			        }
+		        }
+		        else if(LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
+		        {
+			        LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
+				if(!HasAuthority())
+		                {
+			                UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+			        }
+		        }
+		        GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+	        }
+	        else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
+	        {
+		        LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+		        if(!HasAuthority())
+		        {
+			        UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+			}
+	        }
 	}
 }
 
