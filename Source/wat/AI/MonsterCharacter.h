@@ -6,8 +6,9 @@
 #include "GameFramework/Character.h"
 #include "MonsterCharacter.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE( FOnEventReactionMode );
-DECLARE_DYNAMIC_MULTICAST_DELEGATE( FOnEventPlayerIsNowInSight );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventReactionMode);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventPlayerIsNowInSight);
 
 UCLASS()
 class WAT_API AMonsterCharacter final : public ACharacter
@@ -54,6 +55,9 @@ public:
 
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
+
+	UPROPERTY(BlueprintReadWrite, Category = "WAT")
+	bool bNotAnimPlaying;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
