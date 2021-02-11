@@ -53,7 +53,7 @@ private:
 	int CellPerSide = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
-	float CoolingStrength = 0.40f;
+	float CoolingStrength = 0.09f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	float CoolingInterval = 1.f;

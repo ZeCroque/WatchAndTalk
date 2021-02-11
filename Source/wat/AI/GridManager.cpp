@@ -49,7 +49,7 @@ void AGridManager::Tick(float DeltaTime)
 		{
 			for (int j = 0; j < CellPerSide; j++)
 			{
-				DecrementValueAt(j, i, CoolingStrength * DeltaTime);
+				DecrementValueAt(j, i, CoolingStrength);
 			}
 		}
 
@@ -57,7 +57,7 @@ void AGridManager::Tick(float DeltaTime)
 		{
 			for (int j = 0; j < CellPerSide; j++)
 			{
-				DecrementValueAt(j, i, CoolingStrength * DeltaTime);
+				DecrementValueAt(j, i, CoolingStrength);
 			}
 		}
 	}
