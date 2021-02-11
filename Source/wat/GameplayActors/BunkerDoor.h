@@ -26,7 +26,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* DoorTrigger;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "WAT Door")
 	float DoorMovingSpeed;
 
 protected:

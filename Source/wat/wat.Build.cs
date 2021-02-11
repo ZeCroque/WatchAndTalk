@@ -22,7 +22,7 @@ public class wat : ModuleRules
             "OnlineSubsystemUtils"
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore"});
         DynamicallyLoadedModuleNames.AddRange(new string[]
         {
             "OnlineSubsystemWat",
