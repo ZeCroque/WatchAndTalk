@@ -50,6 +50,9 @@ public:
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
 
+	UPROPERTY()
+	bool bIsUsingLaser;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -73,7 +76,7 @@ protected:
 	//Interactables
 	UFUNCTION(Server, Reliable)
 	void Interact();
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void SetPlayerAsReadyForRestart();
 	
@@ -104,6 +107,12 @@ private:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
     TSubclassOf<UUserWidget> GridDebugWidget;
+
+	UPROPERTY()
+	class ALaser* LaserPointer;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ALaser> LaserPointerClass;
 
     UPROPERTY()
     TSet<AInteractable*> InteractablesSet;
