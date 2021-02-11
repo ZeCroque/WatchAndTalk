@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "MonsterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE( FOnEventReactionMode );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE( FOnEventPlayerIsNowInSight );
+
 UCLASS()
 class WAT_API AMonsterCharacter final : public ACharacter
 {
@@ -43,14 +46,14 @@ public:
 	void StartGoalReaction(ACharacter* Character);
 	void StopGoalReaction();
 
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventReactionMode"))
+	FOnEventReactionMode OnEventReactionModeDispatcher;
+
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventPlayerIsNowInSight"))
+	FOnEventPlayerIsNowInSight OnEventPlayerIsNowInSightDispatcher;
+
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - State")
-	bool bIsInGoalReactionMode;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - State")
-	bool bPlayerIsNowInSight;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))

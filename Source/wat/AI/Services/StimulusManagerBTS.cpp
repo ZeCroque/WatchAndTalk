@@ -31,23 +31,23 @@ FString UStimulusManagerBTS::GetStaticServiceDescription() const
 void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-	
+
 	AAIController* const Controller = OwnerComp.GetAIOwner();
 	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	if (Controller)
 	{
-		if(!Self)
+		if (!Self)
 		{
 			Self = Cast<AMonsterCharacter>(Controller->GetPawn());
 		}
-		
+
 		TArray<AActor*> Actors;
 		UAIPerceptionComponent* PerceptionComponent = Controller->GetPerceptionComponent();
 		PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Actors);
 
 		for (AActor* Actor : Actors)
 		{
-			auto * PerceivedPlayer = Cast<AWatPlayerCharacter>(Actor);
+			auto* PerceivedPlayer = Cast<AWatPlayerCharacter>(Actor);
 			if (PerceivedPlayer && PerceivedPlayer->IsAlive())
 			{
 				FActorPerceptionBlueprintInfo Infos;
@@ -55,12 +55,17 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
 				for (FAIStimulus const Stimulus : Infos.LastSensedStimuli)
 				{
-						Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
-						Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
-						Blackboard->ClearValue(RandomLocation.SelectedKeyName);
-						Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
-						Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
-						return;
+					Blackboard->SetValueAsVector(CurrentSeenLocation.SelectedKeyName, Stimulus.StimulusLocation);
+					Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
+					Blackboard->ClearValue(RandomLocation.SelectedKeyName);
+					if (!Blackboard->GetValueAsBool(HasSightStimulus.SelectedKeyName) && !Blackboard->IsVectorValueSet(
+						LastSeenLocation.SelectedKeyName))
+					{
+						Self->OnEventPlayerIsNowInSightDispatcher.Broadcast();
+					}
+					Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, true);
+					Blackboard->SetValueAsObject(Player.SelectedKeyName, Actor);
+					return;
 				}
 			}
 			else
@@ -69,19 +74,19 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 			}
 		}
 
-		if(!Self->PlayerToChase)
+		if (!Self->PlayerToChase)
 		{
 			Blackboard->ClearValue(Player.SelectedKeyName);
 		}
-			
+
 		Blackboard->ClearValue(CurrentSeenLocation.SelectedKeyName);
 		Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
 		PerceptionComponent->GetKnownPerceivedActors(nullptr, Actors);
 		for (AActor* Actor : Actors)
 		{
 			auto* PerceivedPlayer = Cast<AWatPlayerCharacter>(Actor);
-			if(PerceivedPlayer && PerceivedPlayer->IsAlive())
-			{			
+			if (PerceivedPlayer && PerceivedPlayer->IsAlive())
+			{
 				FActorPerceptionBlueprintInfo Infos;
 				PerceptionComponent->GetActorsPerception(Actor, Infos);
 
