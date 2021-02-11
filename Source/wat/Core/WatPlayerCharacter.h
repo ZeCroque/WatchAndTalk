@@ -83,6 +83,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void RestartGame(uint32 PlayerId);
 
+	UFUNCTION(Server, Reliable)
+	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;

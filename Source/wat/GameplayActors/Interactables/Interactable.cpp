@@ -57,7 +57,10 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 		{
 			PlayerCharacter->AddInteractable(this);
 			PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
-			RefreshIconWidgetForCurrentDevice(PlayerController->bIsUsingController);
+			if(PlayerController)
+			{
+			    RefreshIconWidgetForCurrentDevice(PlayerController->bIsUsingController);
+			}
 		}
 	}
 }
