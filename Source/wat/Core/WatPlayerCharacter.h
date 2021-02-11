@@ -76,10 +76,6 @@ protected:
 	//Interactables
 	UFUNCTION(Server, Reliable)
 	void Interact();
-
-	//Laser pointer
-	void UseLaser();
-	void StopLaser();
 	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void SetPlayerAsReadyForRestart();

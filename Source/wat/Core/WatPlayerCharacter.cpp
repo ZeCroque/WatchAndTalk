@@ -1,11 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "Characters/PlayerCharacter.h"
-
-#include "Laser.h"
-#include "Interactables/Interactable.h"
 #include "wat/Core/WatPlayerCharacter.h"
+#include "wat/Laser.h"
+#include "wat/GameplayActors/Interactables/Interactable.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -128,21 +125,6 @@ void AWatPlayerCharacter::CreateDebugWidget()
 	}
 }
 
-void APlayerCharacter::UseLaser()
-{
-	bIsUsingLaser = true;
-}
-
-void APlayerCharacter::StopLaser()
-{
-	if(LaserPointer)
-	{
-		LaserPointer->Destroy();
-		LaserPointer = nullptr;
-	}
-	bIsUsingLaser = false;
-}
-
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 {
 	RestartGame(GetPlayerState()->GetPlayerId());
@@ -191,32 +173,31 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 		FVector Start = FirstPersonCameraComponent->GetComponentLocation();
 		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 		FVector End = ((ForwardVector * 1000.f) + Start);
-		FCollisionQueryParams CollisionParams;
-
-		if(GetWorld()->LineTraceSingleByChannel(Result, Start, End, ECC_Visibility, CollisionParams))
+		FCollisionObjectQueryParams ObjectQueryParams;
+		ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
+		
+		if(GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
 		{
-			if(Result.bBlockingHit && Result.Actor->GetFName().ToString() == "BP_MAP_0")
+			if(Result.bBlockingHit)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("LASER")));
-				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%s"), *Result.Actor->GetFName().ToString()));
 				if (!LaserPointer)
 				{
 					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
 				} else
 				{
-					LaserPointer->SetActorLocation(Result.ImpactPoint);
-					LaserPointer->SetActorRotation(Result.Normal.Rotation());
-					
-				}
-			} else
-			{
-				if (LaserPointer)
-				{
-					LaserPointer->Destroy();
-					LaserPointer = nullptr;
+					LaserPointer->SetActorLocation(Result.ImpactPoint+Result.Normal*0.01);
+					LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
 				}
 			}
 		}
+	} else
+	{
+		if (LaserPointer)
+		{
+			LaserPointer->Destroy();
+			LaserPointer = nullptr;
+		}
+	}
 	if (bIsSprinting && !GetVelocity().IsZero())
 	{
 		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
@@ -253,17 +234,15 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AWatPlayerCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &AWatPlayerCharacter::LookUpAtRate);
 
-	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &APlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::StartSprinting);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::StartCrouching);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::StopCrouching);
-	PlayerInputComponent->BindAction("Laser", IE_Pressed, this, &APlayerCharacter::UseLaser);
-	PlayerInputComponent->BindAction("Laser", IE_Released, this, &APlayerCharacter::StopLaser);
+	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::StartCrouching);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AWatPlayerCharacter::StopCrouching);
 
-	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &APlayerCharacter::CreateDebugWidget);
+	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
 }
 
 bool AWatPlayerCharacter::IsAlive() const
@@ -353,3 +332,4 @@ void AWatPlayerCharacter::StopCrouching()
 {
 	UnCrouch();
 }
+
