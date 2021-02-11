@@ -99,11 +99,11 @@ private:
     UPROPERTY()
     class UAIPerceptionStimuliSourceComponent* Stimulus;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT Sound", meta=(AllowPrivateAccess = "true"))
     USoundBase* DistractionSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> GridDebugWidget;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
+    TSubclassOf<UUserWidget> GridDebugWidget;
 
     UPROPERTY()
     TSet<AInteractable*> InteractablesSet;
@@ -112,6 +112,6 @@ private:
 
     void OnDistract();
 
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UCameraShake> SprintShake;
+    UPROPERTY(EditAnywhere, Category= "WAT Sprint")
+    TSubclassOf<UCameraShake> SprintShake;
 };

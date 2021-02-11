@@ -25,7 +25,7 @@ public:
     AObjective* ParentInteractable;
 	
     // Array de définition des inputs pouvant être utilisés dans le QTE
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category= "WAT QTE")
     TArray<FName> PossibleActionsName;
 
 	UPROPERTY()
@@ -41,20 +41,20 @@ public:
     int CurrentIndex = 0;
 	
     //TIMER
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, Category= "WAT QTE")
     float TimeLimit;
 	
     UPROPERTY(BlueprintReadWrite)
     float TimeLeft;
 
-	UPROPERTY(meta=(BindWidget))
-	class UKeyIconWidget* KeyIconWidget;
+    UPROPERTY(meta=(BindWidget))
+    class UKeyIconWidget* KeyIconWidget;
 
     void OnInput(FKey PressedInput);
 
-	void Start();
+    void Start();
 
-	void Stop();
+    void Stop();
     
 private:
 
