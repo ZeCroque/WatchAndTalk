@@ -46,6 +46,12 @@ public:
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - State")
+	bool bIsInGoalReactionMode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - State")
+	bool bPlayerIsNowInSight;
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Montage;

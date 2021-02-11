@@ -77,9 +77,11 @@ void AMonsterCharacter::StartGoalReaction(ACharacter* Character)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Purple,TEXT("Start Goal Reaction"));
 	PlayerToChase = Cast<AWatPlayerCharacter>(Character);
+	bIsInGoalReactionMode = true;
 }
 
 void AMonsterCharacter::StopGoalReaction()
 {
 	PlayerToChase = nullptr;
+	bIsInGoalReactionMode = false;
 }
