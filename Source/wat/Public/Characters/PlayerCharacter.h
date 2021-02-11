@@ -41,6 +41,9 @@ public:
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
 
+	UPROPERTY()
+	bool bIsUsingLaser;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -107,9 +110,6 @@ private:
 
     UPROPERTY()
     TSet<AInteractable*> InteractablesSet;
-
-	UPROPERTY()
-	bool bIsUsingLaser;
 
     void SetupStimulus();
 

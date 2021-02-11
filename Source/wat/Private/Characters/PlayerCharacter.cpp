@@ -192,8 +192,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 		if(GetWorld()->LineTraceSingleByChannel(Result, Start, End, ECC_Visibility, CollisionParams))
 		{
-			if(Result.bBlockingHit)
+			if(Result.bBlockingHit && Result.Actor->GetFName().ToString() == "BP_MAP_0")
 			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("LASER")));
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%s"), *Result.Actor->GetFName().ToString()));
 				if (!LaserPointer)
 				{
 					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
@@ -201,6 +203,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 				{
 					LaserPointer->SetActorLocation(Result.ImpactPoint);
 					LaserPointer->SetActorRotation(Result.Normal.Rotation());
+					
 				}
 			} else
 			{
