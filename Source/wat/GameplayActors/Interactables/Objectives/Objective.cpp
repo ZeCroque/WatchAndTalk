@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Widgets/QTEWidget.h"
 
 
 void AObjective::EndGame_Implementation()

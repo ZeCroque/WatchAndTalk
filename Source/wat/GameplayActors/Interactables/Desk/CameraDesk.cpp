@@ -10,6 +10,7 @@
 #include "wat/GameplayActors/Interactables/Desk/Monitor.h"
 #include "Engine/Canvas.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "wat/Widgets/CameraDeskHUDWidget.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()
@@ -114,6 +115,16 @@ void ACameraDesk::OnNotFinalBlend()
 	{
 		Super::OnNotFinalBlend();
 		bIsOnMap = true;
+
+		if (!PlayerController->CameraDeskHUDWidget)
+		{
+			PlayerController->CameraDeskHUDWidget = CreateWidget<UCameraDeskHUDWidget>(PlayerController, CameraDeskHUDWidgetClass);
+			PlayerController->CameraDeskHUDWidget->Parent = this;
+		}
+
+		PlayerController->CameraDeskHUDWidget->AddToViewport();
+		PlayerController->CameraDeskHUDWidget->Init();
+		
 		bIsInternalBlend = true;	
 	}
 	else
@@ -130,7 +141,9 @@ void ACameraDesk::OnNotFinalBlend()
 		else
 		{
 			bIsBlendingVertically = false;
+
 		}
+		PlayerController->CameraDeskHUDWidget->Update(bIsOnMap, CurrentIndex, CurrentFloor == FirstFloor);
 		if(!bIsOnMap)
 		{
 			SetCurrentMonitorRenderingState(true);
@@ -287,6 +300,7 @@ void ACameraDesk::Return()
 	{
 		SetCurrentMonitorRenderingState(false);
 		GetMonitorByIndex(CurrentIndex)->OnTransitionEnd.Clear();
+		PlayerController->CameraDeskHUDWidget->RemoveFromParent();
 		BlendToPlayer();
 		Initialize();
 	}
@@ -316,6 +330,7 @@ void ACameraDesk::SwitchFloor()
 		{
 			SwitchFloorInMonitors();
 		}
+		PlayerController->CameraDeskHUDWidget->Update(bIsOnMap, CurrentIndex, CurrentFloor == FirstFloor);
 	}
 }
 

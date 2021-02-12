@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
-#include "wat/Widgets/QTEWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "WatPlayerController.generated.h"
 
@@ -29,7 +27,10 @@ public:
 	bool bIsInMiniGame;
 	
 	UPROPERTY()
-	UQTEWidget* Widget;
+	class UQTEWidget* Widget;
+
+	UPROPERTY()
+	class UCameraDeskHUDWidget* CameraDeskHUDWidget;
 	
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;

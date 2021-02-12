@@ -2,10 +2,12 @@
 
 
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Widgets/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
+	CameraDeskHUDWidget = nullptr;
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
