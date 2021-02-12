@@ -265,7 +265,7 @@ void ACameraDesk::MoveForward(float Value)
 
 void ACameraDesk::MoveRight(float Value)
 {
-	if (bIsInternalBlend && !bIsBlendingVertically && !bIsSwitchingFloors && PlayerController)
+	if (bIsInternalBlend && !bIsBlendingVertically && !bIsOnMap && !bIsSwitchingFloors && PlayerController)
 	{
 		if (Value > 0.0f && !bToggle)
 		{
