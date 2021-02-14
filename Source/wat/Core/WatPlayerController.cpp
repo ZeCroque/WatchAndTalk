@@ -8,16 +8,12 @@ AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
 	CameraDeskHUDWidget = nullptr;
+	bIsUsingController = false;
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
 {
 	Possess(PawnToPossess);
-}
-
-void AWatPlayerController::BeginPlay()
-{
-	bIsUsingController = false;
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)

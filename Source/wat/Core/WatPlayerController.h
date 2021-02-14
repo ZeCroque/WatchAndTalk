@@ -19,8 +19,6 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void PossessRPC(APawn* PawnToPossess);
-
-	virtual void BeginPlay() override;
 	
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	
