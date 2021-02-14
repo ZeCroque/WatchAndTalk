@@ -19,6 +19,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Widgets/ObjectivesHUDWidget.h"
 
 #if WITH_EDITOR
 #include "wat/Core/WatGameInstance.h"
@@ -105,8 +106,13 @@ void AWatPlayerCharacter::BeginPlay()
 	if (!IsLocallyControlled())
 	{
 		GetMesh()->SetVisibility(true);
-
+		bIsMechanist = true;
 	}
+	else
+	{
+		bIsMechanist = false;
+	}
+	
 }
 
 void AWatPlayerCharacter::CreateDebugWidget()
@@ -163,6 +169,19 @@ void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerChara
         Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
+void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
+{
+	for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+	     auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
+	     if (PlayerController)
+	     {
+			 auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
+	     	 PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
+	     }
+	}
+}
+
 // Called every frame
 void AWatPlayerCharacter::Tick(float DeltaTime)
 {
@@ -170,6 +189,7 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
 #endif
 	if(bIsUsingLaser)
 	{
@@ -250,13 +270,8 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-    // Bind jump events
-    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
     
-    // Bind movement events
+    // Axis
     PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
 
@@ -268,12 +283,19 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AWatPlayerCharacter::LookUpAtRate);
 
+	//Actions
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
 	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AWatPlayerCharacter::StopCrouching);
+	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
 
+	//DEBUG
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
 }
 
@@ -304,6 +326,13 @@ void AWatPlayerCharacter::OnDistract()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DistractionSound, Location);
 		UAISense_Hearing::ReportNoiseEvent(GetWorld(), Location, 1.0f, this, 0.0f, AITags::NoiseTag);
 	}
+}
+
+void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
 }
 
 void AWatPlayerCharacter::MoveForward(float Value)
@@ -363,5 +392,28 @@ void AWatPlayerCharacter::StartCrouching()
 void AWatPlayerCharacter::StopCrouching()
 {
 	UnCrouch();
+}
+
+void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
+{
+	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
+	if (!PC->ObjectivesHUDWidget)
+	{
+		PC->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(PC, ObjectivesHUDWidgetClass);
+		PC->ObjectivesHUDWidget->Parent = this;
+		PC->ObjectivesHUDWidget->Controller = PC;
+		PC->ObjectivesHUDWidget->AddToViewport();
+	}
+	else
+	{
+		if(PC->ObjectivesHUDWidget->IsInViewport())
+		{		
+			PC->ObjectivesHUDWidget->RemoveFromParent();
+		}
+		else
+		{
+			PC->ObjectivesHUDWidget->AddToViewport();
+		}
+	}
 }
 

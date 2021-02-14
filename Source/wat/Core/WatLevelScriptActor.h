@@ -14,6 +14,10 @@ class AWatLevelScriptActor : public ALevelScriptActor
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(EditAnywhere, Category="WAT Objectives")
+	class UDataTable* ObjectiveDataTable;
+	
 protected:
-	void PostInitializeComponents() override;
+	virtual void PostInitializeComponents() override;
 };

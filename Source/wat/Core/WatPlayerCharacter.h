@@ -72,7 +72,9 @@ protected:
 	void StopSprinting();
 	void StartCrouching();
     void StopCrouching();
+	void ToggleObjectivesHUDVisibility();
 
+	
 	//Interactables
 	UFUNCTION(Server, Reliable)
 	void Interact();
@@ -86,6 +88,7 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
 
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
@@ -93,6 +96,9 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(Server, Reliable)
+	void SwitchPlayersClasses();
+	
 	bool IsAlive() const;
 	
 	void Die();
@@ -101,6 +107,9 @@ private:
 
 	bool bIsAlive;
 	bool bIsSprinting;
+
+	UPROPERTY(Replicated)
+	bool bIsMechanist;
 	
     UPROPERTY()
     class UAIPerceptionStimuliSourceComponent* Stimulus;
@@ -110,6 +119,9 @@ private:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
     TSubclassOf<UUserWidget> GridDebugWidget;
+
+	UPROPERTY(EditAnywhere, Category="WAT HUD")
+    TSubclassOf<UUserWidget> ObjectivesHUDWidgetClass;
 
 	UPROPERTY()
 	class ALaser* LaserPointer;
@@ -126,4 +138,6 @@ private:
 
     UPROPERTY(EditAnywhere, Category= "WAT Sprint")
     TSubclassOf<UCameraShake> SprintShake;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

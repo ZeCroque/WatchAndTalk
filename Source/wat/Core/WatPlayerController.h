@@ -29,6 +29,9 @@ public:
 
 	UPROPERTY()
 	class UCameraDeskHUDWidget* CameraDeskHUDWidget;
+
+	UPROPERTY()
+	class UObjectivesHUDWidget* ObjectivesHUDWidget;
 	
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
