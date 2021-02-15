@@ -106,9 +106,12 @@ void AWatPlayerCharacter::BeginPlay()
 	if (!IsLocallyControlled())
 	{
 		GetMesh()->SetVisibility(true);
-		bIsMechanist = true;
+		if(HasAuthority())
+		{
+			bIsMechanist = true;
+		}		
 	}
-	else
+	else if(HasAuthority())
 	{
 		bIsMechanist = false;
 	}
@@ -133,6 +136,13 @@ void AWatPlayerCharacter::CreateDebugWidget()
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 {
 	RestartGame(GetPlayerState()->GetPlayerId());
+}
+
+void AWatPlayerCharacter::SwitchStartMode_Implementation()
+{
+	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	GameState->bTutorialActivated = !GameState->bTutorialActivated;
+	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
 }
 
 
@@ -186,84 +196,86 @@ void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 void AWatPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	if(IsLocallyControlled())
+    {
 #if WITH_EDITOR
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
-#endif
-	if(bIsUsingLaser)
-	{
-		FHitResult Result;
-		FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
-		FVector End = ((ForwardVector * 1000.f) + Start);
-		FCollisionObjectQueryParams ObjectQueryParams;
-		ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
-		
-		if(GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
+		auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+		if(GameState)
 		{
-			if(Result.bBlockingHit)
+			GEngine->AddOnScreenDebugMessage(-1,0.f, FColor::Purple, FString("Start mode: ") + (GameState->bTutorialActivated ? FString("Tutorial") : FString("Quick Start")));
+		}
+#endif
+		if(bIsUsingLaser)
+		{
+			FHitResult Result;
+			FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+			FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+			FVector End = ((ForwardVector * 1000.f) + Start);
+			FCollisionObjectQueryParams ObjectQueryParams;
+			ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
+			
+			if(GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
 			{
-				if (!LaserPointer)
+				if(Result.bBlockingHit)
 				{
-					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
-				} 
-				else
-				{
-					LaserPointer->SetActorLocation(Result.ImpactPoint+Result.Normal*0.01);
-					LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
+					if (!LaserPointer)
+					{
+						LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
+					} 
+					else
+					{
+						LaserPointer->SetActorLocation(Result.ImpactPoint+Result.Normal*0.01);
+						LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
+					}
 				}
 			}
-		}
-	} 
-	else
-	{
-		if (LaserPointer)
+		} 
+		else
 		{
-			LaserPointer->Destroy();
-			LaserPointer = nullptr;
+			if (LaserPointer)
+			{
+				LaserPointer->Destroy();
+				LaserPointer = nullptr;
+			}
 		}
-	}
 
 		auto* LocalCharacterMovement = GetCharacterMovement();
-
-        if(IsLocallyControlled())
+        if(!OriginalMaxSpeed)
         {
-	        if(!OriginalMaxSpeed)
+	        OriginalMaxSpeed = LocalCharacterMovement->GetMaxSpeed();
+        }
+        
+        if ( bIsSprinting && !GetVelocity().IsZero())
+        {
+	        if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
 	        {
-		        OriginalMaxSpeed = LocalCharacterMovement->GetMaxSpeed();
-	        }
-	        
-	        if ( bIsSprinting && !GetVelocity().IsZero())
-	        {
-		        if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
-		        {
-			        LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
+		        LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
 				if(!HasAuthority())
-		                {
-			                UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-			        }
+	            {
+		            UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 		        }
-		        else if(LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
-		        {
-			        LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
-				if(!HasAuthority())
-		                {
-			                UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-			        }
-		        }
-		        GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
 	        }
-	        else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
+	        else if(LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
 	        {
-		        LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
-		        if(!HasAuthority())
-		        {
-			        UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+		        LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
+				if(!HasAuthority())
+				{
+					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+		        }
+	        }
+	        GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+        }
+        else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
+        {
+	        LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+	        if(!HasAuthority())
+	        {
+				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 			}
-	        }
-	}
-	
+		}
+    }	
 }
 
 // Called to bind functionality to input
@@ -297,6 +309,11 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
+}
+
+bool AWatPlayerCharacter::IsMechanist() const
+{
+	return bIsMechanist;
 }
 
 bool AWatPlayerCharacter::IsAlive() const
@@ -402,6 +419,7 @@ void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 		PC->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(PC, ObjectivesHUDWidgetClass);
 		PC->ObjectivesHUDWidget->Parent = this;
 		PC->ObjectivesHUDWidget->Controller = PC;
+		PC->ObjectivesHUDWidget->UpdateObjectiveList();
 		PC->ObjectivesHUDWidget->AddToViewport();
 	}
 	else

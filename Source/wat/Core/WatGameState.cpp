@@ -6,6 +6,8 @@
 AWatGameState::AWatGameState()
 {
 	bGameEnded = false;
+	bTutorialActivated = false;
+	ObjectiveIndex = 1;
 }
 
 void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

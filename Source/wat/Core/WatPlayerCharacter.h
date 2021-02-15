@@ -96,8 +96,13 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void SwitchPlayersClasses();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SwitchStartMode();
+
+	bool IsMechanist() const;
 	
 	bool IsAlive() const;
 	

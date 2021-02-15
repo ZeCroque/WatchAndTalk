@@ -13,10 +13,6 @@ UCLASS()
 class AWatLevelScriptActor : public ALevelScriptActor
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, Category="WAT Objectives")
-	class UDataTable* ObjectiveDataTable;
 	
 protected:
 	virtual void PostInitializeComponents() override;

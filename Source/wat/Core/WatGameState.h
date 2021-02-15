@@ -52,7 +52,14 @@ public:
     UPROPERTY()
     TSet<uint32> PlayersReadyForRestartIds;
 
+	bool bTutorialActivated;
+
     bool bGameEnded;
+
+	uint8 ObjectiveIndex;
+
+	UPROPERTY(EditAnywhere, Category="WAT Objectives")
+	class UDataTable* ObjectiveDataTable;
     
     AWatGameState();
 

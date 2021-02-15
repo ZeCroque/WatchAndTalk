@@ -25,5 +25,8 @@ public:
 	FSoftObjectPath MainLevel;
 
 	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
+	FSoftObjectPath TutoLevel;
+
+	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath MainMenuLevel;
 };

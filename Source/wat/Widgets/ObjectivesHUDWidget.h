@@ -27,7 +27,5 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	class UVerticalBox* ObjectivesList;
 
-protected:
-
-	virtual void NativeConstruct() override;
+	void UpdateObjectiveList();
 };
