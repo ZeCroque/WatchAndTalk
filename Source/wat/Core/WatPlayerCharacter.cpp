@@ -55,6 +55,7 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	SetupStimulus();
 
 	bIsAlive = true;
+	bIsMechanist = false;
 }
 
 bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -105,15 +106,11 @@ void AWatPlayerCharacter::BeginPlay()
 
 	if (!IsLocallyControlled())
 	{
-		GetMesh()->SetVisibility(true);
-		if(HasAuthority())
-		{
-			bIsMechanist = true;
-		}		
+		GetMesh()->SetVisibility(true);	
 	}
 	else if(HasAuthority())
 	{
-		bIsMechanist = false;
+		bIsMechanist = true;
 	}
 	
 }

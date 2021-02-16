@@ -22,37 +22,39 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 	const FString ContextString;
 	TArray<FWatObjectivesTableRow*> Rows;
 	GameState->ObjectiveDataTable->GetAllRows<FWatObjectivesTableRow>(ContextString, Rows);
-	
-	if(Objectives.Num() == 0 || Objectives.Num() != GameState->ObjectiveIndex + GameState->bTutorialActivated)
-	{
-		for(int i = 0; i < Objectives.Num(); ++i)
-		{
-			auto* Row = Cast<UObjectiveHUDRowWidget>(Objectives[i]);
 
-			if(!Row->ObjectiveDescription->StrikeBrush.GetResourceObject())
-			{
+	if(GameState->bScientistTurn == Parent->IsMechanist())
+	{
+		if(Objectives.Num())
+		{
 				const FVector2D ImageSize(1,1);
 				auto SlateBrush = FSlateImageBrush("InteractionIcon", ImageSize);
 				TArray<FColor> Colors;
 				Colors.Add(FColor::White);
-				SlateBrush.SetResourceObject(FImageUtils::CreateTexture2D(1,1, Colors, this, FString("StrikeTexture") + FString::FromInt(i), EObjectFlags::RF_NoFlags, FCreateTexture2DParameters()));
-				Row->ObjectiveDescription->SetStrikeBrush(SlateBrush);
-			}
+				SlateBrush.SetResourceObject(FImageUtils::CreateTexture2D(1,1, Colors, this, FString("StrikeTexture"), EObjectFlags::RF_NoFlags, FCreateTexture2DParameters()));
+				Cast<UObjectiveHUDRowWidget>(ObjectivesList->GetChildAt(Objectives.Num() - 1))->ObjectiveDescription->SetStrikeBrush(SlateBrush);
 		}
-
-		if(GameState->ObjectiveIndex < Rows.Num())
+		
+		auto* ObjectiveRow = CreateWidget<UObjectiveHUDRowWidget>(Controller, RowClass);
+		ObjectiveRow->ObjectiveDescription->SetText(FText::FromString(TEXT("En attente de l'autre joueur")));
+		ObjectivesList->AddChildToVerticalBox(ObjectiveRow);
+	}
+	else if(Objectives.Num() - 1 != GameState->ObjectiveIndex + GameState->bTutorialActivated)
+	{
+		if((Parent->IsMechanist() && Objectives.Num() > 1) || (!Parent->IsMechanist() && Objectives.Num() > 0))
 		{
-			for(auto& Row : Rows)
+			ObjectivesList->RemoveChildAt(Objectives.Num() - 1);
+		}
+		
+		for(auto& Row : Rows)
+		{
+			if(Row->Index == GameState->ObjectiveIndex && ((Parent->IsMechanist() && Row->PlayerClass == EPlayerClass::Mechanist) || (!Parent->IsMechanist() && Row->PlayerClass == EPlayerClass::Scientist) || Row->PlayerClass == EPlayerClass::Both))
 			{
-				if(Row->Index == GameState->ObjectiveIndex && ((Parent->IsMechanist() && Row->PlayerClass == EPlayerClass::Mechanist) || (!Parent->IsMechanist() && Row->PlayerClass == EPlayerClass::Scientist) || Row->PlayerClass == EPlayerClass::Both))
-				{
-					auto* ObjectiveRow = CreateWidget<UObjectiveHUDRowWidget>(Controller, RowClass);
-					ObjectiveRow->ObjectiveDescription->SetText(FText::FromString(Row->ObjectiveDesc));
-					ObjectivesList->AddChildToVerticalBox(ObjectiveRow);
-					break;
-				}
+				auto* ObjectiveRow = CreateWidget<UObjectiveHUDRowWidget>(Controller, RowClass);
+				ObjectiveRow->ObjectiveDescription->SetText(FText::FromString(Row->ObjectiveDesc));
+				ObjectivesList->AddChildToVerticalBox(ObjectiveRow);
+				break;
 			}
-
 		}
 	}
 }

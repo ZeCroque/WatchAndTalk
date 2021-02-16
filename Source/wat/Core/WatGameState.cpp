@@ -17,6 +17,9 @@ void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWatGameState, Objectives);
 	DOREPLIFETIME(AWatGameState, MonsterCharacter);
 	DOREPLIFETIME(AWatGameState, GridManager);
+	DOREPLIFETIME(AWatGameState, bTutorialActivated);
+	DOREPLIFETIME(AWatGameState, ObjectiveIndex);
+	DOREPLIFETIME(AWatGameState, bScientistTurn);
 }
 
 bool AWatGameState::AreAllObjectivesCompleted() const
