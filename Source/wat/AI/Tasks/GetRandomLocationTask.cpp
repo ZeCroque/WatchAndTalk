@@ -8,6 +8,7 @@
 #include "wat/AI/MonsterAIController.h"
 #include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
+#include "wat/GameplayActors/Triggers/BunkerTriggerBox.h"
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
 {
@@ -18,7 +19,8 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 {
 	if (!GridManager)
 	{
-		GridManager = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+		WatGameState = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()));
+		GridManager = WatGameState->GridManager;
 	}
 
 	if (!Controller)
@@ -33,9 +35,14 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		if (!GridManager->RandomHotWorldCoordinate(Location))
 		{
 			auto const NPC = Controller->GetPawn();
-			FVector const Origin = NPC->GetActorLocation();
-
-			GridManager->SetValueAround(Origin, SearchRadius);
+			FVector const Origin = WatGameState->NumberOfActorInBunker == 2
+				                       ? WatGameState->BunkerTriggerBox->GetActorLocation()
+				                       : NPC->GetActorLocation();
+			const auto Radius = WatGameState->NumberOfActorInBunker == 2
+				                    ? WatGameState->BunkerTriggerBox->GridDrawRay
+				                    : SearchRadius;
+			
+			GridManager->SetValueAround(Origin, Radius);
 			GridManager->RandomHotWorldCoordinate(Location);
 		}
 
@@ -47,7 +54,7 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		do
 		{
 			++i;
-			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(),Location,NavLocation,1000);
+			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation, 1000);
 		}
 		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
 			|| i < 100);

@@ -9,14 +9,13 @@
 #include "WatGameState.generated.h"
 
 
-
 USTRUCT()
 struct FZoneCameras
 {
-    GENERATED_USTRUCT_BODY()
+	GENERATED_USTRUCT_BODY()
 
-    UPROPERTY()
-    TArray<class ASecurityCamera*> ZoneCameras;
+	UPROPERTY()
+	TArray<class ASecurityCamera*> ZoneCameras;
 };
 
 USTRUCT()
@@ -34,28 +33,34 @@ struct FFloorZones
 UCLASS()
 class WAT_API AWatGameState : public AGameStateBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(Replicated)
 	TArray<FFloorZones> Cameras;
 
-    UPROPERTY(Replicated)
-    TArray<AObjective*> Objectives;
+	UPROPERTY(Replicated)
+	TArray<AObjective*> Objectives;
 
-    UPROPERTY(Replicated)
-    class AMonsterCharacter* MonsterCharacter;
+	UPROPERTY(Replicated)
+	class AMonsterCharacter* MonsterCharacter;
 
-    UPROPERTY(Replicated)
-    class AGridManager* GridManager;
+	UPROPERTY(Replicated)
+	class AGridManager* GridManager;
 
-    UPROPERTY()
-    TSet<uint32> PlayersReadyForRestartIds;
+	UPROPERTY()
+	class ABunkerTriggerBox* BunkerTriggerBox;
 
-    bool bGameEnded;
-    
-    AWatGameState();
+	UPROPERTY()
+	TSet<uint32> PlayersReadyForRestartIds;
 
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    bool AreAllObjectivesCompleted() const;
+	UPROPERTY()
+	int NumberOfActorInBunker;
+
+	bool bGameEnded;
+
+	AWatGameState();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool AreAllObjectivesCompleted() const;
 };

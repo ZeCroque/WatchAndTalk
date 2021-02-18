@@ -23,16 +23,20 @@ public:
 	void PossessRPC(APawn* PawnToPossess);
 
 	virtual void BeginPlay() override;
-	
+
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
-	
+
 	bool bIsInMiniGame;
-	
+
 	UPROPERTY()
 	UQTEWidget* Widget;
-	
+
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
+
+	UFUNCTION(Server,Reliable)
+	void UpdateBunkerPlayerCount(const int Value);
+
 
 	bool bIsUsingController;
 };

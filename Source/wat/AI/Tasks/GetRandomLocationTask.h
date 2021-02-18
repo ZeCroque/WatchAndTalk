@@ -8,6 +8,8 @@
 #include "wat/AI/MonsterAIController.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BehaviorTree/BehaviorTreeTypes.h"
+#include "wat/Core/WatGameState.h"
+
 #include "GetRandomLocationTask.generated.h"
 
 /**
@@ -16,17 +18,20 @@
 UCLASS(Blueprintable)
 class WAT_API UGetRandomLocationTask final : public UBTTask_BlackboardBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 public:
-    explicit UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer);
-    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	explicit UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer);
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 private:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Search", meta= (AllowPrivateAccess = "true"))
-    int SearchRadius = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Search", meta= (AllowPrivateAccess = "true"))
+	int SearchRadius = 2;
 
-    UPROPERTY()
-    AGridManager* GridManager;
+	UPROPERTY()
+	AGridManager* GridManager;
 
-    UPROPERTY()
-    AMonsterAIController* Controller;
+	UPROPERTY()
+	AWatGameState* WatGameState;
+
+	UPROPERTY()
+	AMonsterAIController* Controller;
 };

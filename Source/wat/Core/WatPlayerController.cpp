@@ -3,6 +3,9 @@
 
 #include "wat/Core/WatPlayerController.h"
 
+#include "WatGameState.h"
+#include "IOS/Accessibility/IOSAccessibilityElement.h"
+
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
@@ -27,4 +30,10 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
         return true;
     }
     return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
+}
+
+void AWatPlayerController::UpdateBunkerPlayerCount_Implementation(const int Value)
+{
+	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	GameState->NumberOfActorInBunker += Value;
 }
