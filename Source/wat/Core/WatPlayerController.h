@@ -39,5 +39,8 @@ public:
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
 
+	UPROPERTY()
+	class UPauseWidget* PauseWidget;
+
 	bool bIsUsingController;
 };

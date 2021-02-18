@@ -85,9 +85,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void RestartGame(uint32 PlayerId);
 
+	UFUNCTION()
+	void TogglePauseMenu();
+
 	UFUNCTION(Server, Reliable)
 	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
-
 
 public:
     // Called every frame
@@ -143,6 +145,10 @@ private:
 
     UPROPERTY(EditAnywhere, Category= "WAT Sprint")
     TSubclassOf<UCameraShake> SprintShake;
+
+
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> PauseWidget;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

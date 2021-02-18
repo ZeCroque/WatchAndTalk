@@ -2,7 +2,7 @@
 
 
 #include "wat/Core/WatPlayerController.h"
-
+#include "wat/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
@@ -11,6 +11,7 @@
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
+	PauseWidget = nullptr;
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
 	bIsUsingController = false;
@@ -55,6 +56,11 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
     {
         Widget->OnInput(Key);
         return true;
+    }
+	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
+    {
+	    PauseWidget->OnInput(Key);
+		return true;
     }
     return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }

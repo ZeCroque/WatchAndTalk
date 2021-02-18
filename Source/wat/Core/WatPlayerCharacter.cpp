@@ -3,7 +3,6 @@
 #include "wat/Core/WatPlayerCharacter.h"
 #include "wat/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
-#include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
@@ -18,6 +17,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
+#include "wat/PauseWidget.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
@@ -172,6 +172,22 @@ void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 }
 
 
+void AWatPlayerCharacter::TogglePauseMenu()
+{
+	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
+    if (!PC->PauseWidget)
+    {
+    	PC->PauseWidget = CreateWidget<UPauseWidget>(PC, PauseWidget);
+        if (PC->PauseWidget)
+        {
+        	PC->PauseWidget->AddToViewport();
+        	PC->bShowMouseCursor = true;
+        	FInputModeUIOnly UIOnly;
+        	PC->SetInputMode(UIOnly);
+        } 
+    }
+}
+
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
 {
         Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
@@ -322,6 +338,7 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AWatPlayerCharacter::TogglePauseMenu);
 }
 
 bool AWatPlayerCharacter::IsMechanist() const
