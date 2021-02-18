@@ -17,6 +17,8 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
+#include "wat/AI/GridManager.h"
+#include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 
 #if WITH_EDITOR
@@ -75,7 +77,8 @@ AInteractable* AWatPlayerCharacter::GetClosestInteractable()
 	{
 		if (InteractableSetItem)
 		{
-			const float Distance = UKismetMathLibrary::Vector_Distance2D(PlayerLocation, InteractableSetItem->GetActorLocation());
+			const float Distance = UKismetMathLibrary::Vector_Distance2D(
+				PlayerLocation, InteractableSetItem->GetActorLocation());
 			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
 			{
 				ClosestInteractable.Key = Distance;
@@ -123,6 +126,19 @@ void AWatPlayerCharacter::CreateDebugWidget()
 	}
 }
 
+void AWatPlayerCharacter::ClearGridWhenSprinting()
+{
+	const int Range = FMath::RoundToInt(ARange * GetCharacterMovement()->MaxWalkSpeed + BRange);
+
+	if (GameState->GridManager && GetDistanceTo(GameState->MonsterCharacter) <= Range)
+	{
+		const int Ray = FMath::RoundToInt(ARay * GetCharacterMovement()->MaxWalkSpeed + BRay);
+
+		GameState->GridManager->SetValueOutside(GetActorLocation(), Ray);
+		GameState->GridManager->SetValueAround(GetActorLocation(), Ray);
+	}
+}
+
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 {
 	RestartGame(GetPlayerState()->GetPlayerId());
@@ -131,7 +147,6 @@ void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 
 void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 {
-	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	GameState->PlayersReadyForRestartIds.Add(PlayerId);
 
 	int MatchingPlayersIdsCount = 0;
@@ -162,22 +177,45 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!GameState)
+	{
+		GameState = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()));
+		ARay = static_cast<float>(MaxRangToKeep - MinRangToKeep) / (OriginalMaxSpeed - (OriginalMaxSpeed +
+			SprintAdditionalSpeedValue));
+		BRay = static_cast<float>(MinRangToKeep) - ARay * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
+
+
+		ARange = static_cast<float>(MinRangFromMonster - MaxRangFromMonster) / (OriginalMaxSpeed - (OriginalMaxSpeed +
+			SprintAdditionalSpeedValue));
+
+		BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
+	}
+
 #if WITH_EDITOR
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
+	                                 Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 #endif
 	if (bIsSprinting && !GetVelocity().IsZero())
 	{
-		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed+SprintAdditionalSpeedValue)
+		if (GetCharacterMovement()->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
 		{
-			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate*DeltaTime;
-		} else
-		{
-			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed+SprintAdditionalSpeedValue;
+			GetCharacterMovement()->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
 		}
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed+SprintAdditionalSpeedValue));
-	} else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
+		}
+
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(
+			SprintShake, GetCharacterMovement()->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+	}
+	else if (!bIsSprinting && GetCharacterMovement()->MaxWalkSpeed > OriginalMaxSpeed)
 	{
-		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate*DeltaTime;
+		GetCharacterMovement()->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+	}
+	if (!GetCharacterMovement()->IsCrouching())
+	{
+		ClearGridWhenSprinting();
 	}
 }
 
@@ -186,14 +224,14 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // Bind jump events
-    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
-    
-    // Bind movement events
-    PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
+	// Bind jump events
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
+
+	// Bind movement events
+	PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.

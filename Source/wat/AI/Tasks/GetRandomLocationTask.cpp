@@ -40,20 +40,19 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		}
 
 
-		FNavLocation NavLocation;
+		FVector NavLocation;
 		UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 
 		auto i = 0;
 		do
 		{
 			++i;
-			NavSys->GetRandomPointInNavigableRadius(Location, 1000, NavLocation,
-			                                        nullptr);
+			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(),Location,NavLocation,1000);
 		}
-		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Location.Z))) > 300
+		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
 			|| i < 100);
 
-		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation.Location);
+		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
 
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		return EBTNodeResult::Succeeded;

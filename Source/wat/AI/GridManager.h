@@ -38,6 +38,9 @@ public:
 	void SetValueAround(const FVector& Center, const int Ray);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
+	void SetValueOutside(const FVector& Center, const int Ray);
+
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	void CleanPolygon(const TArray<FVector>& WorldPolygon);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
@@ -46,7 +49,7 @@ public:
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
-	static bool IsInsidePolygon(const TArray<FVector2D> &Polygon, const  FVector2D &Point);
+	static bool IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
