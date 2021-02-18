@@ -2,23 +2,51 @@
 
 
 #include "wat/Core/WatPlayerController.h"
-
 #include "wat/PauseWidget.h"
+#include "WatGameState.h"
+#include "WatPlayerCharacter.h"
+#include "wat/Widgets/ObjectivesHUDWidget.h"
+#include "wat/Widgets/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
 	PauseWidget = nullptr;
+	CameraDeskHUDWidget = nullptr;
+	ObjectivesHUDWidget = nullptr;
+	bIsUsingController = false;
 }
 
-void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
+void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
+    AObjective *Objective)
+{
+  	Objective->bCompleted = true;
+
+	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	if(GameState->bScientistTurn)
+	{
+		GameState->ObjectiveIndex++;
+	}
+	GameState->bScientistTurn = !GameState->bScientistTurn;
+
+	if (GameState->AreAllObjectivesCompleted() == true)
+	{
+            GameState->bGameEnded = true;
+
+	    GameState->EndGame();
+	    return;
+	}
+
+        Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
+}
+
+void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool bEnableInput)
 {
 	Possess(PawnToPossess);
-}
-
-void AWatPlayerController::BeginPlay()
-{
-	bIsUsingController = false;
+         if(bEnableInput)
+         {
+           PawnToPossess->EnableInput(this);
+         }
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)

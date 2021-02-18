@@ -3,9 +3,32 @@
 
 #include "wat/Core/WatGameState.h"
 
+#include "WatPlayerController.h"
+#include "wat/Widgets/ObjectivesHUDWidget.h"
+
 AWatGameState::AWatGameState()
 {
 	bGameEnded = false;
+	bTutorialActivated = false;
+	ObjectiveIndex = 1;
+        bGameStarted = false;
+}
+
+void AWatGameState::EndGame_Implementation()
+{
+        auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
+        if (EndGameWidget != nullptr && !EndGameWidget->GetIsVisible())
+        {
+                EndGameWidget->AddToViewport();
+                auto* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+                PC->SetInputMode(FInputModeUIOnly());
+                PC->bShowMouseCursor = true;
+        }
+}
+
+void AWatGameState::UpdateObjective()
+{
+    Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
 }
 
 void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -15,6 +38,10 @@ void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWatGameState, Objectives);
 	DOREPLIFETIME(AWatGameState, MonsterCharacter);
 	DOREPLIFETIME(AWatGameState, GridManager);
+	DOREPLIFETIME(AWatGameState, bTutorialActivated);
+	DOREPLIFETIME(AWatGameState, ObjectiveIndex);
+	DOREPLIFETIME(AWatGameState, bScientistTurn);
+        DOREPLIFETIME(AWatGameState, bGameStarted);
 }
 
 bool AWatGameState::AreAllObjectivesCompleted() const

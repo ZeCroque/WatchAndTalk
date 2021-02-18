@@ -52,9 +52,33 @@ public:
     UPROPERTY()
     TSet<uint32> PlayersReadyForRestartIds;
 
+	UPROPERTY(Replicated)
+	bool bTutorialActivated;
+
+	UPROPERTY(Replicated)
+    bool bGameStarted;
+	
     bool bGameEnded;
+
+	UPROPERTY(Replicated)
+	uint8 ObjectiveIndex;
+
+	UPROPERTY(ReplicatedUsing = UpdateObjective)
+	bool bScientistTurn;
+
+    UPROPERTY(EditAnywhere, Category="WAT Objectives")
+    class UDataTable* ObjectiveDataTable;
+
+     UPROPERTY(EditAnywhere)
+     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
     
     AWatGameState();
+
+    UFUNCTION(NetMulticast, Reliable)
+    void EndGame();
+
+    UFUNCTION()
+    void UpdateObjective();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     bool AreAllObjectivesCompleted() const;

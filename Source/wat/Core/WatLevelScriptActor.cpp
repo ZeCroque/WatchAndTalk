@@ -63,12 +63,7 @@ void AWatLevelScriptActor::PostInitializeComponents()
             UGameplayStatics::GetActorOfClass(GetWorld(), AMonsterCharacter::StaticClass()));
         MainGameState->GridManager = Cast<AGridManager>(
             UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
-    }
 
-    auto* PlayerController = GetWorld()->GetFirstPlayerController();
-    if (PlayerController)
-    {
-        PlayerController->EnableInput(nullptr);
-        PlayerController->SetInputMode(FInputModeGameOnly());
+    	MainGameState->bGameStarted = true;
     }
 }

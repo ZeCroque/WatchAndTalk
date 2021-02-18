@@ -57,7 +57,7 @@ public:
 	AWatPlayerCharacter* PlayerToChase;
 
 	UPROPERTY(BlueprintReadWrite, Category = "WAT")
-	bool bNotAnimPlaying;
+	bool bNotAnimPlaying = true;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))

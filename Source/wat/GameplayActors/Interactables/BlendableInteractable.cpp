@@ -44,9 +44,8 @@ void ABlendableInteractable::OnFinalBlend()
 {
 	bIsFinalBlend = false;
 	bInUse = false;
-	PlayerController->PossessRPC(PlayerCharacter);
-	PlayerCharacter->EnableInput(PlayerController);
-    PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
+	PlayerController->PossessRPC(PlayerCharacter, true);
+        PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
 }
 
 void ABlendableInteractable::BlendToPlayer()

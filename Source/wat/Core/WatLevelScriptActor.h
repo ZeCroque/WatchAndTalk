@@ -13,7 +13,7 @@ UCLASS()
 class AWatLevelScriptActor : public ALevelScriptActor
 {
 	GENERATED_BODY()
-
+	
 protected:
-	void PostInitializeComponents() override;
+	virtual void PostInitializeComponents() override;
 };

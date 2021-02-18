@@ -6,10 +6,11 @@
 #include "wat/Core/WatSettings.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "wat/Core/WatGameState.h"
 
 void ALeaveLobbyInteractable::OnInteraction()
 {
-        bInUse = false;
+    bInUse = false;
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
 
 	auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
@@ -31,9 +32,9 @@ void ALeaveLobbyInteractable::OnInteraction()
 
 		if(MatchingPlayersIdsCount == PlayerStates.Num())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to main level"));
+			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to level"));
 			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
-			GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
+			GetWorld()->ServerTravel(Cast<AWatGameState>(GetWorld()->GetGameState())->bTutorialActivated ? *NetworkSettingsWat->TutoLevel.GetAssetName() : *NetworkSettingsWat->MainLevel.GetAssetName());
 		}
 	}
 }

@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
-#include "wat/Widgets/QTEWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "WatPlayerController.generated.h"
 
@@ -20,16 +18,23 @@ public:
 	AWatPlayerController();
 
 	UFUNCTION(Server, Reliable)
-	void PossessRPC(APawn* PawnToPossess);
+	void PossessRPC(APawn* PawnToPossess, bool bEnableInput = false);
 
-	virtual void BeginPlay() override;
+	UFUNCTION(Server, Reliable)
+	void NotifyObjectiveCompleted(class AObjective* Objective);
 	
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	
 	bool bIsInMiniGame;
 	
 	UPROPERTY()
-	UQTEWidget* Widget;
+	class UQTEWidget* Widget;
+
+	UPROPERTY()
+	class UCameraDeskHUDWidget* CameraDeskHUDWidget;
+
+	UPROPERTY()
+	class UObjectivesHUDWidget* ObjectivesHUDWidget;
 	
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;

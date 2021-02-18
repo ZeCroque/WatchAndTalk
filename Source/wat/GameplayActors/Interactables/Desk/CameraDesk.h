@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
 	UTexture* SecondFloor;
 
+	UPROPERTY(EditAnywhere, Category= "WAT HUDSettings")
+	TSubclassOf<UUserWidget> CameraDeskHUDWidgetClass;
+
 	bool bIsSwitchingFloors;
 	
 private:
