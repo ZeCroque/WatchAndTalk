@@ -83,6 +83,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void RestartGame(uint32 PlayerId);
 
+	UFUNCTION()
+	void TogglePauseMenu();
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
@@ -123,4 +126,7 @@ private:
 
     UPROPERTY(EditAnywhere, Category= "WAT Sprint")
     TSubclassOf<UCameraShake> SprintShake;
+
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> PauseWidget;
 };

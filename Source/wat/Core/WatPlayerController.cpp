@@ -3,9 +3,12 @@
 
 #include "wat/Core/WatPlayerController.h"
 
+#include "wat/PauseWidget.h"
+
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
+	PauseWidget = nullptr;
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess)
@@ -25,6 +28,12 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
     {
         Widget->OnInput(Key);
         return true;
+    }
+	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
+    {
+		GEngine->AddOnScreenDebugMessage(1,1,FColor::Blue, FString::Printf(TEXT("%s"), *Key.ToString()));
+	    PauseWidget->OnInput(Key);
+		return true;
     }
     return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }
