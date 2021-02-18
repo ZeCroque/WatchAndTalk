@@ -12,11 +12,6 @@ class WAT_API AObjective : public ABlendableInteractable
 {
 	GENERATED_BODY()
 
-private:
-	
-    UFUNCTION(NetMulticast, Reliable)
-    void EndGame();
-
 public:
 
 	UPROPERTY()
@@ -25,21 +20,16 @@ public:
 	UPROPERTY(Replicated)
 	bool bCompleted;
 
-    UPROPERTY(EditAnywhere)
-    TSubclassOf<UUserWidget> EndGameWidgetTemplate;
-
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(Replicated, VisibleAnywhere)
 	UWidgetComponent* MiniGameWidgetComponent;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	class UQTEWidget* MiniGameWidget;
 
 
 	AObjective();
 	
 	virtual void BeginPlay() override;
-
-	virtual void OnInteractionBegin() override;
 	
 	virtual void EndInteraction(bool bSuccess, bool bShouldWarnMonster);
 

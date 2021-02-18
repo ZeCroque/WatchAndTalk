@@ -18,7 +18,13 @@ public:
 	AWatPlayerController();
 
 	UFUNCTION(Server, Reliable)
-	void PossessRPC(APawn* PawnToPossess);
+	void PossessRPC(APawn* PawnToPossess, bool bEnableInput = false);
+
+	UFUNCTION(Server, Reliable)
+	void NotifyObjectiveCompleted(class AObjective* Objective);
+
+  	UFUNCTION(NetMulticast, Reliable)
+	void UpdateObjectiveHUD(class AWatPlayerController* PlayerController);
 	
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	

@@ -33,6 +33,12 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 				Colors.Add(FColor::White);
 				SlateBrush.SetResourceObject(FImageUtils::CreateTexture2D(1,1, Colors, this, FString("StrikeTexture"), EObjectFlags::RF_NoFlags, FCreateTexture2DParameters()));
 				Cast<UObjectiveHUDRowWidget>(ObjectivesList->GetChildAt(Objectives.Num() - 1))->ObjectiveDescription->SetStrikeBrush(SlateBrush);
+
+				if(IsInViewport())
+				{
+					RemoveFromParent();
+					AddToViewport();
+				}
 		}
 		
 		auto* ObjectiveRow = CreateWidget<UObjectiveHUDRowWidget>(Controller, RowClass);

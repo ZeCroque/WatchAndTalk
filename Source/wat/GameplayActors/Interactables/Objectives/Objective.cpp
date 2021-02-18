@@ -6,19 +6,6 @@
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Widgets/QTEWidget.h"
 
-
-void AObjective::EndGame_Implementation()
-{
-    auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
-    if (EndGameWidget != nullptr && !EndGameWidget->GetIsVisible())
-    {
-    	GameState->bGameEnded = true;
-        EndGameWidget->AddToViewport();
-        PlayerController->SetInputMode(FInputModeUIOnly());
-        PlayerController->bShowMouseCursor = true;
-    }
-}
-
 AObjective::AObjective()
 {
 	MiniGameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniGameWidget"));
@@ -28,17 +15,9 @@ AObjective::AObjective()
 void AObjective::BeginPlay()
 {
         Super::BeginPlay();
-        GameState = Cast<AWatGameState>(GetWorld()->GetGameState());      
-}
-
-void AObjective::OnInteractionBegin()
-{
-	Super::OnInteractionBegin();
-	if(!MiniGameWidget)
-	{
-	    MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
-		MiniGameWidget->ParentInteractable = this;
-    }
+        GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+        MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
+	MiniGameWidget->ParentInteractable = this;
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
@@ -50,13 +29,9 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
     	BlendToPlayer();
     	if(bSuccess)
     	{
-    		bCompleted = true;
+                bCompleted = true;
     		bCanInteract = false;
     		PlayerCharacter->RemoveInteractable(this);
-	        if (GameState->AreAllObjectivesCompleted() == true)
-	        {
-	            EndGame();
-	        }
     	}
         if(bShouldWarnMonster)
         {
@@ -69,4 +44,6 @@ void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AObjective, bCompleted);
+    DOREPLIFETIME(AObjective, MiniGameWidgetComponent);
+    DOREPLIFETIME(AObjective, MiniGameWidget);
 }

@@ -56,6 +56,7 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 
 	bIsAlive = true;
 	bIsMechanist = false;
+        OriginalMaxSpeed = 0;
 }
 
 bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -193,17 +194,32 @@ void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 void AWatPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(IsLocallyControlled())
-    {
+	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 #if WITH_EDITOR
+	if(IsLocallyControlled())
+        {
+
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
-		auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 		if(GameState)
 		{
 			GEngine->AddOnScreenDebugMessage(-1,0.f, FColor::Purple, FString("Start mode: ") + (GameState->bTutorialActivated ? FString("Tutorial") : FString("Quick Start")));
 		}
+	}
 #endif
+
+	if(GameState && GameState->bGameStarted && IsLocallyControlled())
+        {
+
+		AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
+		if (!PC->ObjectivesHUDWidget)
+		{
+			PC->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(PC, ObjectivesHUDWidgetClass);
+			PC->ObjectivesHUDWidget->Parent = this;
+			PC->ObjectivesHUDWidget->Controller = PC;
+			PC->ObjectivesHUDWidget->UpdateObjectiveList();
+		}
+		
 		if(bIsUsingLaser)
 		{
 			FHitResult Result;
@@ -262,7 +278,7 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 		        }
 	        }
-	        GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+	       PC->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
         }
         else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
         {
@@ -270,8 +286,8 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 	        if(!HasAuthority())
 	        {
 				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-			}
 		}
+	}
     }	
 }
 
@@ -411,15 +427,7 @@ void AWatPlayerCharacter::StopCrouching()
 void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
 	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-	if (!PC->ObjectivesHUDWidget)
-	{
-		PC->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(PC, ObjectivesHUDWidgetClass);
-		PC->ObjectivesHUDWidget->Parent = this;
-		PC->ObjectivesHUDWidget->Controller = PC;
-		PC->ObjectivesHUDWidget->UpdateObjectiveList();
-		PC->ObjectivesHUDWidget->AddToViewport();
-	}
-	else
+	if(Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
 	{
 		if(PC->ObjectivesHUDWidget->IsInViewport())
 		{		

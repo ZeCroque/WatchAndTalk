@@ -55,6 +55,9 @@ public:
 	UPROPERTY(Replicated)
 	bool bTutorialActivated;
 
+	UPROPERTY(Replicated)
+    bool bGameStarted;
+	
     bool bGameEnded;
 
 	UPROPERTY(Replicated)
@@ -63,10 +66,16 @@ public:
 	UPROPERTY(Replicated)
 	bool bScientistTurn;
 
-	UPROPERTY(EditAnywhere, Category="WAT Objectives")
-	class UDataTable* ObjectiveDataTable;
+    UPROPERTY(EditAnywhere, Category="WAT Objectives")
+    class UDataTable* ObjectiveDataTable;
+
+     UPROPERTY(EditAnywhere)
+     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
     
     AWatGameState();
+
+    UFUNCTION(NetMulticast, Reliable)
+    void EndGame();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     bool AreAllObjectivesCompleted() const;

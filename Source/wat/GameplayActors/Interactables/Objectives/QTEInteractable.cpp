@@ -5,17 +5,23 @@
 #include "wat/Widgets/QTEWidget.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Core/WatGameState.h"
+#include "wat/Core/WatPlayerCharacter.h"
 
 void AQTEInteractable::OnNotFinalBlend()
 {
-	Super::OnNotFinalBlend();
-	MiniGameWidget->Start();
+    Super::OnNotFinalBlend();
+    MiniGameWidget->Start();
     PlayerController->Widget = MiniGameWidget;
 }
 
 void AQTEInteractable::OnFinalBlend()
 {
 	Super::OnFinalBlend();
+
+        if(bCompleted)
+        {
+	    PlayerController->NotifyObjectiveCompleted(this);
+	}
 
 	if(!GameState->bGameEnded)
 	{
