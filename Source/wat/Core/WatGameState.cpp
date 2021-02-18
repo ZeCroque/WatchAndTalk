@@ -4,6 +4,7 @@
 #include "wat/Core/WatGameState.h"
 
 #include "WatPlayerController.h"
+#include "wat/Widgets/ObjectivesHUDWidget.h"
 
 AWatGameState::AWatGameState()
 {
@@ -23,6 +24,11 @@ void AWatGameState::EndGame_Implementation()
                 PC->SetInputMode(FInputModeUIOnly());
                 PC->bShowMouseCursor = true;
         }
+}
+
+void AWatGameState::UpdateObjective()
+{
+    Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
 }
 
 void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

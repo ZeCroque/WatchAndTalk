@@ -63,7 +63,7 @@ public:
 	UPROPERTY(Replicated)
 	uint8 ObjectiveIndex;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = UpdateObjective)
 	bool bScientistTurn;
 
     UPROPERTY(EditAnywhere, Category="WAT Objectives")
@@ -76,6 +76,9 @@ public:
 
     UFUNCTION(NetMulticast, Reliable)
     void EndGame();
+
+    UFUNCTION()
+    void UpdateObjective();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     bool AreAllObjectivesCompleted() const;

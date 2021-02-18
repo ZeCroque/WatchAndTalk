@@ -4,6 +4,7 @@
 #include "wat/Core/WatPlayerController.h"
 
 #include "WatGameState.h"
+#include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/QTEWidget.h"
 
@@ -35,21 +36,7 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	    return;
 	}
 
-	for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-	{
-	     auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
-	     if (PlayerController && PlayerController->IsLocalController())
-	     {
-	     	if(PlayerController->ObjectivesHUDWidget)
-	     	{
-		    PlayerController->ObjectivesHUDWidget->UpdateObjectiveList();
-		}
-	     }
-	     else
-	     {
-		  UpdateObjectiveHUD(PlayerController);
-	     }
-	}
+        Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool bEnableInput)
@@ -59,14 +46,6 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
          {
            PawnToPossess->EnableInput(this);
          }
-}
-
-void AWatPlayerController::UpdateObjectiveHUD_Implementation(AWatPlayerController* PlayerController)
-{
-	if(PlayerController->IsLocalController() && PlayerController->ObjectivesHUDWidget)
-	{
-		PlayerController->ObjectivesHUDWidget->UpdateObjectiveList();
-	}
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
