@@ -6,7 +6,6 @@
 
 void UPauseWidget::OnInput(FKey PressedInput)
 {
-    GEngine->AddOnScreenDebugMessage(1,1,FColor::Green, FString::Printf(TEXT("%s"), *PressedInput.ToString()));
     if (PressedInput.ToString() == "Escape" || PressedInput.ToString()=="X")
     {
 	    AWatPlayerController* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
