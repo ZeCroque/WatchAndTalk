@@ -257,7 +257,7 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 		auto* LocalCharacterMovement = GetCharacterMovement();
         if(!OriginalMaxSpeed)
         {
-	        OriginalMaxSpeed = LocalCharacterMovement->GetMaxSpeed();
+	        OriginalMaxSpeed = LocalCharacterMovement->MaxWalkSpeed;
         }
         
         if ( bIsSprinting && !GetVelocity().IsZero())
