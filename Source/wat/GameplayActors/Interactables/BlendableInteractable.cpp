@@ -25,6 +25,8 @@ void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AWatPl
 
 void ABlendableInteractable::OnInteractionBegin()
 {
+	Super::OnInteractionBegin();
+	
 	bIsFinalBlend = false;
 	PlayerCharacter->DisableInput(PlayerController);
 	RegisterBlendCompleteCallback(PlayerController);
@@ -45,13 +47,14 @@ void ABlendableInteractable::OnFinalBlend()
 	bIsFinalBlend = false;
 	bInUse = false;
 	PlayerController->PossessRPC(PlayerCharacter, true);
-        PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
+    PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
 }
 
 void ABlendableInteractable::BlendToPlayer()
 {
 	bIsFinalBlend = true;
 	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
+	PlayerCharacter->OnInteractionEndDispatcher.Broadcast(this);
 }
 
 void ABlendableInteractable::OnBlendComplete()
