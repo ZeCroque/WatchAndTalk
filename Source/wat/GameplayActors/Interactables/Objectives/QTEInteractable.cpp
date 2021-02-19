@@ -18,8 +18,8 @@ void AQTEInteractable::OnFinalBlend()
 {
 	Super::OnFinalBlend();
 
-        if(bCompleted)
-        {
+    if(bCompleted)
+    {
 	    PlayerController->NotifyObjectiveCompleted(this);
 	}
 

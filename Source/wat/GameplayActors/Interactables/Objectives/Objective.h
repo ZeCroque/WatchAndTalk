@@ -26,9 +26,18 @@ public:
 	UPROPERTY(Replicated)
 	class UQTEWidget* MiniGameWidget;
 
+    UPROPERTY(EditAnywhere)
+    int ObjectiveIndex;
+
+    UPROPERTY(EditAnywhere)
+    bool bIsOnlyForMechanist;
 
 	AObjective();
-	
+
+	virtual void OnInteractionBegin() override;
+
+    virtual void OnInteraction() override;
+
 	virtual void BeginPlay() override;
 	
 	virtual void EndInteraction(bool bSuccess, bool bShouldWarnMonster);

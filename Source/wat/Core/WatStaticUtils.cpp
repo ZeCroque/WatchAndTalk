@@ -11,9 +11,7 @@ UTexture2D* UWatStaticUtils::GetKeyIcon(FName ActionMappingName, bool bIsGamePad
 {
 	const auto* InputSettingsWat = GetDefault<UWatSettings>();
 	const FSoftObjectPath* InputTexturePath = InputSettingsWat->KeysVisuals.Find(GetKeyForDevice(ActionMappingName, bIsGamePad));
-	
-	const auto AssetData = UAssetManager::Get().GetAssetRegistry().GetAssetByObjectPath(InputTexturePath->GetAssetPathName());	
-	return Cast<UTexture2D>(AssetData.GetAsset());
+	return Cast<UTexture2D>(InputTexturePath->TryLoad());
 }
 
 FKey UWatStaticUtils::GetKeyForDevice(FName ActionMappingName, bool bIsGamePad)

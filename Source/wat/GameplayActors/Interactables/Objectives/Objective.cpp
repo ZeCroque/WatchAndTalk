@@ -10,6 +10,27 @@ AObjective::AObjective()
 {
 	MiniGameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniGameWidget"));
 	MiniGameWidgetComponent->SetupAttachment(RootComponent);
+
+	ObjectiveIndex = 0;
+	bIsOnlyForMechanist = true;
+}
+
+void AObjective::OnInteractionBegin()
+{ 
+    if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
+    {
+    	bCanInteract = true;
+		bInUse = false;
+		Super::OnInteractionBegin(); 
+    }
+}
+
+void AObjective::OnInteraction()
+{
+    if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
+    {
+		Super::OnInteraction(); 
+    }
 }
 
 void AObjective::BeginPlay()
@@ -17,7 +38,7 @@ void AObjective::BeginPlay()
         Super::BeginPlay();
         GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
         MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
-	MiniGameWidget->ParentInteractable = this;
+		MiniGameWidget->ParentInteractable = this;
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
@@ -29,7 +50,7 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
     	BlendToPlayer();
     	if(bSuccess)
     	{
-                bCompleted = true;
+            bCompleted = true;
     		bCanInteract = false;
     		PlayerCharacter->RemoveInteractable(this);
     	}
