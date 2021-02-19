@@ -8,6 +8,8 @@
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/QTEWidget.h"
 
+#include "WatGameState.h"
+
 AWatPlayerController::AWatPlayerController()
 {
 	Widget = nullptr;
@@ -18,12 +20,12 @@ AWatPlayerController::AWatPlayerController()
 }
 
 void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
-    AObjective *Objective)
+	AObjective* Objective)
 {
-  	Objective->bCompleted = true;
+	Objective->bCompleted = true;
 
 	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-	if(GameState->bScientistTurn)
+	if (GameState->bScientistTurn)
 	{
 		GameState->ObjectiveIndex++;
 	}
@@ -31,36 +33,42 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 
 	if (GameState->AreAllObjectivesCompleted() == true)
 	{
-            GameState->bGameEnded = true;
+		GameState->bGameEnded = true;
 
-	    GameState->EndGame();
-	    return;
+		GameState->EndGame();
+		return;
 	}
 
-        Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
+	Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool bEnableInput)
 {
 	Possess(PawnToPossess);
-         if(bEnableInput)
-         {
-           PawnToPossess->EnableInput(this);
-         }
+	if (bEnableInput)
+	{
+		PawnToPossess->EnableInput(this);
+	}
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
-    if (Widget && EventType == EInputEvent::IE_Pressed)
-    {
-        Widget->OnInput(Key);
-        return true;
-    }
-	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
-    {
-	    PauseWidget->OnInput(Key);
+	if (Widget && EventType == EInputEvent::IE_Pressed)
+	{
+		Widget->OnInput(Key);
 		return true;
-    }
-    return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
+	}
+	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
+	{
+		PauseWidget->OnInput(Key);
+		return true;
+	}
+	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
+}
+
+void AWatPlayerController::UpdateBunkerPlayerCount_Implementation(const int Value)
+{
+	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	GameState->NumberOfActorInBunker += Value;
 }

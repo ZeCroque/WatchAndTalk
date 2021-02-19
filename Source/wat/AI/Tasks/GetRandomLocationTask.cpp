@@ -8,6 +8,7 @@
 #include "wat/AI/MonsterAIController.h"
 #include "wat/Core/WatGameState.h"
 #include "Kismet/GameplayStatics.h"
+#include "wat/GameplayActors/Triggers/BunkerTriggerBox.h"
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
 {
@@ -18,7 +19,8 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 {
 	if (!GridManager)
 	{
-		GridManager = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()))->GridManager;
+		WatGameState = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()));
+		GridManager = WatGameState->GridManager;
 	}
 
 	if (!Controller)
@@ -33,27 +35,31 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		if (!GridManager->RandomHotWorldCoordinate(Location))
 		{
 			auto const NPC = Controller->GetPawn();
-			FVector const Origin = NPC->GetActorLocation();
-
-			GridManager->SetValueAround(Origin, SearchRadius);
+			FVector const Origin = WatGameState->NumberOfActorInBunker == 2
+				                       ? WatGameState->BunkerTriggerBox->GetActorLocation()
+				                       : NPC->GetActorLocation();
+			const auto Radius = WatGameState->NumberOfActorInBunker == 2
+				                    ? WatGameState->BunkerTriggerBox->GridDrawRay
+				                    : SearchRadius;
+			
+			GridManager->SetValueAround(Origin, Radius);
 			GridManager->RandomHotWorldCoordinate(Location);
 		}
 
 
-		FNavLocation NavLocation;
+		FVector NavLocation;
 		UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 
 		auto i = 0;
 		do
 		{
 			++i;
-			NavSys->GetRandomPointInNavigableRadius(Location, 1000, NavLocation,
-			                                        nullptr);
+			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation, 1000);
 		}
-		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Location.Z))) > 300
+		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
 			|| i < 100);
 
-		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation.Location);
+		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
 
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		return EBTNodeResult::Succeeded;

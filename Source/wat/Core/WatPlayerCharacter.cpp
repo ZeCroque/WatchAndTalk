@@ -18,6 +18,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
 #include "wat/PauseWidget.h"
+#include "wat/AI/GridManager.h"
+#include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
@@ -56,7 +58,7 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 
 	bIsAlive = true;
 	bIsMechanist = false;
-        OriginalMaxSpeed = 0;
+	OriginalMaxSpeed = 0;
 }
 
 bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -79,7 +81,8 @@ AInteractable* AWatPlayerCharacter::GetClosestInteractable()
 	{
 		if (InteractableSetItem)
 		{
-			const float Distance = UKismetMathLibrary::Vector_Distance2D(PlayerLocation, InteractableSetItem->GetActorLocation());
+			const float Distance = UKismetMathLibrary::Vector_Distance2D(
+				PlayerLocation, InteractableSetItem->GetActorLocation());
 			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
 			{
 				ClosestInteractable.Key = Distance;
@@ -107,13 +110,12 @@ void AWatPlayerCharacter::BeginPlay()
 
 	if (!IsLocallyControlled())
 	{
-		GetMesh()->SetVisibility(true);	
+		GetMesh()->SetVisibility(true);
 	}
-	else if(HasAuthority())
+	else if (HasAuthority())
 	{
 		bIsMechanist = true;
 	}
-	
 }
 
 void AWatPlayerCharacter::CreateDebugWidget()
@@ -131,6 +133,19 @@ void AWatPlayerCharacter::CreateDebugWidget()
 	}
 }
 
+void AWatPlayerCharacter::ClearGridWhenSprinting()
+{
+	const int Range = FMath::RoundToInt(ARange * GetCharacterMovement()->MaxWalkSpeed + BRange);
+
+	if (GameState->GridManager && GetDistanceTo(GameState->MonsterCharacter) <= Range)
+	{
+		const int Ray = FMath::RoundToInt(ARay * GetCharacterMovement()->MaxWalkSpeed + BRay);
+
+		GameState->GridManager->SetValueOutside(GetActorLocation(), Ray);
+		GameState->GridManager->SetValueAround(GetActorLocation(), Ray);
+	}
+}
+
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 {
 	RestartGame(GetPlayerState()->GetPlayerId());
@@ -138,7 +153,6 @@ void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
 {
-	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	GameState->bTutorialActivated = !GameState->bTutorialActivated;
 	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
 }
@@ -146,7 +160,6 @@ void AWatPlayerCharacter::SwitchStartMode_Implementation()
 
 void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 {
-	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	GameState->PlayersReadyForRestartIds.Add(PlayerId);
 
 	int MatchingPlayersIdsCount = 0;
@@ -175,34 +188,34 @@ void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 void AWatPlayerCharacter::TogglePauseMenu()
 {
 	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-    if (!PC->PauseWidget)
-    {
-    	PC->PauseWidget = CreateWidget<UPauseWidget>(PC, PauseWidget);
-        if (PC->PauseWidget)
-        {
-        	PC->PauseWidget->AddToViewport();
-        	PC->bShowMouseCursor = true;
-        	FInputModeUIOnly UIOnly;
-        	PC->SetInputMode(UIOnly);
-        } 
-    }
+	if (!PC->PauseWidget)
+	{
+		PC->PauseWidget = CreateWidget<UPauseWidget>(PC, PauseWidget);
+		if (PC->PauseWidget)
+		{
+			PC->PauseWidget->AddToViewport();
+			PC->bShowMouseCursor = true;
+			FInputModeUIOnly UIOnly;
+			PC->SetInputMode(UIOnly);
+		}
+	}
 }
 
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
 {
-        Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
 void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 {
 	for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
-	     auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
-	     if (PlayerController)
-	     {
-			 auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
-	     	 PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
-	     }
+		auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
+		if (PlayerController)
+		{
+			auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
+			PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
+		}
 	}
 }
 
@@ -210,22 +223,36 @@ void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 void AWatPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	if (!GameState)
+	{
+		GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	}
 #if WITH_EDITOR
-	if(IsLocallyControlled())
-        {
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+	if (IsLocallyControlled())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
+		                                 Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
-		if(GameState)
+		if (GameState)
 		{
-			GEngine->AddOnScreenDebugMessage(-1,0.f, FColor::Purple, FString("Start mode: ") + (GameState->bTutorialActivated ? FString("Tutorial") : FString("Quick Start")));
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Purple,
+			                                 FString("Start mode: ") + (GameState->bTutorialActivated
+				                                                            ? FString("Tutorial")
+				                                                            : FString("Quick Start")));
 		}
 	}
 #endif
 
-	if(GameState && GameState->bGameStarted && IsLocallyControlled())
-        {
+	if (GameState && GameState->bGameStarted && IsLocallyControlled())
+	{
+		ARay = static_cast<float>(MaxRangToKeep - MinRangToKeep) / (OriginalMaxSpeed - (OriginalMaxSpeed +
+			SprintAdditionalSpeedValue));
+		BRay = static_cast<float>(MinRangToKeep) - ARay * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
+
+		ARange = static_cast<float>(MinRangFromMonster - MaxRangFromMonster) / (OriginalMaxSpeed - (OriginalMaxSpeed +
+			SprintAdditionalSpeedValue));
+		BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
+
 
 		AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
 		if (!PC->ObjectivesHUDWidget)
@@ -235,8 +262,8 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 			PC->ObjectivesHUDWidget->Controller = PC;
 			PC->ObjectivesHUDWidget->UpdateObjectiveList();
 		}
-		
-		if(bIsUsingLaser)
+
+		if (bIsUsingLaser)
 		{
 			FHitResult Result;
 			FVector Start = FirstPersonCameraComponent->GetComponentLocation();
@@ -244,23 +271,24 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 			FVector End = ((ForwardVector * 1000.f) + Start);
 			FCollisionObjectQueryParams ObjectQueryParams;
 			ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
-			
-			if(GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
+
+			if (GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
 			{
-				if(Result.bBlockingHit)
+				if (Result.bBlockingHit)
 				{
 					if (!LaserPointer)
 					{
-						LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint, Result.Normal.Rotation());
-					} 
+						LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint,
+						                                              Result.Normal.Rotation());
+					}
 					else
 					{
-						LaserPointer->SetActorLocation(Result.ImpactPoint+Result.Normal*0.01);
+						LaserPointer->SetActorLocation(Result.ImpactPoint + Result.Normal * 0.01);
 						LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
 					}
 				}
 			}
-		} 
+		}
 		else
 		{
 			if (LaserPointer)
@@ -271,50 +299,56 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 		}
 
 		auto* LocalCharacterMovement = GetCharacterMovement();
-        if(!OriginalMaxSpeed)
-        {
-	        OriginalMaxSpeed = LocalCharacterMovement->MaxWalkSpeed;
-        }
-        
-        if ( bIsSprinting && !GetVelocity().IsZero())
-        {
-	        if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
-	        {
-		        LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
-				if(!HasAuthority())
-	            {
-		            UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-		        }
-	        }
-	        else if(LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
-	        {
-		        LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
-				if(!HasAuthority())
+		if (!OriginalMaxSpeed)
+		{
+			OriginalMaxSpeed = LocalCharacterMovement->MaxWalkSpeed;
+		}
+
+		if (bIsSprinting && !GetVelocity().IsZero())
+		{
+			if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
+			{
+				LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
+				if (!HasAuthority())
 				{
 					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-		        }
-	        }
-	       PC->PlayerCameraManager->PlayCameraShake(SprintShake, LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed + SprintAdditionalSpeedValue));
-        }
-        else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
-        {
-	        LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
-	        if(!HasAuthority())
-	        {
+				}
+			}
+			else if (LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
+			{
+				LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
+				if (!HasAuthority())
+				{
+					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+				}
+			}
+			PC->PlayerCameraManager->PlayCameraShake(SprintShake,
+			                                         LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed +
+				                                         SprintAdditionalSpeedValue));
+		}
+		else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
+		{
+			LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+			if (!HasAuthority())
+			{
 				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+			}
+		}
+		if (!GetCharacterMovement()->IsCrouching())
+		{
+			ClearGridWhenSprinting();
 		}
 	}
-    }	
 }
 
 // Called to bind functionality to input
 void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-    
-    // Axis
-    PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
+
+	// Axis
+	PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -332,11 +366,12 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::StartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AWatPlayerCharacter::StopCrouching);
-	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
+	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this,
+	                                 &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
 
 	//DEBUG
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
 	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AWatPlayerCharacter::TogglePauseMenu);
 }
@@ -444,10 +479,10 @@ void AWatPlayerCharacter::StopCrouching()
 void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
 	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-	if(Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
+	if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
 	{
-		if(PC->ObjectivesHUDWidget->IsInViewport())
-		{		
+		if (PC->ObjectivesHUDWidget->IsInViewport())
+		{
 			PC->ObjectivesHUDWidget->RemoveFromParent();
 		}
 		else
@@ -456,4 +491,3 @@ void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 		}
 	}
 }
-

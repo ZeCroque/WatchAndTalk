@@ -9,14 +9,13 @@
 #include "WatGameState.generated.h"
 
 
-
 USTRUCT()
 struct FZoneCameras
 {
-    GENERATED_USTRUCT_BODY()
+	GENERATED_USTRUCT_BODY()
 
-    UPROPERTY()
-    TArray<class ASecurityCamera*> ZoneCameras;
+	UPROPERTY()
+	TArray<class ASecurityCamera*> ZoneCameras;
 };
 
 USTRUCT()
@@ -34,31 +33,38 @@ struct FFloorZones
 UCLASS()
 class WAT_API AWatGameState : public AGameStateBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(Replicated)
 	TArray<FFloorZones> Cameras;
 
-    UPROPERTY(Replicated)
-    TArray<AObjective*> Objectives;
+	UPROPERTY(Replicated)
+	TArray<AObjective*> Objectives;
 
-    UPROPERTY(Replicated)
-    class AMonsterCharacter* MonsterCharacter;
+	UPROPERTY(Replicated)
+	class AMonsterCharacter* MonsterCharacter;
 
-    UPROPERTY(Replicated)
-    class AGridManager* GridManager;
+	UPROPERTY(Replicated)
+	class AGridManager* GridManager;
 
-    UPROPERTY()
-    TSet<uint32> PlayersReadyForRestartIds;
+	UPROPERTY()
+	class ABunkerTriggerBox* BunkerTriggerBox;
+
+	UPROPERTY()
+	TSet<uint32> PlayersReadyForRestartIds;
+
+	UPROPERTY()
+	int NumberOfActorInBunker;
+
 
 	UPROPERTY(Replicated)
 	bool bTutorialActivated;
 
 	UPROPERTY(Replicated)
-    bool bGameStarted;
-	
-    bool bGameEnded;
+	bool bGameStarted;
+
+	bool bGameEnded;
 
 	UPROPERTY(Replicated)
 	uint8 ObjectiveIndex;
@@ -66,20 +72,20 @@ public:
 	UPROPERTY(ReplicatedUsing = UpdateObjective)
 	bool bScientistTurn;
 
-    UPROPERTY(EditAnywhere, Category="WAT Objectives")
-    class UDataTable* ObjectiveDataTable;
+	UPROPERTY(EditAnywhere, Category="WAT Objectives")
+	class UDataTable* ObjectiveDataTable;
 
-     UPROPERTY(EditAnywhere)
-     TSubclassOf<UUserWidget> EndGameWidgetTemplate;
-    
-    AWatGameState();
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
-    UFUNCTION(NetMulticast, Reliable)
-    void EndGame();
+	AWatGameState();
 
-    UFUNCTION()
-    void UpdateObjective();
+	UFUNCTION(NetMulticast, Reliable)
+	void EndGame();
 
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    bool AreAllObjectivesCompleted() const;
+	UFUNCTION()
+	void UpdateObjective();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool AreAllObjectivesCompleted() const;
 };

@@ -22,11 +22,14 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void NotifyObjectiveCompleted(class AObjective* Objective);
-	
+
+	UFUNCTION(Server,Reliable)
+	void UpdateBunkerPlayerCount(const int Value);
+
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
-	
+
 	bool bIsInMiniGame;
-	
+
 	UPROPERTY()
 	class UQTEWidget* Widget;
 
@@ -35,7 +38,7 @@ public:
 
 	UPROPERTY()
 	class UObjectivesHUDWidget* ObjectivesHUDWidget;
-	
+
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
 

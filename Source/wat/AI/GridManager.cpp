@@ -112,6 +112,31 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 	}
 }
 
+void AGridManager::SetValueOutside(const FVector& Center, const int Ray)
+{
+	// j -> X
+	// i -> y
+
+	const FVector2D GridCoordinate = GetGridCoordinate(Center);
+
+	int IStart = 0;
+
+	int IEnd = CellPerSide * 2;
+
+
+	for (int i = IStart; i < IEnd; i++)
+	{
+		for (int j = 0; j < CellPerSide; j++)
+		{
+			if (!(((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <=
+				Ray * Ray))
+			{
+				SetValueAt(j, i, 0.0f);
+			}
+		}
+	}
+}
+
 void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 {
 	int XMin = (CellPerSide * 2);
