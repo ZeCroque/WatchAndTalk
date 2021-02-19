@@ -41,14 +41,6 @@ public:
 	int GridDrawRay = 15;
 
 private:
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	float CoolDown = 1;
-
 	UPROPERTY()
 	AGridManager* GridManager;
-	
-	float Timer;
-	
 };

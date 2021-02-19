@@ -7,6 +7,7 @@
 #include "wat/AI/GridManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatGameState.h"
+#include "wat/Core/WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 
 // Sets default values
@@ -28,8 +29,6 @@ ABunkerTriggerBox::ABunkerTriggerBox()
 void ABunkerTriggerBox::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Timer = CoolDown;
 }
 
 // Called every frame
@@ -39,10 +38,10 @@ void ABunkerTriggerBox::Tick(float DeltaTime)
 }
 
 void ABunkerTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                      UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-                                      const FHitResult& SweepResult)
+                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                       const FHitResult& SweepResult)
 {
-	const auto Pawn = Cast<APawn>(OtherActor);
+	const auto Pawn = Cast<AWatPlayerCharacter>(OtherActor);
 	if (Pawn && Pawn->IsLocallyControlled())
 	{
 		Cast<AWatPlayerController>(Pawn->GetController())->UpdateBunkerPlayerCount(1);
@@ -50,9 +49,9 @@ void ABunkerTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 }
 
 void ABunkerTriggerBox::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                    UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
+                                     UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
 {
-	const auto Pawn = Cast<APawn>(OtherActor);
+	const auto Pawn = Cast<AWatPlayerCharacter>(OtherActor);
 	if (Pawn && Pawn->IsLocallyControlled())
 	{
 		Cast<AWatPlayerController>(Pawn->GetController())->UpdateBunkerPlayerCount(-1);

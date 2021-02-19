@@ -4,7 +4,6 @@
 #include "wat/Core/WatPlayerController.h"
 
 #include "WatGameState.h"
-#include "IOS/Accessibility/IOSAccessibilityElement.h"
 
 AWatPlayerController::AWatPlayerController()
 {

@@ -69,7 +69,7 @@ void AWatLevelScriptActor::PostInitializeComponents()
 		MainGameState->BunkerTriggerBox = Cast<ABunkerTriggerBox>(
 			UGameplayStatics::GetActorOfClass(GetWorld(), ABunkerTriggerBox::StaticClass()));
 
-		MainGameState->NumberOfActorInBunker = 0;
+		MainGameState->NumberOfActorInBunker = 2;
 	}
 
 	auto* PlayerController = GetWorld()->GetFirstPlayerController();
