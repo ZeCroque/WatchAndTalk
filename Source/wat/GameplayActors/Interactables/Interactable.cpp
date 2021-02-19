@@ -75,6 +75,11 @@ void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	}
 }
 
+void AInteractable::OnInteractionBegin()
+{
+	PlayerCharacter->OnInteractDispatcher.Broadcast(this);
+}
+
 void AInteractable::Interact()
 {
 	if (PlayerCharacter && PlayerController)

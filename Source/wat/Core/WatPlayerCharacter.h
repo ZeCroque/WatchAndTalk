@@ -8,6 +8,9 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "WatPlayerCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteract, class AInteractable*, InteractedObject);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractionEnd, class AInteractable*, InteractedObject);
+
 class AInteractable;
 UCLASS()
 class WAT_API AWatPlayerCharacter : public ACharacter
@@ -44,6 +47,11 @@ public:
 	UPROPERTY()
 	float OriginalMaxSpeed;
 
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnInteractionBegin"))
+	FOnInteract OnInteractDispatcher;
+
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnInteractionEnd"))
+	FOnInteract OnInteractionEndDispatcher;
 
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
