@@ -17,11 +17,14 @@ AObjective::AObjective()
 
 void AObjective::OnInteractionBegin()
 {
-	bCanInteract = true;
-	bInUse = false;
     if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
     {
 		Super::OnInteractionBegin(); 
+    }
+    else
+    {
+	    bCanInteract = true;
+		bInUse = false;
     }
 }
 

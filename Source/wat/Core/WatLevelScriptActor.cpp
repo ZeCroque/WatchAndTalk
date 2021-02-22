@@ -31,6 +31,11 @@ void AWatLevelScriptActor::PostInitializeComponents()
 			{
 				Floor.FloorZones.Reserve(4);
 				Floor.FloorZones.SetNum(4);
+				for(auto& Zone : Floor.FloorZones)
+				{
+					Zone.ZoneCameras.Reserve(4);
+					Zone.ZoneCameras.SetNum(4);
+				}
 			}
 
 			for (auto* FoundActor : FoundActors)
@@ -38,8 +43,7 @@ void AWatLevelScriptActor::PostInitializeComponents()
 				auto* FoundCameraActor = Cast<ASecurityCamera>(FoundActor);
 				if (FoundCameraActor)
 				{
-					MainGameState->Cameras[FoundCameraActor->FloorNumber].FloorZones[FoundCameraActor->ZoneNumber].
-						ZoneCameras.Add(FoundCameraActor);
+					MainGameState->Cameras[FoundCameraActor->FloorNumber].FloorZones[FoundCameraActor->ZoneNumber].ZoneCameras[FoundCameraActor->CameraNumber] = FoundCameraActor;
 				}
 			}
 		}

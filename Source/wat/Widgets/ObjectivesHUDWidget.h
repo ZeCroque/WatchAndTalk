@@ -22,6 +22,9 @@ public:
 	class AWatPlayerController* Controller;
 
 	UPROPERTY(EditAnywhere)
+	UTexture2D* StrikeTexture;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> RowClass;
 	
 	UPROPERTY(meta=(BindWidget))

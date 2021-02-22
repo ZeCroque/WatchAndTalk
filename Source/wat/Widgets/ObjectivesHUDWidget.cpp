@@ -27,11 +27,10 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 	{
 		if(Objectives.Num())
 		{
-				const FVector2D ImageSize(1,1);
+				const auto ImageSize =FVector2D(StrikeTexture->GetSizeX(), StrikeTexture->GetSizeY());
 				auto SlateBrush = FSlateImageBrush("InteractionIcon", ImageSize);
-				TArray<FColor> Colors;
-				Colors.Add(FColor::White);
-				SlateBrush.SetResourceObject(FImageUtils::CreateTexture2D(1,1, Colors, this, FString("StrikeTexture"), EObjectFlags::RF_NoFlags, FCreateTexture2DParameters()));
+
+				SlateBrush.SetResourceObject(StrikeTexture);
 				Cast<UObjectiveHUDRowWidget>(ObjectivesList->GetChildAt(Objectives.Num() - 1))->ObjectiveDescription->SetStrikeBrush(SlateBrush);
 
 				if(IsInViewport())

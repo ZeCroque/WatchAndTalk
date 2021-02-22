@@ -11,7 +11,7 @@ AWatGameState::AWatGameState()
 	bGameEnded = false;
 	bTutorialActivated = false;
 	ObjectiveIndex = 1;
-        bGameStarted = false;
+    bGameStarted = false;
 }
 
 void AWatGameState::EndGame_Implementation()
@@ -41,7 +41,7 @@ void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWatGameState, bTutorialActivated);
 	DOREPLIFETIME(AWatGameState, ObjectiveIndex);
 	DOREPLIFETIME(AWatGameState, bScientistTurn);
-        DOREPLIFETIME(AWatGameState, bGameStarted);
+	DOREPLIFETIME(AWatGameState, bGameStarted);
 }
 
 bool AWatGameState::AreAllObjectivesCompleted() const
