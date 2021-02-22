@@ -106,7 +106,7 @@ void UQTEWidget::OnComplete()
 
 void UQTEWidget::OnCancel()
 {
-    ParentInteractable->EndInteraction(false, false);
+    ParentInteractable->EndInteraction(false, true);
 }
 
 void UQTEWidget::OnFail()

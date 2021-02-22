@@ -16,11 +16,11 @@ AObjective::AObjective()
 }
 
 void AObjective::OnInteractionBegin()
-{ 
+{
+	bCanInteract = true;
+	bInUse = false;
     if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
     {
-    	bCanInteract = true;
-		bInUse = false;
 		Super::OnInteractionBegin(); 
     }
 }
