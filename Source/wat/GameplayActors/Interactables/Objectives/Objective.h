@@ -26,10 +26,10 @@ public:
 	UPROPERTY(Replicated)
 	class UQTEWidget* MiniGameWidget;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     int ObjectiveIndex;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     bool bIsOnlyForMechanist;
 
 	AObjective();
