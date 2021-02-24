@@ -54,7 +54,7 @@ void ABlendableInteractable::BlendToPlayer()
 {
 	bIsFinalBlend = true;
 	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
-	PlayerCharacter->OnInteractionEndDispatcher.Broadcast(this);
+	PlayerController->BroadcastInteractionEnd(PlayerCharacter, this);
 }
 
 void ABlendableInteractable::OnBlendComplete()

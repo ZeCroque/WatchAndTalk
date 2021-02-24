@@ -19,6 +19,11 @@ AWatPlayerController::AWatPlayerController()
 	bIsUsingController = false;
 }
 
+void AWatPlayerController::BroadcastInteractionEnd_Implementation(AWatPlayerCharacter* InteractingPlayer, ABlendableInteractable* Interactable)
+{
+	InteractingPlayer->OnInteractionEndDispatcher.Broadcast(Interactable);
+}
+
 void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	AObjective* Objective)
 {
