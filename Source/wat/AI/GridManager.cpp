@@ -112,6 +112,36 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 	}
 }
 
+float AGridManager::GetValueAround(const FVector& Center, const int Ray)
+{
+	// j -> X
+	// i -> y
+
+	const FVector2D GridCoordinate = GetGridCoordinate(Center);
+
+	int IStart = 0;
+	int IEnd = CellPerSide;
+	if (Center.Z >= FloorHeight)
+	{
+		IStart = CellPerSide;
+		IEnd = CellPerSide * 2;
+	}
+
+	float AverageValue = 0;
+	for (int i = IStart; i < IEnd; i++)
+	{
+		for (int j = 0; j < CellPerSide; j++)
+		{
+			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <=
+				Ray * Ray)
+			{
+				AverageValue = (AverageValue + GetValueAt(j, i)) / 2;
+			}
+		}
+	}
+	return AverageValue;
+}
+
 void AGridManager::SetValueOutside(const FVector& Center, const int Ray)
 {
 	// j -> X
@@ -195,6 +225,29 @@ bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 	}
 
 	return false;
+}
+
+bool AGridManager::SmartRandomHotWorldCoordinate(FVector& Vector, const int Try, const int Ray)
+{
+	float BestWeight = 0;
+	bool bHaveFindCoordinate = false;
+
+	for (int i = 0; i < Try; i++)
+	{
+		FVector ActualCoordinate;
+		bHaveFindCoordinate = RandomHotWorldCoordinate(ActualCoordinate);
+		if (bHaveFindCoordinate)
+		{
+			const float ActualWeight = GetValueAround(ActualCoordinate, Ray);
+			if (ActualWeight > BestWeight)
+			{
+				BestWeight = ActualWeight;
+				Vector = ActualCoordinate;
+			}
+		}
+	}
+
+	return bHaveFindCoordinate;
 }
 
 FVector2D AGridManager::GetGridCoordinate(const FVector& WorldCoordinate) const

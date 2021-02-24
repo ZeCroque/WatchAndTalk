@@ -38,6 +38,9 @@ public:
 	void SetValueAround(const FVector& Center, const int Ray);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
+	float GetValueAround(const FVector& Center, const int Ray);
+
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	void SetValueOutside(const FVector& Center, const int Ray);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
@@ -45,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	bool RandomHotWorldCoordinate(FVector& Vector);
+
+	UFUNCTION(BlueprintCallable, Category="WAT - Function")
+	bool SmartRandomHotWorldCoordinate(FVector& Vector, int Try, int Ray);
 
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
