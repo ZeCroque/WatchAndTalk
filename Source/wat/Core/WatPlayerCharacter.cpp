@@ -4,6 +4,7 @@
 #include "wat/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
 #include "wat/AI/AITags.h"
@@ -32,7 +33,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -59,6 +59,10 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	bIsAlive = true;
 	bIsMechanist = false;
 	OriginalMaxSpeed = 0;
+
+	CrouchingCapsuleReductionRatio = 0.5f;
+	CrouchingCameraOffset = 30.f;
+	CrouchingTransitionDuration = 0.2f;
 }
 
 bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
@@ -116,6 +120,11 @@ void AWatPlayerCharacter::BeginPlay()
 	{
 		bIsMechanist = true;
 	}
+	BaseCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	CrouchCapsuleDelta = BaseCapsuleHeight * CrouchingCapsuleReductionRatio;
+	bWantsToChangeCrouchState = false;
+	bIsCrouching = false;
+	CrouchingDeltaTimeCount = 0.f;
 }
 
 void AWatPlayerCharacter::CreateDebugWidget()
@@ -199,6 +208,12 @@ void AWatPlayerCharacter::TogglePauseMenu()
 			PC->SetInputMode(UIOnly);
 		}
 	}
+}
+
+void AWatPlayerCharacter::UpdatePlayerHeight_Implementation(float NewHeight, FVector NewMeshRelativeLocation)
+{
+	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
+	GetMesh()->SetRelativeLocation(NewMeshRelativeLocation);
 }
 
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
@@ -298,6 +313,7 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 			}
 		}
 
+		//Sprint
 		auto* LocalCharacterMovement = GetCharacterMovement();
 		if (!OriginalMaxSpeed)
 		{
@@ -334,9 +350,45 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 			}
 		}
-		if (!GetCharacterMovement()->IsCrouching())
+		if (!bIsCrouching)
 		{
 			ClearGridWhenSprinting();
+		}
+	}
+
+	//Crouch
+	if(GetWorld()->IsServer() && bWantsToChangeCrouchState)
+	{
+		CrouchingDeltaTimeCount += DeltaTime;
+		if(CrouchingDeltaTimeCount <= CrouchingTransitionDuration)
+		{
+			auto MeshRelativeLocation = GetMesh()->GetRelativeLocation();
+			const auto CapsuleOffset = BaseCapsuleHeight * CrouchingCapsuleReductionRatio * DeltaTime;
+			if(!bIsCrouching)
+			{
+				const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - CapsuleOffset * 2.f;	
+				MeshRelativeLocation.Z += CrouchCapsuleDelta * 2.f * DeltaTime;
+				UpdatePlayerHeight(NewCapsuleHeight, MeshRelativeLocation);
+			}
+			else
+			{
+				const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset * 2.f;
+				MeshRelativeLocation.Z -= CrouchCapsuleDelta * 2.f * DeltaTime;
+				UpdatePlayerHeight(NewCapsuleHeight, MeshRelativeLocation);
+			}
+		}
+		else
+		{
+			bWantsToChangeCrouchState = false;
+			CrouchingDeltaTimeCount = 0.f;
+			if(!bIsCrouching)
+			{	
+				bIsCrouching = true;
+			}
+			else
+			{
+				bIsCrouching = false;
+			}
 		}
 	}
 }
@@ -364,10 +416,8 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::StartCrouching);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AWatPlayerCharacter::StopCrouching);
-	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this,
-	                                 &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::ToggleCrouch);
+	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
 
 	//DEBUG
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
@@ -415,6 +465,8 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
+	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
+	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
 }
 
 void AWatPlayerCharacter::MoveForward(float Value)
@@ -458,7 +510,10 @@ void AWatPlayerCharacter::Interact_Implementation()
 
 void AWatPlayerCharacter::StartSprinting()
 {
-	bIsSprinting = true;
+	if(!bIsCrouching)
+	{
+		bIsSprinting = true;
+	}
 }
 
 void AWatPlayerCharacter::StopSprinting()
@@ -466,14 +521,12 @@ void AWatPlayerCharacter::StopSprinting()
 	bIsSprinting = false;
 }
 
-void AWatPlayerCharacter::StartCrouching()
+void AWatPlayerCharacter::ToggleCrouch_Implementation()
 {
-	Crouch();
-}
-
-void AWatPlayerCharacter::StopCrouching()
-{
-	UnCrouch();
+	if(!bIsSprinting)
+	{
+		bWantsToChangeCrouchState = true;
+	}
 }
 
 void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()

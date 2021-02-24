@@ -33,24 +33,39 @@ public:
 	class USkeletalMeshComponent* Mesh1P = nullptr;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(EditAnywhere, Category = Camera)
+	UPROPERTY(EditAnywhere, Category = "WAT Camera")
 	float BaseTurnRate;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(EditAnywhere, Category = Camera)
+	UPROPERTY(EditAnywhere, Category = "WAT Camera")
 	float BaseLookUpRate;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "WAT Sprint")
 	float SprintAdditionalSpeedValue;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "WAT Sprint")
 	float SprintSpeedIncreaseRate;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "WAT Sprint")
 	float SprintSpeedDecreaseRate;
+
+	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
+	float CrouchingTransitionDuration;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
+	float CrouchingCapsuleReductionRatio;
+
+	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
+	float CrouchingCameraOffset;
 
 	UPROPERTY()
 	float OriginalMaxSpeed;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bWantsToChangeCrouchState;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsCrouching;
 
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnInteractionBegin"))
 	FOnInteract OnInteractDispatcher;
@@ -83,8 +98,10 @@ protected:
 	//Special displacements
 	void StartSprinting();
 	void StopSprinting();
-	void StartCrouching();
-	void StopCrouching();
+
+	UFUNCTION(Server, Reliable)
+	void ToggleCrouch();
+	
 	void ToggleObjectivesHUDVisibility();
 
 
@@ -104,6 +121,9 @@ protected:
 	UFUNCTION()
 	void TogglePauseMenu();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void UpdatePlayerHeight(float NewCapsuleHeight, FVector NewMeshRelativeLocation);
+	
 	UFUNCTION(Server, Reliable)
 	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
 
@@ -128,6 +148,10 @@ public:
 
 private:
 
+	float BaseCapsuleHeight;
+	float CrouchCapsuleDelta;
+	float CrouchingDeltaTimeCount;
+	
 	bool bIsAlive;
 	bool bIsSprinting;
 
