@@ -55,9 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
 	float CrouchingCapsuleReductionRatio;
 
-	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
-	float CrouchingCameraOffset;
-
 	UPROPERTY()
 	float OriginalMaxSpeed;
 
@@ -120,9 +117,9 @@ protected:
 
 	UFUNCTION()
 	void TogglePauseMenu();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void UpdatePlayerHeight(float NewCapsuleHeight, FVector NewMeshRelativeLocation);
+	
+	UFUNCTION(Server, Reliable)
+	void UpdateRemoteCapsuleHeight(float NewCapsuleHeight);
 	
 	UFUNCTION(Server, Reliable)
 	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
@@ -151,6 +148,7 @@ private:
 	float BaseCapsuleHeight;
 	float CrouchCapsuleDelta;
 	float CrouchingDeltaTimeCount;
+	int CrouchingDeltaTimeCountByRelativeTransitionTimeRatio;
 	
 	bool bIsAlive;
 	bool bIsSprinting;

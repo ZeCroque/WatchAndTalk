@@ -61,7 +61,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	OriginalMaxSpeed = 0;
 
 	CrouchingCapsuleReductionRatio = 0.5f;
-	CrouchingCameraOffset = 30.f;
 	CrouchingTransitionDuration = 0.2f;
 }
 
@@ -210,10 +209,10 @@ void AWatPlayerCharacter::TogglePauseMenu()
 	}
 }
 
-void AWatPlayerCharacter::UpdatePlayerHeight_Implementation(float NewHeight, FVector NewMeshRelativeLocation)
+
+void AWatPlayerCharacter::UpdateRemoteCapsuleHeight_Implementation(float NewHeight)
 {
 	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
-	GetMesh()->SetRelativeLocation(NewMeshRelativeLocation);
 }
 
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
@@ -357,37 +356,64 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 	}
 
 	//Crouch
-	if(GetWorld()->IsServer() && bWantsToChangeCrouchState)
+	if(bWantsToChangeCrouchState)
 	{
 		CrouchingDeltaTimeCount += DeltaTime;
+		
 		if(CrouchingDeltaTimeCount <= CrouchingTransitionDuration)
 		{
-			auto MeshRelativeLocation = GetMesh()->GetRelativeLocation();
-			const auto CapsuleOffset = BaseCapsuleHeight * CrouchingCapsuleReductionRatio * DeltaTime;
+			auto MeshZOffset = (CrouchCapsuleDelta * DeltaTime) / CrouchingTransitionDuration;	
+			auto CapsuleOffset = (BaseCapsuleHeight * CrouchingCapsuleReductionRatio * DeltaTime) / CrouchingTransitionDuration;
+			
 			if(!bIsCrouching)
 			{
-				const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - CapsuleOffset * 2.f;	
-				MeshRelativeLocation.Z += CrouchCapsuleDelta * 2.f * DeltaTime;
-				UpdatePlayerHeight(NewCapsuleHeight, MeshRelativeLocation);
+				CapsuleOffset *= -1.f;
 			}
 			else
 			{
-				const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset * 2.f;
-				MeshRelativeLocation.Z -= CrouchCapsuleDelta * 2.f * DeltaTime;
-				UpdatePlayerHeight(NewCapsuleHeight, MeshRelativeLocation);
+				MeshZOffset *= -1.f;
 			}
+			
+			auto MeshRelativeLocation = IsLocallyControlled() ? GetMesh()->GetRelativeLocation() : BaseTranslationOffset;
+			MeshRelativeLocation.Z += MeshZOffset;
+			
+			if(IsLocallyControlled())
+			{
+				GetMesh()->SetRelativeLocation(MeshRelativeLocation);
+				if(HasAuthority())
+				{
+					BaseTranslationOffset.Z += MeshZOffset;
+				}
+			}
+			else
+			{
+				BaseTranslationOffset.Z = MeshRelativeLocation.Z;	
+			}
+
+			const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset;
+			GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+			if(IsLocallyControlled() && !HasAuthority())
+			{
+				UpdateRemoteCapsuleHeight(NewCapsuleHeight);
+			}
+
 		}
 		else
 		{
-			bWantsToChangeCrouchState = false;
 			CrouchingDeltaTimeCount = 0.f;
-			if(!bIsCrouching)
-			{	
-				bIsCrouching = true;
-			}
-			else
+			
+			if(HasAuthority())
 			{
-				bIsCrouching = false;
+				bWantsToChangeCrouchState = false;
+				if(!bIsCrouching)
+				{	
+					bIsCrouching = true;
+					
+				}
+				else
+				{
+					bIsCrouching = false;
+				}
 			}
 		}
 	}
