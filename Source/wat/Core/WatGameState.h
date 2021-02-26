@@ -64,6 +64,9 @@ public:
 	UPROPERTY(Replicated)
 	bool bGameStarted;
 
+	UPROPERTY(Replicated)
+	bool bIsInLobby;
+
 	bool bGameEnded;
 
 	UPROPERTY(Replicated)

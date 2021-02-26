@@ -73,6 +73,7 @@ void AWatLevelScriptActor::PostInitializeComponents()
 
 		MainGameState->NumberOfActorInBunker = 2;
 
+		MainGameState->bIsInLobby = false;
 		MainGameState->bGameStarted = true;
 	}
 }

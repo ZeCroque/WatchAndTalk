@@ -31,7 +31,6 @@
 // Sets default values
 AWatPlayerCharacter::AWatPlayerCharacter()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create a CameraComponent	
@@ -60,8 +59,17 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 void AWatPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+
+	if (GameState->bIsInLobby || GameState->bGameStarted)
+	{
+		SetActorTickEnabled(true);
+	}
+	else
+	{
+		SetActorTickEnabled(false);
+	}
 	
 	if (!IsLocallyControlled())
 	{
