@@ -75,6 +75,8 @@ public:
 	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
 
+	void SetMeshZOffset(float ZOffset);
+
 	UPROPERTY()
 	bool bIsUsingLaser;
 
@@ -117,9 +119,6 @@ protected:
 
 	UFUNCTION()
 	void TogglePauseMenu();
-	
-	UFUNCTION(Server, Reliable)
-	void UpdateRemoteCapsuleHeight(float NewCapsuleHeight);
 	
 	UFUNCTION(Server, Reliable)
 	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
@@ -176,6 +175,9 @@ private:
 
 	UPROPERTY()
 	TSet<AInteractable*> InteractablesSet;
+
+	UPROPERTY()
+	class AWatPlayerController* LocalPlayerController;
 
 
 	void SetupStimulus();

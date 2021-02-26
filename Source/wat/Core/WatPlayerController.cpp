@@ -7,8 +7,7 @@
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/QTEWidget.h"
-
-#include "WatGameState.h"
+#include "Components/CapsuleComponent.h"
 
 AWatPlayerController::AWatPlayerController()
 {
@@ -54,6 +53,18 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 	{
 		PawnToPossess->EnableInput(this);
 	}
+}
+
+void AWatPlayerController::UpdatePlayerZOffset_Implementation(AWatPlayerCharacter* PlayerCharacter, const float ZOffset)
+{
+	auto MeshRelativeLocation = PlayerCharacter->GetMesh()->GetRelativeLocation();
+	MeshRelativeLocation.Z = ZOffset;
+	PlayerCharacter->GetMesh()->SetRelativeLocation(MeshRelativeLocation);
+}
+
+void AWatPlayerController::UpdatePlayerCapsuleHalfHeight_Implementation(AWatPlayerCharacter* PlayerCharacter, float Height)
+{
+	PlayerCharacter->GetCapsuleComponent()->SetCapsuleHalfHeight(Height);
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)

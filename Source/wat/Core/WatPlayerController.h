@@ -29,6 +29,12 @@ public:
 	UFUNCTION(Server,Reliable)
 	void UpdateBunkerPlayerCount(const int Value);
 
+	UFUNCTION(Server, Reliable)
+	void UpdatePlayerZOffset(AWatPlayerCharacter* PlayerCharacter, float ZOffset);
+
+	UFUNCTION(Server, Reliable)
+	void UpdatePlayerCapsuleHalfHeight(AWatPlayerCharacter* PlayerCharacter, float Height);
+
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 
 	bool bIsInMiniGame;

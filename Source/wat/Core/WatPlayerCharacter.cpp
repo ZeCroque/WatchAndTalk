@@ -124,6 +124,8 @@ void AWatPlayerCharacter::BeginPlay()
 	bWantsToChangeCrouchState = false;
 	bIsCrouching = false;
 	CrouchingDeltaTimeCount = 0.f;
+	LocalPlayerController = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+	
 }
 
 void AWatPlayerCharacter::CreateDebugWidget()
@@ -209,10 +211,9 @@ void AWatPlayerCharacter::TogglePauseMenu()
 	}
 }
 
-
-void AWatPlayerCharacter::UpdateRemoteCapsuleHeight_Implementation(float NewHeight)
+void AWatPlayerCharacter::SetMeshZOffset(float ZOffset)
 {
-	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
+	BaseTranslationOffset.Z = ZOffset;
 }
 
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
@@ -374,29 +375,22 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 				MeshZOffset *= -1.f;
 			}
 			
-			auto MeshRelativeLocation = IsLocallyControlled() ? GetMesh()->GetRelativeLocation() : BaseTranslationOffset;
-			MeshRelativeLocation.Z += MeshZOffset;
-			
-			if(IsLocallyControlled())
+			const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset;
+			if((!IsLocallyControlled() && HasAuthority()) || !HasAuthority())
 			{
-				GetMesh()->SetRelativeLocation(MeshRelativeLocation);
-				if(HasAuthority())
+				GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+				BaseTranslationOffset.Z += MeshZOffset;
+				if(IsLocallyControlled())
+				{	
+					GetMesh()->SetRelativeLocation(BaseTranslationOffset);
+				}
+			
+				if(!IsLocallyControlled() && !HasAuthority())
 				{
-					BaseTranslationOffset.Z += MeshZOffset;
+					LocalPlayerController->UpdatePlayerCapsuleHalfHeight(this, NewCapsuleHeight);
+					LocalPlayerController->UpdatePlayerZOffset(this, BaseTranslationOffset.Z);
 				}
 			}
-			else
-			{
-				BaseTranslationOffset.Z = MeshRelativeLocation.Z;	
-			}
-
-			const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset;
-			GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-			if(IsLocallyControlled() && !HasAuthority())
-			{
-				UpdateRemoteCapsuleHeight(NewCapsuleHeight);
-			}
-
 		}
 		else
 		{
