@@ -55,110 +55,125 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	Mesh3P->SetVisibleFlag(false);
 
 	SetupStimulus();
-
-	bIsAlive = true;
-	bIsMechanist = false;
-	OriginalMaxSpeed = 0;
-
-	CrouchingCapsuleReductionRatio = 0.5f;
-	CrouchingTransitionDuration = 0.2f;
 }
 
-bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
-{
-	InteractablesSet.Add(Interactable);
-	return IsClosestInteractable(Interactable);
-}
-
-void AWatPlayerCharacter::RemoveInteractable(AInteractable* Interactable)
-{
-	InteractablesSet.Remove(Interactable);
-}
-
-AInteractable* AWatPlayerCharacter::GetClosestInteractable()
-{
-	const FVector PlayerLocation = GetActorLocation();
-	TPair<float, AInteractable*> ClosestInteractable(-1.0f, nullptr);
-
-	for (auto InteractableSetItem : InteractablesSet)
-	{
-		if (InteractableSetItem)
-		{
-			const float Distance = UKismetMathLibrary::Vector_Distance2D(
-				PlayerLocation, InteractableSetItem->GetActorLocation());
-			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
-			{
-				ClosestInteractable.Key = Distance;
-				ClosestInteractable.Value = InteractableSetItem;
-			}
-		}
-	}
-	return ClosestInteractable.Value;
-}
-
-bool AWatPlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
-{
-	if (GetClosestInteractable() == Interactable)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-// Called when the game starts or when spawned
 void AWatPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	
 	if (!IsLocallyControlled())
 	{
 		GetMesh()->SetVisibility(true);
+		LocalPlayerController = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
 	}
-	else if (HasAuthority())
+	else
 	{
-		bIsMechanist = true;
+		LocalPlayerController = Cast<AWatPlayerController>(GetController());
+		if (HasAuthority())
+		{
+			bIsMechanist = true;
+		}
 	}
+	
+	bIsAlive = true;
+
+	if (!OriginalMaxSpeed)
+	{
+		OriginalMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	}
+	
 	BaseCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	CrouchCapsuleDelta = BaseCapsuleHeight * CrouchingCapsuleReductionRatio;
 	bWantsToChangeCrouchState = false;
 	bIsCrouching = false;
 	CrouchingDeltaTimeCount = 0.f;
-	LocalPlayerController = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
-	
+
+	ARay = static_cast<float>(MaxRangToKeep - MinRangToKeep) / (OriginalMaxSpeed - (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+	BRay = static_cast<float>(MinRangToKeep) - ARay * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
+
+	ARange = static_cast<float>(MinRangFromMonster - MaxRangFromMonster) / (OriginalMaxSpeed - (OriginalMaxSpeed + SprintAdditionalSpeedValue));
+	BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
 }
 
-void AWatPlayerCharacter::CreateDebugWidget()
+void AWatPlayerCharacter::Tick(const float DeltaTime)
 {
-	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-	if (!PC->DebugGridWidget)
+	Super::Tick(DeltaTime);
+#if WITH_EDITOR
+	if (IsLocallyControlled())
 	{
-		PC->DebugGridWidget = CreateWidget<UUserWidget>(PC, GridDebugWidget);
-		PC->DebugGridWidget->AddToViewport();
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
+			Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
+		if (GameState)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Purple, FString("Start mode: ") + (GameState->bTutorialActivated ? FString("Tutorial") : FString("Quick Start")));
+		}
 	}
-	else
+#endif
+
+	if (IsLocallyControlled())
 	{
-		PC->DebugGridWidget->RemoveFromParent();
-		PC->DebugGridWidget = nullptr;
+		if (GameState && GameState->bGameStarted)
+		{
+			if (!LocalPlayerController->ObjectivesHUDWidget)
+			{
+				CreateObjectiveList();
+			}
+
+			HandleLaser();
+			
+			if (!bIsCrouching)
+			{
+				ClearGridWhenSprinting();
+			}
+		}
+		HandleSprint(DeltaTime);
 	}
+
+	HandleCrouch(DeltaTime);
 }
 
-void AWatPlayerCharacter::ClearGridWhenSprinting()
+void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	const int Range = FMath::RoundToInt(ARange * GetCharacterMovement()->MaxWalkSpeed + BRange);
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (GameState->GridManager && GetDistanceTo(GameState->MonsterCharacter) <= Range)
-	{
-		const int Ray = FMath::RoundToInt(ARay * GetCharacterMovement()->MaxWalkSpeed + BRay);
+	// Axis
+	PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
 
-		GameState->GridManager->SetValueOutside(GetActorLocation(), Ray);
-		GameState->GridManager->SetValueAround(GetActorLocation(), Ray);
-	}
+	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
+	// "turn" handles devices that provide an absolute delta, such as a mouse.
+	// "turnRate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("TurnRate", this, &AWatPlayerCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &AWatPlayerCharacter::LookUpAtRate);
+
+	//Actions
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
+	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::ToggleCrouch);
+	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
+
+	//DEBUG
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AWatPlayerCharacter::TogglePauseMenu);
 }
 
-void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
+void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	RestartGame(GetPlayerState()->GetPlayerId());
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
+	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
+	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
 }
 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
@@ -167,8 +182,12 @@ void AWatPlayerCharacter::SwitchStartMode_Implementation()
 	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
 }
 
+void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
+{
+	RestartGame(GetPlayerState()->GetPlayerId());
+}
 
-void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
+void AWatPlayerCharacter::RestartGame_Implementation(const uint32 PlayerId)
 {
 	GameState->PlayersReadyForRestartIds.Add(PlayerId);
 
@@ -194,26 +213,16 @@ void AWatPlayerCharacter::RestartGame_Implementation(uint32 PlayerId)
 	}
 }
 
-
-void AWatPlayerCharacter::TogglePauseMenu()
+bool AWatPlayerCharacter::IsAlive() const
 {
-	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-	if (!PC->PauseWidget)
-	{
-		PC->PauseWidget = CreateWidget<UPauseWidget>(PC, PauseWidget);
-		if (PC->PauseWidget)
-		{
-			PC->PauseWidget->AddToViewport();
-			PC->bShowMouseCursor = true;
-			FInputModeUIOnly UIOnly;
-			PC->SetInputMode(UIOnly);
-		}
-	}
+	return bIsAlive;
 }
 
-void AWatPlayerCharacter::SetMeshZOffset(float ZOffset)
+void AWatPlayerCharacter::Die()
 {
-	BaseTranslationOffset.Z = ZOffset;
+	//TODO trigger die anim
+	bIsAlive = false;
+	DisableInput(nullptr);
 }
 
 void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerCharacter* Player, float NewSpeed)
@@ -221,142 +230,92 @@ void AWatPlayerCharacter::UpdateRemotePlayerSpeed_Implementation(AWatPlayerChara
 	Player->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
-void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
+void AWatPlayerCharacter::MoveForward(float Value)
 {
-	for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	if (Value != 0.0f)
 	{
-		auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
-		if (PlayerController)
-		{
-			auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
-			PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
-		}
+		// add movement in that direction
+		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
-// Called every frame
-void AWatPlayerCharacter::Tick(float DeltaTime)
+void AWatPlayerCharacter::MoveRight(float Value)
 {
-	Super::Tick(DeltaTime);
-	if (!GameState)
+	if (Value != 0.0f)
 	{
-		GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+		// add movement in that direction
+		AddMovementInput(GetActorRightVector(), Value);
 	}
-#if WITH_EDITOR
-	if (IsLocallyControlled())
+}
+
+void AWatPlayerCharacter::TurnAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AWatPlayerCharacter::LookUpAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
+{
+	auto* LocalCharacterMovement = GetCharacterMovement();
+
+	if (bIsSprinting && !GetVelocity().IsZero())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
-		                                 Cast<UWatGameInstance>(GetGameInstance())->bIsHost ? L"HOST" : L"CLIENT");
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, bIsMechanist ? L"MECHANIST" : L"SCIENTIST");
-		if (GameState)
+		if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Purple,
-			                                 FString("Start mode: ") + (GameState->bTutorialActivated
-				                                                            ? FString("Tutorial")
-				                                                            : FString("Quick Start")));
-		}
-	}
-#endif
-
-	if (GameState && GameState->bGameStarted && IsLocallyControlled())
-	{
-		ARay = static_cast<float>(MaxRangToKeep - MinRangToKeep) / (OriginalMaxSpeed - (OriginalMaxSpeed +
-			SprintAdditionalSpeedValue));
-		BRay = static_cast<float>(MinRangToKeep) - ARay * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
-
-		ARange = static_cast<float>(MinRangFromMonster - MaxRangFromMonster) / (OriginalMaxSpeed - (OriginalMaxSpeed +
-			SprintAdditionalSpeedValue));
-		BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
-
-
-		AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-		if (!PC->ObjectivesHUDWidget)
-		{
-			PC->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(PC, ObjectivesHUDWidgetClass);
-			PC->ObjectivesHUDWidget->Parent = this;
-			PC->ObjectivesHUDWidget->Controller = PC;
-			PC->ObjectivesHUDWidget->UpdateObjectiveList();
-		}
-
-		if (bIsUsingLaser)
-		{
-			FHitResult Result;
-			FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-			FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
-			FVector End = ((ForwardVector * 1000.f) + Start);
-			FCollisionObjectQueryParams ObjectQueryParams;
-			ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
-
-			if (GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
-			{
-				if (Result.bBlockingHit)
-				{
-					if (!LaserPointer)
-					{
-						LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint,
-						                                              Result.Normal.Rotation());
-					}
-					else
-					{
-						LaserPointer->SetActorLocation(Result.ImpactPoint + Result.Normal * 0.01);
-						LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
-					}
-				}
-			}
-		}
-		else
-		{
-			if (LaserPointer)
-			{
-				LaserPointer->Destroy();
-				LaserPointer = nullptr;
-			}
-		}
-
-		//Sprint
-		auto* LocalCharacterMovement = GetCharacterMovement();
-		if (!OriginalMaxSpeed)
-		{
-			OriginalMaxSpeed = LocalCharacterMovement->MaxWalkSpeed;
-		}
-
-		if (bIsSprinting && !GetVelocity().IsZero())
-		{
-			if (LocalCharacterMovement->MaxWalkSpeed < OriginalMaxSpeed + SprintAdditionalSpeedValue)
-			{
-				LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
-				if (!HasAuthority())
-				{
-					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-				}
-			}
-			else if (LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
-			{
-				LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
-				if (!HasAuthority())
-				{
-					UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
-				}
-			}
-			PC->PlayerCameraManager->PlayCameraShake(SprintShake,
-			                                         LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed +
-				                                         SprintAdditionalSpeedValue));
-		}
-		else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
-		{
-			LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+			LocalCharacterMovement->MaxWalkSpeed += SprintSpeedIncreaseRate * DeltaTime;
 			if (!HasAuthority())
 			{
 				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 			}
 		}
-		if (!bIsCrouching)
+		else if (LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed + SprintAdditionalSpeedValue)
 		{
-			ClearGridWhenSprinting();
+			LocalCharacterMovement->MaxWalkSpeed = OriginalMaxSpeed + SprintAdditionalSpeedValue;
+			if (!HasAuthority())
+			{
+				UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
+			}
+		}
+		LocalPlayerController->PlayerCameraManager->PlayCameraShake(SprintShake,
+		                                         LocalCharacterMovement->GetMaxSpeed() / (OriginalMaxSpeed +
+			                                         SprintAdditionalSpeedValue));
+	}
+	else if (!bIsSprinting && LocalCharacterMovement->MaxWalkSpeed > OriginalMaxSpeed)
+	{
+		LocalCharacterMovement->MaxWalkSpeed -= SprintSpeedDecreaseRate * DeltaTime;
+		if (!HasAuthority())
+		{
+			UpdateRemotePlayerSpeed(this, LocalCharacterMovement->MaxWalkSpeed);
 		}
 	}
+}
 
-	//Crouch
+void AWatPlayerCharacter::StartSprinting()
+{
+	if(!bIsCrouching)
+	{
+		bIsSprinting = true;
+	}
+}
+
+void AWatPlayerCharacter::StopSprinting()
+{
+	bIsSprinting = false;
+}
+
+void AWatPlayerCharacter::SetMeshZOffset(const float ZOffset)
+{
+	BaseTranslationOffset.Z = ZOffset;
+}
+
+void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
+{
 	if(bWantsToChangeCrouchState)
 	{
 		CrouchingDeltaTimeCount += DeltaTime;
@@ -413,37 +372,132 @@ void AWatPlayerCharacter::Tick(float DeltaTime)
 	}
 }
 
-// Called to bind functionality to input
-void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AWatPlayerCharacter::ToggleCrouch_Implementation()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	if(!bIsSprinting)
+	{
+		bWantsToChangeCrouchState = true;
+	}
+}
 
-	// Axis
-	PlayerInputComponent->BindAxis("MoveForward", this, &AWatPlayerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AWatPlayerCharacter::MoveRight);
+bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
+{
+	InteractablesSet.Add(Interactable);
+	return IsClosestInteractable(Interactable);
+}
 
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnRate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AWatPlayerCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AWatPlayerCharacter::LookUpAtRate);
+void AWatPlayerCharacter::RemoveInteractable(AInteractable* Interactable)
+{
+	InteractablesSet.Remove(Interactable);
+}
 
-	//Actions
+bool AWatPlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
+{
+	if (GetClosestInteractable() == Interactable)
+	{
+		return true;
+	}
 
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
-	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::ToggleCrouch);
-	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
+	return false;
+}
 
-	//DEBUG
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AWatPlayerCharacter::CreateDebugWidget);
-	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AWatPlayerCharacter::TogglePauseMenu);
+void AWatPlayerCharacter::Interact_Implementation()
+{
+	auto* ClosestInteractable = GetClosestInteractable();
+	if (ClosestInteractable)
+	{
+		ClosestInteractable->Interact();
+	}
+}
+
+AInteractable* AWatPlayerCharacter::GetClosestInteractable()
+{
+	const FVector PlayerLocation = GetActorLocation();
+	TPair<float, AInteractable*> ClosestInteractable(-1.0f, nullptr);
+
+	for (auto InteractableSetItem : InteractablesSet)
+	{
+		if (InteractableSetItem)
+		{
+			const float Distance = UKismetMathLibrary::Vector_Distance2D(
+				PlayerLocation, InteractableSetItem->GetActorLocation());
+			if (ClosestInteractable.Key == -1.0f || ClosestInteractable.Key > Distance)
+			{
+				ClosestInteractable.Key = Distance;
+				ClosestInteractable.Value = InteractableSetItem;
+			}
+		}
+	}
+	return ClosestInteractable.Value;
+}
+
+void AWatPlayerCharacter::SetIsUsingLaser(const bool bInUse)
+{
+	bIsUsingLaser = bInUse;
+}
+
+void AWatPlayerCharacter::HandleLaser()
+{
+	if (bIsUsingLaser)
+	{
+		FHitResult Result;
+		const FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+		const FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+		const FVector End = ((ForwardVector * 1000.f) + Start);
+		FCollisionObjectQueryParams ObjectQueryParams;
+		ObjectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel1);
+
+		if (GetWorld()->LineTraceSingleByObjectType(Result, Start, End, ObjectQueryParams))
+		{
+			if (Result.bBlockingHit)
+			{
+				if (!LaserPointer)
+				{
+					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint,
+					                                              Result.Normal.Rotation());
+				}
+				else
+				{
+					LaserPointer->SetActorLocation(Result.ImpactPoint + Result.Normal * 0.01);
+					LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
+				}
+			}
+		}
+	}
+	else
+	{
+		if (LaserPointer)
+		{
+			LaserPointer->Destroy();
+			LaserPointer = nullptr;
+		}
+	}
+}
+
+void AWatPlayerCharacter::ClearGridWhenSprinting()
+{
+	const int Range = FMath::RoundToInt(ARange * GetCharacterMovement()->MaxWalkSpeed + BRange);
+
+	if (GameState->GridManager && GetDistanceTo(GameState->MonsterCharacter) <= Range)
+	{
+		const int Ray = FMath::RoundToInt(ARay * GetCharacterMovement()->MaxWalkSpeed + BRay);
+
+		GameState->GridManager->SetValueOutside(GetActorLocation(), Ray);
+		GameState->GridManager->SetValueAround(GetActorLocation(), Ray);
+	}
+}
+
+void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
+{
+	for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
+		if (PlayerController)
+		{
+			auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
+			PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
+		}
+	}
 }
 
 bool AWatPlayerCharacter::IsMechanist() const
@@ -451,16 +505,58 @@ bool AWatPlayerCharacter::IsMechanist() const
 	return bIsMechanist;
 }
 
-bool AWatPlayerCharacter::IsAlive() const
+void AWatPlayerCharacter::CreateObjectiveList()
 {
-	return bIsAlive;
+	LocalPlayerController->ObjectivesHUDWidget = CreateWidget<UObjectivesHUDWidget>(LocalPlayerController, ObjectivesHUDWidgetClass);
+	LocalPlayerController->ObjectivesHUDWidget->Parent = this;
+	LocalPlayerController->ObjectivesHUDWidget->Controller = LocalPlayerController;
+	LocalPlayerController->ObjectivesHUDWidget->UpdateObjectiveList();
 }
 
-void AWatPlayerCharacter::Die()
+void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
-	//TODO trigger die anim
-	bIsAlive = false;
-	DisableInput(nullptr);
+	if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
+	{
+		if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
+		{
+			LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+		}
+		else
+		{
+			LocalPlayerController->ObjectivesHUDWidget->AddToViewport();
+		}
+	}
+}
+
+
+void AWatPlayerCharacter::TogglePauseMenu()
+{
+	if (!LocalPlayerController->PauseWidget)
+	{
+		LocalPlayerController->PauseWidget = CreateWidget<UPauseWidget>(LocalPlayerController, PauseWidget);
+		if (LocalPlayerController->PauseWidget)
+		{
+			LocalPlayerController->PauseWidget->AddToViewport();
+			LocalPlayerController->bShowMouseCursor = true;
+			const FInputModeUIOnly UIOnly;
+			LocalPlayerController->SetInputMode(UIOnly);
+		}
+	}
+}
+
+
+void AWatPlayerCharacter::CreateDebugWidget()
+{
+	if (!LocalPlayerController->DebugGridWidget)
+	{
+		LocalPlayerController->DebugGridWidget = CreateWidget<UUserWidget>(LocalPlayerController, GridDebugWidget);
+		LocalPlayerController->DebugGridWidget->AddToViewport();
+	}
+	else
+	{
+		LocalPlayerController->DebugGridWidget->RemoveFromParent();
+		LocalPlayerController->DebugGridWidget = nullptr;
+	}
 }
 
 void AWatPlayerCharacter::SetupStimulus()
@@ -477,90 +573,5 @@ void AWatPlayerCharacter::OnDistract()
 		FVector const Location = GetActorLocation();
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DistractionSound, Location);
 		UAISense_Hearing::ReportNoiseEvent(GetWorld(), Location, 1.0f, this, 0.0f, AITags::NoiseTag);
-	}
-}
-
-void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
-	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
-	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
-}
-
-void AWatPlayerCharacter::MoveForward(float Value)
-{
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorForwardVector(), Value);
-	}
-}
-
-void AWatPlayerCharacter::MoveRight(float Value)
-{
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorRightVector(), Value);
-	}
-}
-
-void AWatPlayerCharacter::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AWatPlayerCharacter::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AWatPlayerCharacter::Interact_Implementation()
-{
-	auto* ClosestInteractable = GetClosestInteractable();
-	if (ClosestInteractable)
-	{
-		ClosestInteractable->Interact();
-	}
-}
-
-void AWatPlayerCharacter::StartSprinting()
-{
-	if(!bIsCrouching)
-	{
-		bIsSprinting = true;
-	}
-}
-
-void AWatPlayerCharacter::StopSprinting()
-{
-	bIsSprinting = false;
-}
-
-void AWatPlayerCharacter::ToggleCrouch_Implementation()
-{
-	if(!bIsSprinting)
-	{
-		bWantsToChangeCrouchState = true;
-	}
-}
-
-void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
-{
-	AWatPlayerController* PC = Cast<AWatPlayerController>(GetController());
-	if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
-	{
-		if (PC->ObjectivesHUDWidget->IsInViewport())
-		{
-			PC->ObjectivesHUDWidget->RemoveFromParent();
-		}
-		else
-		{
-			PC->ObjectivesHUDWidget->AddToViewport();
-		}
 	}
 }

@@ -13,33 +13,88 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteract, class AInteractable*, InteractedObject);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractionEnd, class AInteractable*, InteractedObject);
 
-class AWatGameState;
-class AGridManager;
-class AInteractable;
-
 UCLASS()
 class WAT_API AWatPlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+//ACTOR
+//=====
+	
 public:
-	// Sets default values for this character's properties
-	AWatPlayerCharacter();
-
 	UPROPERTY(VisibleDefaultsOnly)
 	class UCameraComponent* FirstPersonCameraComponent = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	class USkeletalMeshComponent* Mesh1P = nullptr;
+	
+protected:
+	AWatPlayerCharacter();
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
+//UTILITY
+//=======
+private:
+	UPROPERTY()
+	class AWatPlayerController* LocalPlayerController;
+
+	UPROPERTY()
+	class AWatGameState* GameState;
+
+//NETWORK
+//=======
+public:
+	UFUNCTION(Server, Reliable)
+	void SwitchStartMode();
+	
+private:
+	UFUNCTION(BlueprintCallable, Category = "WAT Network")
+	void SetPlayerAsReadyForRestart();
+
+	UFUNCTION(Server, Reliable)
+	void RestartGame(uint32 PlayerId);
+
+//GAMEPLAY
+//========
+public:
+	bool IsAlive() const;
+	void Die();
+
+private:
+	bool bIsAlive;
+	
+//MOVEMENT
+//========
+//	DISPLACEMENTS
+//	-------------
+private:
+	float OriginalMaxSpeed;
+
+	UFUNCTION(Server, Reliable)
+	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
+	
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	
+//	CAMERA
+//	------
+public:
 	UPROPERTY(EditAnywhere, Category = "WAT Camera")
 	float BaseTurnRate;
 
-	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(EditAnywhere, Category = "WAT Camera")
 	float BaseLookUpRate;
+	
+private:
+	void TurnAtRate(float Rate);
+	void LookUpAtRate(float Rate);
 
+//	SPRINT
+//	------
+public:
 	UPROPERTY(EditAnywhere, Category = "WAT Sprint")
 	float SprintAdditionalSpeedValue;
 
@@ -49,21 +104,48 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT Sprint")
 	float SprintSpeedDecreaseRate;
 
+	UPROPERTY(EditAnywhere, Category= "WAT Sprint")
+	TSubclassOf<UCameraShake> SprintShake;
+
+	
+private:
+	bool bIsSprinting;
+
+	void HandleSprint(float DeltaTime);
+	void StartSprinting();
+	void StopSprinting();
+
+//	CROUCH
+//	------
+public:
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
-	float CrouchingTransitionDuration;
+	float CrouchingTransitionDuration = 0.5f;
 	
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
-	float CrouchingCapsuleReductionRatio;
+	float CrouchingCapsuleReductionRatio = 0.2f;
 
-	UPROPERTY()
-	float OriginalMaxSpeed;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
+private:	
+	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	bool bWantsToChangeCrouchState;
 
-	UPROPERTY(Replicated, BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	bool bIsCrouching;
 
+	float BaseCapsuleHeight;
+	float CrouchCapsuleDelta;
+	float CrouchingDeltaTimeCount;
+
+public:
+	void SetMeshZOffset(float ZOffset);
+
+private:
+	void HandleCrouch(float DeltaTime);
+	UFUNCTION(Server, Reliable)
+	void ToggleCrouch();
+
+//INTERACTIONS
+//============
+public:
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnInteractionBegin"))
 	FOnInteract OnInteractDispatcher;
 
@@ -72,150 +154,101 @@ public:
 
 	bool AddInteractable(AInteractable* Interactable);
 	void RemoveInteractable(AInteractable* Interactable);
-	AInteractable* GetClosestInteractable();
 	bool IsClosestInteractable(AInteractable* Interactable);
-
-	void SetMeshZOffset(float ZOffset);
-
-	UPROPERTY()
-	bool bIsUsingLaser;
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	//Inputs
-
-	void CreateDebugWidget();
-
-	//Movement
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void TurnAtRate(float Rate);
-	void LookUpAtRate(float Rate);
-
-	//Special displacements
-	void StartSprinting();
-	void StopSprinting();
-
-	UFUNCTION(Server, Reliable)
-	void ToggleCrouch();
-	
-	void ToggleObjectivesHUDVisibility();
-
-
-	//Interactables
-	UFUNCTION(Server, Reliable)
-	void Interact();
-
-	//GridManager
-	void ClearGridWhenSprinting();
-
-	UFUNCTION(BlueprintCallable, Category = "Network|Test")
-	void SetPlayerAsReadyForRestart();
-
-	UFUNCTION(Server, Reliable)
-	void RestartGame(uint32 PlayerId);
-
-	UFUNCTION()
-	void TogglePauseMenu();
-	
-	UFUNCTION(Server, Reliable)
-	void UpdateRemotePlayerSpeed(AWatPlayerCharacter* Player, float NewSpeed);
-
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION(Server, Reliable)
-	void SwitchPlayersClasses();
-
-	UFUNCTION(Server, Reliable)
-	void SwitchStartMode();
-
-	bool IsMechanist() const;
-
-	bool IsAlive() const;
-
-	void Die();
-
 private:
-
-	float BaseCapsuleHeight;
-	float CrouchCapsuleDelta;
-	float CrouchingDeltaTimeCount;
-	int CrouchingDeltaTimeCountByRelativeTransitionTimeRatio;
-	
-	bool bIsAlive;
-	bool bIsSprinting;
-
-	UPROPERTY(Replicated)
-	bool bIsMechanist;
-
-	UPROPERTY()
-	class UAIPerceptionStimuliSourceComponent* Stimulus;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT Sound", meta=(AllowPrivateAccess = "true"))
-	USoundBase* DistractionSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> GridDebugWidget;
-
-	UPROPERTY(EditAnywhere, Category="WAT HUD")
-	TSubclassOf<UUserWidget> ObjectivesHUDWidgetClass;
-
-	UPROPERTY()
-	class ALaser* LaserPointer;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ALaser> LaserPointerClass;
-
 	UPROPERTY()
 	TSet<AInteractable*> InteractablesSet;
 
+	UFUNCTION(Server, Reliable)
+	void Interact();
+	
+	AInteractable* GetClosestInteractable();
+
+//LASER
+//=====
+public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ALaser> LaserPointerClass;
+
+	void SetIsUsingLaser(bool bInUse);
+
+private:
+	void HandleLaser();
+	
+	bool bIsUsingLaser;
+	
 	UPROPERTY()
-	class AWatPlayerController* LocalPlayerController;
+	class ALaser* LaserPointer;
 
-
-	void SetupStimulus();
-
-	void OnDistract();
-
-	UPROPERTY(EditAnywhere, Category= "WAT Sprint")
-	TSubclassOf<UCameraShake> SprintShake;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup Clean Grid", meta = (AllowPrivateAccess = "true"
-	))
+//GRID
+//======
+public:
+	UPROPERTY(EditAnywhere, Category = "WAT Grid")
 	int MinRangToKeep = 4;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup Clean Grid", meta = (AllowPrivateAccess = "true"
-	))
+	UPROPERTY(EditAnywhere, Category = "WAT Grid")
 	int MaxRangToKeep = 10;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup Clean Grid", meta = (AllowPrivateAccess = "true"
-	))
+	UPROPERTY(EditAnywhere, Category = "WAT Grid")
 	int MinRangFromMonster = 500;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup Clean Grid", meta = (AllowPrivateAccess = "true"
-	))
+	UPROPERTY(EditAnywhere, Category = "WAT Grid")
 	int MaxRangFromMonster = 1000;
 
-	UPROPERTY()
-	AWatGameState* GameState;
-
-	//Coeff for affine function  used to get the range to keep when cleaning the grid during sprint
+private:
+	//Coeff for affine function used to get the range to keep when cleaning the grid during sprint
 	float ARay;
 	float BRay;
 
+	//Coeff for affine function used to get the range to fill when cleaning the grid during sprint
 	float ARange;
 	float BRange;
+	
+	void ClearGridWhenSprinting();
 
+//OBJECTIVES
+//==========
+public:
+	UPROPERTY(EditAnywhere, Category="WAT Objectives")
+	TSubclassOf<UUserWidget> ObjectivesHUDWidgetClass;
 
+	UFUNCTION(Server, Reliable)
+	void SwitchPlayersClasses();
+	
+	bool IsMechanist() const;
+private:
+	UPROPERTY(Replicated)
+	bool bIsMechanist;
+
+	void CreateObjectiveList();
+	void ToggleObjectivesHUDVisibility();
+
+//PAUSE
+//=====
+public:
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> PauseWidget;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+private:
+	UFUNCTION()
+	void TogglePauseMenu();
+	
+//DEBUG
+//=====
+public:
+	UPROPERTY(EditAnywhere, Category="WAT Debug")
+	TSubclassOf<UUserWidget> GridDebugWidget;
+
+	UPROPERTY(EditAnywhere, Category="WAT Debug")
+	USoundBase* DistractionSound;
+	
+private:
+	UPROPERTY()
+	class UAIPerceptionStimuliSourceComponent* Stimulus;
+	
+	void CreateDebugWidget();
+	void SetupStimulus();
+	void OnDistract();
+
+
 };
