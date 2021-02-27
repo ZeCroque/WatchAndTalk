@@ -31,8 +31,7 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 	if (GridManager && Controller)
 	{
 		FVector Location;
-
-		if (!GridManager->RandomHotWorldCoordinate(Location))
+		if (!GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight))
 		{
 			auto const NPC = Controller->GetPawn();
 			FVector const Origin = WatGameState->NumberOfActorInBunker != 1 && WatGameState->NumberOfActorInBunker != 3
@@ -41,9 +40,9 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 			const auto Radius = WatGameState->NumberOfActorInBunker != 1 && WatGameState->NumberOfActorInBunker != 3
 				                    ? WatGameState->BunkerTriggerBox->GridDrawRay
 				                    : SearchRadius;
-			
+
 			GridManager->SetValueAround(Origin, Radius);
-			GridManager->RandomHotWorldCoordinate(Location);
+			GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight);
 		}
 
 

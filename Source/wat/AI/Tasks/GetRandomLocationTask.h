@@ -23,8 +23,13 @@ public:
 	explicit UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Search", meta= (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
 	int SearchRadius = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
+	int TryForBestWeight = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
+	int RadiusForBestWeight = 10;
 
 	UPROPERTY()
 	AGridManager* GridManager;
