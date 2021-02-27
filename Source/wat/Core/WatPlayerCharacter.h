@@ -178,19 +178,29 @@ private:
 //LASER
 //=====
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="WAT Laser")
 	TSubclassOf<class ALaser> LaserPointerClass;
 
+	UPROPERTY(EditAnywhere, Category="WAT Laser")
+	float LaserRefreshPeriod = 0.1f;
+	
 	void SetIsUsingLaser(bool bInUse);
 
 private:
-	void HandleLaser();
-	
 	bool bIsUsingLaser;
+	float LaserDeltaTimeCount;
+
 	
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing=SetLaserColor)
 	class ALaser* LaserPointer;
 
+	UFUNCTION(Server, Reliable)
+	void UpdateLaserPosition(AWatPlayerCharacter* OwningPlayer, FVector Location, FRotator Rotation);
+
+	UFUNCTION()
+	void SetLaserColor();
+	
+	void HandleLaser(float DeltaTime);
 //GRID
 //======
 public:

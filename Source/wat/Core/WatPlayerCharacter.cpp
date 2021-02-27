@@ -98,6 +98,8 @@ void AWatPlayerCharacter::BeginPlay()
 	bIsCrouching = false;
 	CrouchingDeltaTimeCount = 0.f;
 
+	LaserDeltaTimeCount = 0.f;
+
 	ARay = static_cast<float>(MaxRangToKeep - MinRangToKeep) / (OriginalMaxSpeed - (OriginalMaxSpeed + SprintAdditionalSpeedValue));
 	BRay = static_cast<float>(MinRangToKeep) - ARay * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
 
@@ -130,7 +132,7 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 				CreateObjectiveList();
 			}
 
-			HandleLaser();
+			HandleLaser(DeltaTime);
 			
 			if (!bIsCrouching)
 			{
@@ -183,6 +185,7 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsSprinting);
+	DOREPLIFETIME(AWatPlayerCharacter, LaserPointer);
 }
 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
@@ -477,10 +480,44 @@ void AWatPlayerCharacter::SetIsUsingLaser(const bool bInUse)
 	bIsUsingLaser = bInUse;
 }
 
-void AWatPlayerCharacter::HandleLaser()
+void AWatPlayerCharacter::UpdateLaserPosition_Implementation(AWatPlayerCharacter* OwningPlayer, FVector Location, FRotator Rotation)
+{
+	if(!LaserPointer)
+	{
+		LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Location, Rotation);
+		if(OwningPlayer->IsLocallyControlled())
+		{
+			LaserPointer->LaserMesh->SetMaterial(0, LaserPointer->PlayerOneMaterial);
+		}
+		else
+		{
+			LaserPointer->LaserMesh->SetMaterial(0, LaserPointer->PlayerTwoMaterial);
+		}
+	}
+	
+	LaserPointer->SetActorHiddenInGame(false);
+	LaserPointer->SetActorLocation(Location);
+	LaserPointer->SetActorRelativeRotation(Rotation);
+}
+
+void AWatPlayerCharacter::SetLaserColor()
+{
+	if(IsLocallyControlled())
+	{
+		LaserPointer->LaserMesh->SetMaterial(0, LaserPointer->PlayerTwoMaterial);
+	}
+	else
+	{
+		LaserPointer->LaserMesh->SetMaterial(0, LaserPointer->PlayerOneMaterial);
+	}
+}
+
+void AWatPlayerCharacter::HandleLaser(float DeltaTime)
 {
 	if (bIsUsingLaser)
 	{
+		LaserDeltaTimeCount += DeltaTime;
+		
 		FHitResult Result;
 		const FVector Start = FirstPersonCameraComponent->GetComponentLocation();
 		const FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
@@ -492,15 +529,20 @@ void AWatPlayerCharacter::HandleLaser()
 		{
 			if (Result.bBlockingHit)
 			{
-				if (!LaserPointer)
+				if(!HasAuthority() && LaserPointer)
 				{
-					LaserPointer = GetWorld()->SpawnActor<ALaser>(LaserPointerClass, Result.ImpactPoint,
-					                                              Result.Normal.Rotation());
-				}
-				else
-				{
-					LaserPointer->SetActorLocation(Result.ImpactPoint + Result.Normal * 0.01);
+					LaserPointer->SetActorHiddenInGame(false);
+					LaserPointer->SetActorLocation(Result.ImpactPoint + Result.Normal);
 					LaserPointer->SetActorRelativeRotation(Result.Actor->GetActorRotation());
+				}
+				if(!HasAuthority() && LaserDeltaTimeCount >= LaserRefreshPeriod)
+				{
+					LaserDeltaTimeCount = 0.f;
+					UpdateLaserPosition(this, Result.ImpactPoint + Result.Normal, Result.Actor->GetActorRotation());
+				}
+				else if(HasAuthority())
+				{
+					UpdateLaserPosition(this, Result.ImpactPoint + Result.Normal, Result.Actor->GetActorRotation());
 				}
 			}
 		}
@@ -509,8 +551,7 @@ void AWatPlayerCharacter::HandleLaser()
 	{
 		if (LaserPointer)
 		{
-			LaserPointer->Destroy();
-			LaserPointer = nullptr;
+			LaserPointer->SetActorHiddenInGame(true);
 		}
 	}
 }
