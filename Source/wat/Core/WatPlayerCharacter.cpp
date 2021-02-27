@@ -182,6 +182,7 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
 	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
+	DOREPLIFETIME(AWatPlayerCharacter, bIsSprinting);
 }
 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
@@ -304,7 +305,7 @@ void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
 	}
 }
 
-void AWatPlayerCharacter::StartSprinting()
+void AWatPlayerCharacter::StartSprinting_Implementation()
 {
 	if(!bIsCrouching)
 	{
@@ -312,7 +313,7 @@ void AWatPlayerCharacter::StartSprinting()
 	}
 }
 
-void AWatPlayerCharacter::StopSprinting()
+void AWatPlayerCharacter::StopSprinting_Implementation()
 {
 	bIsSprinting = false;
 }
@@ -324,17 +325,20 @@ void AWatPlayerCharacter::SetMeshZOffset(const float ZOffset)
 
 void AWatPlayerCharacter::CrouchStateChanged()
 {
-	if(bIsCrouching)
+	if(IsLocallyControlled())
 	{
-		const auto CharacterMovementLocalRef = GetCharacterMovement();
-		CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
-		UpdateRemotePlayerSpeed(this, CharacterMovementLocalRef->MaxWalkSpeedCrouched);
-	}
-	else
-	{
-		const auto CharacterMovementLocalRef = GetCharacterMovement();
-		CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
-		UpdateRemotePlayerSpeed(this, OriginalMaxSpeed);
+		if(bIsCrouching)
+		{
+			const auto CharacterMovementLocalRef = GetCharacterMovement();
+			CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
+			UpdateRemotePlayerSpeed(this, CharacterMovementLocalRef->MaxWalkSpeedCrouched);
+		}
+		else
+		{
+			const auto CharacterMovementLocalRef = GetCharacterMovement();
+			CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
+			UpdateRemotePlayerSpeed(this, OriginalMaxSpeed);
+		}
 	}
 }
 

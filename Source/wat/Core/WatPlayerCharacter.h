@@ -109,10 +109,15 @@ public:
 
 	
 private:
+	UPROPERTY(Replicated)
 	bool bIsSprinting;
 
 	void HandleSprint(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
 	void StartSprinting();
+
+	UFUNCTION(Server, Reliable)
 	void StopSprinting();
 
 //	CROUCH
