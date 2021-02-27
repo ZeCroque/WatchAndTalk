@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditAnywhere, Category= "WAT Door")
 	float DoorMovingSpeed;
 
+	UPROPERTY(EditAnywhere, Category="WAT Door")
+	float ZOffset = 1.f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

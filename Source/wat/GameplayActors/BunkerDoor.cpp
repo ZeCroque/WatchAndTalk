@@ -14,7 +14,7 @@ ABunkerDoor::ABunkerDoor()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
 	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Door Mesh"));
-        DoorMesh->SetupAttachment(RootComponent);
+    DoorMesh->SetupAttachment(RootComponent);
 
 	DoorTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Door Trigger"));
 	DoorTrigger->SetupAttachment(RootComponent);
@@ -31,8 +31,8 @@ ABunkerDoor::ABunkerDoor()
 void ABunkerDoor::BeginPlay()
 {
 	Super::BeginPlay();
-	MeshHeight = DoorMesh->GetStaticMesh()->GetBoundingBox().Max.Z * 2.f * DoorMesh->GetRelativeScale3D().Z;
-        InitialZ = DoorMesh->GetRelativeLocation().Z;
+	MeshHeight = DoorMesh->GetStaticMesh()->GetBoundingBox().Max.Z * DoorMesh->GetRelativeScale3D().Z + ZOffset;
+    InitialZ = DoorMesh->GetRelativeLocation().Z;
 }
 
 // Called every frame
