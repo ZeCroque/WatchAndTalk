@@ -562,7 +562,7 @@ void AWatPlayerCharacter::HandleLaser(float DeltaTime)
 	}
 }
 
-void AWatPlayerCharacter::ClearGridWhenSprinting()
+void AWatPlayerCharacter::ClearGridWhenSprinting_Implementation()
 {
 	const int Range = FMath::RoundToInt(ARange * GetCharacterMovement()->MaxWalkSpeed + BRange);
 

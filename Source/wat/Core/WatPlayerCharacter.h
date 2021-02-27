@@ -227,7 +227,8 @@ private:
 	//Coeff for affine function used to get the range to fill when cleaning the grid during sprint
 	float ARange;
 	float BRange;
-	
+
+	UFUNCTION(Server, Reliable)
 	void ClearGridWhenSprinting();
 
 //OBJECTIVES
