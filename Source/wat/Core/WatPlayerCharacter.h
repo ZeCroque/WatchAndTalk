@@ -64,6 +64,7 @@ public:
 	void Die();
 
 private:
+	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess = "true"))
 	bool bIsAlive;
 	
 //MOVEMENT
