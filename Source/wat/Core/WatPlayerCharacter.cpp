@@ -367,7 +367,11 @@ void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 			}
 			
 			const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset;
-			if((!IsLocallyControlled() && HasAuthority()) || !HasAuthority())
+			if((!IsLocallyControlled() && HasAuthority()) || !HasAuthority() 
+#ifdef WITH_EDITOR 
+				|| GetWorld()->IsEditorWorld() 
+#endif
+				)
 			{
 				GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
 				BaseTranslationOffset.Z += MeshZOffset;

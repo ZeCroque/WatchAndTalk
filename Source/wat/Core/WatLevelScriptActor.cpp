@@ -75,9 +75,5 @@ void AWatLevelScriptActor::PostInitializeComponents()
 
 		MainGameState->bIsInLobby = false;
 		MainGameState->bGameStarted = true;
-
-#ifdef WITH_EDITOR
-		GetWorld()->GetFirstPlayerController()->GetPawn()->SetActorTickEnabled(true);
-#endif
 	}
 }
