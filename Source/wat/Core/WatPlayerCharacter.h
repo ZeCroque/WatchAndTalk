@@ -197,6 +197,9 @@ private:
 	UFUNCTION(Server, Reliable)
 	void UpdateLaserPosition(AWatPlayerCharacter* OwningPlayer, FVector Location, FRotator Rotation);
 
+	UFUNCTION(Server, Reliable)
+	void HideLaser();
+
 	UFUNCTION()
 	void SetLaserColor();
 	

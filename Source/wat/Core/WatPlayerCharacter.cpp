@@ -500,6 +500,11 @@ void AWatPlayerCharacter::UpdateLaserPosition_Implementation(AWatPlayerCharacter
 	LaserPointer->SetActorRelativeRotation(Rotation);
 }
 
+void AWatPlayerCharacter::HideLaser_Implementation()
+{
+	LaserPointer->SetActorHiddenInGame(true);
+}
+
 void AWatPlayerCharacter::SetLaserColor()
 {
 	if(IsLocallyControlled())
@@ -552,6 +557,7 @@ void AWatPlayerCharacter::HandleLaser(float DeltaTime)
 		if (LaserPointer)
 		{
 			LaserPointer->SetActorHiddenInGame(true);
+			HideLaser();
 		}
 	}
 }
