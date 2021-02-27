@@ -322,6 +322,30 @@ void AWatPlayerCharacter::SetMeshZOffset(const float ZOffset)
 	BaseTranslationOffset.Z = ZOffset;
 }
 
+void AWatPlayerCharacter::CrouchStateChanged()
+{
+	if(bIsCrouching)
+	{
+		const auto CharacterMovementLocalRef = GetCharacterMovement();
+		CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
+		UpdateRemotePlayerSpeed(this, CharacterMovementLocalRef->MaxWalkSpeedCrouched);
+	}
+	else
+	{
+		const auto CharacterMovementLocalRef = GetCharacterMovement();
+		CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
+		UpdateRemotePlayerSpeed(this, OriginalMaxSpeed);
+	}
+}
+
+void AWatPlayerCharacter::ToggleCrouch_Implementation()
+{
+	if(!bIsSprinting)
+	{
+		bWantsToChangeCrouchState = true;
+	}
+}
+
 void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 {
 	if(bWantsToChangeCrouchState)
@@ -369,22 +393,23 @@ void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 				if(!bIsCrouching)
 				{	
 					bIsCrouching = true;
-					
+					if(IsLocallyControlled())
+					{
+						const auto CharacterMovementLocalRef = GetCharacterMovement();
+						CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
+					}
 				}
 				else
 				{
 					bIsCrouching = false;
+					if(IsLocallyControlled())
+					{
+						const auto CharacterMovementLocalRef = GetCharacterMovement();
+						CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
+					}
 				}
 			}
 		}
-	}
-}
-
-void AWatPlayerCharacter::ToggleCrouch_Implementation()
-{
-	if(!bIsSprinting)
-	{
-		bWantsToChangeCrouchState = true;
 	}
 }
 

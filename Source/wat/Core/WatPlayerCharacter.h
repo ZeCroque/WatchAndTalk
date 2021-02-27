@@ -128,9 +128,11 @@ private:
 	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	bool bWantsToChangeCrouchState;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(ReplicatedUsing = CrouchStateChanged, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	bool bIsCrouching;
 
+
+	
 	float BaseCapsuleHeight;
 	float CrouchCapsuleDelta;
 	float CrouchingDeltaTimeCount;
@@ -139,10 +141,14 @@ public:
 	void SetMeshZOffset(float ZOffset);
 
 private:
-	void HandleCrouch(float DeltaTime);
+	UFUNCTION()
+	void CrouchStateChanged();
+	
 	UFUNCTION(Server, Reliable)
 	void ToggleCrouch();
 
+	void HandleCrouch(float DeltaTime);
+	
 //INTERACTIONS
 //============
 public:
