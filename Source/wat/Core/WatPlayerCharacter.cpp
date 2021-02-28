@@ -263,13 +263,22 @@ void AWatPlayerCharacter::MoveRight(float Value)
 void AWatPlayerCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	//Adding 0.01 to SensibilityModifier in case player chose 0
+	AddControllerYawInput(Rate * BaseTurnRate * (SensibilityModifier + 0.01) * GetWorld()->GetDeltaSeconds());
 }
 
 void AWatPlayerCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	if (bInvertYAxis)
+	{
+		//Adding 0.01 to SensibilityModifier in case player chose 0
+		AddControllerPitchInput(-(Rate * BaseLookUpRate * (SensibilityModifier + 0.01) * GetWorld()->GetDeltaSeconds()));
+	} else
+	{
+		//Adding 0.01 to SensibilityModifier in case player chose 0
+		AddControllerPitchInput(Rate * BaseLookUpRate * (SensibilityModifier + 0.01) * GetWorld()->GetDeltaSeconds());
+	}
 }
 
 void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
