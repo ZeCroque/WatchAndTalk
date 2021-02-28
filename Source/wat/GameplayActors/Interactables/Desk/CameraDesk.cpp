@@ -15,6 +15,8 @@
 // Sets default values
 ACameraDesk::ACameraDesk()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	MapMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapMesh"));
 	MapMesh->SetupAttachment(StaticMesh);
 

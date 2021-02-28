@@ -26,8 +26,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void RegisterBlendCompleteCallback(AWatPlayerController* TargetController);
 	
-	virtual void OnInteractionBegin() override;
-	
 	virtual void OnInteraction() override;
 
 	void OnBlendComplete();
@@ -38,7 +36,17 @@ public:
 
 	void BlendToPlayer();
 
+	void CheckInteractionState();
+	
+	void SetUseState(bool bInUse);
+
+	virtual bool CanInteract(AWatPlayerCharacter* Player) override;
+	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
+
+	UPROPERTY(Replicated)
+	bool bIsInUse;
 	
 	bool bIsFinalBlend;
 };

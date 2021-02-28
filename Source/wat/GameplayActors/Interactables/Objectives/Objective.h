@@ -34,9 +34,7 @@ public:
 
 	AObjective();
 
-	virtual void OnInteractionBegin() override;
-
-    virtual void OnInteraction() override;
+	virtual bool CanInteract(class AWatPlayerCharacter* Player) override;
 
 	virtual void BeginPlay() override;
 	
