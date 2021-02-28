@@ -15,52 +15,34 @@ AObjective::AObjective()
 	bIsOnlyForMechanist = true;
 }
 
-void AObjective::OnInteractionBegin()
+bool AObjective::CanInteract(AWatPlayerCharacter* Player)
 {
-    if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
-    {
-		Super::OnInteractionBegin(); 
-    }
-    else
-    {
-	    bCanInteract = true;
-		bInUse = false;
-    }
-}
-
-void AObjective::OnInteraction()
-{
-    if(GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == PlayerCharacter->IsMechanist()) 
-    {
-		Super::OnInteraction(); 
-    }
+	return Super::CanInteract(Player) && !bCompleted && GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == Player->IsMechanist();
 }
 
 void AObjective::BeginPlay()
 {
-        Super::BeginPlay();
-        GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-        MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
-		MiniGameWidget->ParentInteractable = this;
+	Super::BeginPlay();
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
+	MiniGameWidget->ParentInteractable = this;
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
 {
     if (PlayerController)
     {
-        bInUse = false;
-    	MiniGameWidget->Stop();
-    	BlendToPlayer();
+    	MiniGameWidget->Stop();  	
     	if(bSuccess)
     	{
             bCompleted = true;
-    		bCanInteract = false;
     		PlayerCharacter->RemoveInteractable(this);
     	}
         if(bShouldWarnMonster)
         {
 	        GameState->MonsterCharacter->StartGoalReaction(PlayerCharacter);
         }
+    	BlendToPlayer();
     }
 }
 

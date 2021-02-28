@@ -16,8 +16,6 @@ void AQTEInteractable::OnNotFinalBlend()
 
 void AQTEInteractable::OnFinalBlend()
 {
-	Super::OnFinalBlend();
-
     if(bCompleted)
     {
 	    PlayerController->NotifyObjectiveCompleted(this);
@@ -27,4 +25,6 @@ void AQTEInteractable::OnFinalBlend()
 	{
 		PlayerController->SetInputMode(FInputModeGameOnly());
 	}
+
+	Super::OnFinalBlend();
 }

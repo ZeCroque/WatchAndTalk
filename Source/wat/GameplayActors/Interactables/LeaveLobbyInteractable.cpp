@@ -10,7 +10,6 @@
 
 void ALeaveLobbyInteractable::OnInteraction()
 {
-    bInUse = false;
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
 
 	auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;

@@ -4,15 +4,36 @@
 #include "WatLobbyLevelScriptActor.h"
 #include "WatGameState.h"
 
-void AWatLobbyLevelScriptActor::PostInitializeComponents()
+void AWatLobbyLevelScriptActor::BeginPlay()
 {
-	Super::PostInitializeComponents();
-	auto* PlayerController = GetWorld()->GetFirstPlayerController();
+	Super::BeginPlay();
+
+	APlayerController* PlayerController = nullptr;
+	if(!HasAuthority())
+	{
+		PlayerController = GetWorld()->GetFirstPlayerController();
+	}
+	else
+	{
+		for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+
+			if ((*Iterator)->IsLocalController())
+			{
+				PlayerController = (*Iterator).Get();
+			}
+		}
+	}
+	
 	if (PlayerController)
 	{
 		PlayerController->EnableInput(nullptr);
 		PlayerController->SetInputMode(FInputModeGameOnly());
-		PlayerController->GetPawn()->SetActorTickEnabled(true);
+		auto* Pawn = PlayerController->GetPawn();
+		if(Pawn)
+		{
+			Pawn->SetActorTickEnabled(true);
+		}
 	}
 
 	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
