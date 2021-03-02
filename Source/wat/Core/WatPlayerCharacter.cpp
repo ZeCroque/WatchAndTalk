@@ -447,7 +447,11 @@ void AWatPlayerCharacter::RemoveInteractable_Implementation(AInteractable* Inter
 	if(HasAuthority() || IsLocallyControlled())
 	{
 		InteractablesSet.Remove(Interactable);
-		Interactable->KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
+		auto UserWidget = Interactable->KeyIconWidget->GetUserWidgetObject();
+		if(UserWidget)
+		{
+			UserWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 

@@ -9,7 +9,10 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "wat/GameplayActors/Interactables/Desk/Monitor.h"
 #include "Engine/Canvas.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "wat/AI/GridManager.h"
+#include "wat/Core/WatGameState.h"
 #include "wat/Widgets/CameraDeskHUDWidget.h"
 
 // Sets default values
@@ -89,6 +92,24 @@ void ACameraDesk::Tick(float DeltaSeconds)
 
 	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
 	Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
+
+	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	const auto LogicBounds = GameState->GridManager->BoxComponent->GetNavigationBounds();
+	
+	for(auto* PlayerStateRef : GameState->PlayerArray)
+	{
+		const auto* Player = PlayerStateRef->GetPawn();
+		if(Player)
+		{
+			const auto LogicPlayerLocation = PlayerStateRef->GetPawn()->GetActorLocation() - LogicBounds.Min;
+			const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
+			const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
+			Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
+		}
+	}
+	
+	
+	
    
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
