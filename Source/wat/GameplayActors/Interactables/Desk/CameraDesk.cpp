@@ -99,9 +99,9 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	for(auto* PlayerStateRef : GameState->PlayerArray)
 	{
 		const auto* Player = PlayerStateRef->GetPawn();
-		if(Player)
+		if(Player && !PlayerStateRef->IsInactive())
 		{
-			const auto LogicPlayerLocation = PlayerStateRef->GetPawn()->GetActorLocation() - LogicBounds.Min;
+			const auto LogicPlayerLocation = Player->GetActorLocation() - LogicBounds.Min;
 			const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
 			const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
 			Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
