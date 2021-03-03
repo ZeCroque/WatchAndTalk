@@ -50,6 +50,8 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	
 	FVector ScreenStart;
 	FVector ScreenEnd;
 	MapMesh->GetLocalBounds(ScreenStart, ScreenEnd);
@@ -93,24 +95,26 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
 	Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
 
-	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	const auto LogicBounds = GameState->GridManager->BoxComponent->GetNavigationBounds();
 	
 	for(auto* PlayerStateRef : GameState->PlayerArray)
 	{
 		const auto* Player = PlayerStateRef->GetPawn();
-		if(Player && !PlayerStateRef->IsInactive())
+		if(Player)
 		{
-			const auto LogicPlayerLocation = Player->GetActorLocation() - LogicBounds.Min;
-			const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
-			const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
-			Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
+			const auto PlayerLocation = Player->GetActorLocation();
+			const auto Monitor = GetMonitorByIndex(CurrentIndex);
+		
+			if((PlayerLocation.Z >= GameState->GridManager->FloorHeight && Monitor->FloorIndex) || (PlayerLocation.Z < GameState->GridManager->FloorHeight && !Monitor->FloorIndex))
+			{
+				const auto LogicPlayerLocation = PlayerLocation - LogicBounds.Min;
+				const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
+				const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
+				Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
+			}
 		}
 	}
 	
-	
-	
-   
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 

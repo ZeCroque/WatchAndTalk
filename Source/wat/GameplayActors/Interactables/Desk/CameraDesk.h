@@ -66,6 +66,9 @@ private:
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* PostProcessMaterial;
+
+	UPROPERTY()
+	class AWatGameState* GameState;
 	
 	int CurrentIndex;
 	int TargetIndex;
