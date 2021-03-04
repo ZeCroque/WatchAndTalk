@@ -24,7 +24,6 @@ ABunkerDoor::ABunkerDoor()
 	DoorTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABunkerDoor::OnOverlapBegin);
 	DoorTrigger->OnComponentEndOverlap.AddDynamic(this, &ABunkerDoor::OnOverlapEnd);
 
-	bIsActivated = false;
 }
 
 // Called when the game starts or when spawned
@@ -33,13 +32,14 @@ void ABunkerDoor::BeginPlay()
 	Super::BeginPlay();
 	MeshHeight = DoorMesh->GetStaticMesh()->GetBoundingBox().Max.Z * DoorMesh->GetRelativeScale3D().Z + ZOffset;
     InitialZ = DoorMesh->GetRelativeLocation().Z;
+	OverlappingPlayerCount = 0;
 }
 
 // Called every frame
 void ABunkerDoor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(bIsActivated)
+	if(OverlappingPlayerCount)
 	{
 		if(DoorMesh->GetRelativeLocation().Z > (InitialZ + MeshHeight) * -1.f) 
 		{
@@ -50,7 +50,7 @@ void ABunkerDoor::Tick(float DeltaTime)
 		    DoorMesh->SetRelativeLocation(GetActorUpVector() * -1.f * (InitialZ + MeshHeight));
 		}
 	}
-	else if(!bIsActivated)	
+	else	
 	{
 		if(DoorMesh->GetRelativeLocation().Z < InitialZ) 
 		{
@@ -67,11 +67,11 @@ void ABunkerDoor::Tick(float DeltaTime)
 
 void ABunkerDoor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	bIsActivated = true;
+	++OverlappingPlayerCount;
 }
 
 void ABunkerDoor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	bIsActivated = false;
+	--OverlappingPlayerCount;
 }
 
