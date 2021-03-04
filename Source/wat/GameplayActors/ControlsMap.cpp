@@ -20,7 +20,7 @@ void AControlsMap::BeginPlay()
 	Super::BeginPlay();
 	
 	PlayerController = nullptr;
-	bIsShowingGamepad = false;
+	bIsShowingGamepad = true;
 }
 
 // Called every frame
