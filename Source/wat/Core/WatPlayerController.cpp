@@ -75,11 +75,6 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
 		Widget->OnInput(Key);
 		return true;
 	}
-	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
-	{
-		PauseWidget->OnInput(Key);
-		return true;
-	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }
 

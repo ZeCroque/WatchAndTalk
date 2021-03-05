@@ -2,15 +2,27 @@
 
 
 #include "PauseWidget.h"
+
+#include "Core/WatStaticUtils.h"
 #include "wat/Core/WatPlayerController.h"
 
-void UPauseWidget::OnInput(FKey PressedInput)
+void UPauseWidget::DestroyWidget()
 {
-    if (PressedInput.ToString() == "Escape" || PressedInput.ToString()=="X")
+    AWatPlayerController* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+    PC->PauseWidget->RemoveFromParent();
+    PC->PauseWidget = nullptr;
+    PC->bShowMouseCursor = false;
+    const FInputModeGameOnly GameOnly;
+    PC->SetInputMode(GameOnly);
+}
+
+FReply UPauseWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+    AWatPlayerController* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+    if (InKeyEvent.GetKey() == UWatStaticUtils::GetKeyForDevice("Pause" ,InKeyEvent.GetKey().IsGamepadKey()))
     {
-	    AWatPlayerController* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
-        PC->PauseWidget->RemoveFromParent();
-        PC->PauseWidget = nullptr;
-        PC->bShowMouseCursor = false;
+        DestroyWidget();
+        return FReply::Handled();
     }
+    return FReply::Unhandled();
 }

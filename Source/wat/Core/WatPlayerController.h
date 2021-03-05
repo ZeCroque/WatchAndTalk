@@ -51,7 +51,7 @@ public:
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	class UPauseWidget* PauseWidget;
 
 	bool bIsUsingController;
