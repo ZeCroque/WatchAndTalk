@@ -17,7 +17,7 @@ AObjective::AObjective()
 
 bool AObjective::CanInteract(AWatPlayerCharacter* Player)
 {
-	return Super::CanInteract(Player) && !bCompleted && GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == Player->IsMechanist();
+	return Super::CanInteract(Player) && !bCompleted && GameState && GameState->ObjectiveIndex == ObjectiveIndex && bIsOnlyForMechanist == !GameState->bScientistTurn && bIsOnlyForMechanist == Player->IsMechanist();
 }
 
 void AObjective::BeginPlay()
