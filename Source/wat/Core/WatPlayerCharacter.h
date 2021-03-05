@@ -121,6 +121,8 @@ private:
 
 	void HandleSprint(float DeltaTime);
 
+	void NotifyWantsToSprint();
+	
 	UFUNCTION(Server, Reliable)
 	void StartSprinting();
 
@@ -134,9 +136,6 @@ public:
 	float CrouchingTransitionDuration = 0.5f;
 
 private:	
-	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
-	bool bIsCrouching;
-
 	float BaseCameraRelativeHeight;
 	float BaseHalfHeightDelta;
 	float CurrentHalfHeightDelta;

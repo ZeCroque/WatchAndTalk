@@ -36,7 +36,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(RootComponent);
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
@@ -45,12 +44,9 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
-	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
-	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
+
 
 	auto* Mesh3P = this->GetMesh();
-	Mesh3P->AddRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-	Mesh3P->AddRelativeLocation(FVector(-30.0f, 10.0f, -90.0f));
 	Mesh3P->SetVisibleFlag(false);
 
 	SetupStimulus();
@@ -95,7 +91,6 @@ void AWatPlayerCharacter::BeginPlay()
 	BaseCameraRelativeHeight = FirstPersonCameraComponent->GetRelativeLocation().Z;
 	BaseHalfHeightDelta = 0.f;
 	CurrentHalfHeightDelta = 0.f;
-	bIsCrouching = false;
 
 	LaserDeltaTimeCount = 0.f;
 
@@ -133,16 +128,16 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 
 			HandleLaser(DeltaTime);
 			
-			if (!bIsCrouching)
+			if (!GetCharacterMovement()->IsCrouching())
 			{
 				ClearGridWhenSprinting();
 			}
 		}
 		HandleInteractables();
 		HandleSprint(DeltaTime);
+		HandleCrouch(DeltaTime);
 	}
 
-	HandleCrouch(DeltaTime);
 }
 
 void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -165,7 +160,7 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
 	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::NotifyWantsToSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::ToggleCrouch);
 	PlayerInputComponent->BindAction("WatchListObjectives", IE_Pressed, this, &AWatPlayerCharacter::ToggleObjectivesHUDVisibility);
@@ -182,7 +177,6 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
-	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsSprinting);
 	DOREPLIFETIME(AWatPlayerCharacter, LaserPointer);
 }
@@ -316,12 +310,18 @@ void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
 	}
 }
 
+void AWatPlayerCharacter::NotifyWantsToSprint()
+{
+	if(GetCharacterMovement()->IsCrouching())
+	{
+		UnCrouch();
+	}
+	StartSprinting();
+}
+
 void AWatPlayerCharacter::StartSprinting_Implementation()
 {
-	if(!bIsCrouching)
-	{
-		bIsSprinting = true;
-	}
+	bIsSprinting = true;
 }
 
 void AWatPlayerCharacter::StopSprinting_Implementation()
@@ -332,16 +332,17 @@ void AWatPlayerCharacter::StopSprinting_Implementation()
 
 void AWatPlayerCharacter::ToggleCrouch()
 {
-	if(!bIsSprinting)
+	if(bIsSprinting)
 	{
-		if(!GetCharacterMovement()->IsCrouching())
-		{
-			Crouch();
-		}
-		else
-		{
-			UnCrouch();
-		}
+		StopSprinting();
+	}
+	if(!GetCharacterMovement()->IsCrouching())
+	{
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
 	}
 }
 
@@ -372,7 +373,7 @@ void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 			CurrentHalfHeightDelta = 0.f;
 		}
 
-		RelativeLocation.Z = 80.f + CurrentHalfHeightDelta;
+		RelativeLocation.Z = BaseCameraRelativeHeight + CurrentHalfHeightDelta;
 		FirstPersonCameraComponent->SetRelativeLocation(RelativeLocation);
 	}
 }
