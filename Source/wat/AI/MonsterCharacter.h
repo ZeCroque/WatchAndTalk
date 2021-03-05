@@ -10,6 +10,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventReactionMode);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventPlayerIsNowInSight);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventMonsterAttackNow);
+
 UCLASS()
 class WAT_API AMonsterCharacter final : public ACharacter
 {
@@ -54,7 +56,7 @@ public:
 	FOnEventPlayerIsNowInSight OnEventPlayerIsNowInSightDispatcher;
 
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventMonsterAttackNow"))
-	FOnEventPlayerIsNowInSight OnEventAttackDispatcher;
+	FOnEventMonsterAttackNow OnEventAttackDispatcher;
 
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
