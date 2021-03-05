@@ -24,14 +24,7 @@ AMonsterCharacter::AMonsterCharacter()
 
 void AMonsterCharacter::MeleeAttack(AWatPlayerCharacter* Player)
 {
-	//todo : Execute Melee Attack Animation
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
-	}
-
-
+	OnEventAttackDispatcher.Broadcast();
 	KillPlayer(Player);
 }
 

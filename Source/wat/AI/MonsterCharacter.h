@@ -53,6 +53,9 @@ public:
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventPlayerIsNowInSight"))
 	FOnEventPlayerIsNowInSight OnEventPlayerIsNowInSightDispatcher;
 
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventMonsterAttackNow"))
+	FOnEventPlayerIsNowInSight OnEventAttackDispatcher;
+
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
 
