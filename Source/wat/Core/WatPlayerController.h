@@ -21,6 +21,9 @@ public:
 	void PossessRPC(APawn* PawnToPossess, bool bEnableInput = false);
 
 	UFUNCTION(Server, Reliable)
+	void NotifyPossessionEnd(class ABlendableInteractable* Interactable);
+
+	UFUNCTION(Server, Reliable)
 	void BroadcastInteractionEnd(class AWatPlayerCharacter* InteractingPlayer, class ABlendableInteractable* Interactable);
 	
 	UFUNCTION(Server, Reliable)

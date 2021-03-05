@@ -12,9 +12,9 @@ class WAT_API ABunkerDoor : public AActor
 	GENERATED_BODY()
 
 private:
-        float InitialZ;
+    float InitialZ;
 	float MeshHeight;
-	bool bIsActivated;
+	int OverlappingPlayerCount;
 	
 public:	
 	// Sets default values for this actor's properties

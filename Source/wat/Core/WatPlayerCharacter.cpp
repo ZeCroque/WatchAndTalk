@@ -139,6 +139,7 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 				ClearGridWhenSprinting();
 			}
 		}
+		HandleInteractables();
 		HandleSprint(DeltaTime);
 	}
 
@@ -433,15 +434,25 @@ void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 	}
 }
 
-bool AWatPlayerCharacter::AddInteractable(AInteractable* Interactable)
+void AWatPlayerCharacter::AddInteractable_Implementation(AInteractable* Interactable)
 {
-	InteractablesSet.Add(Interactable);
-	return IsClosestInteractable(Interactable);
+	if(HasAuthority() || IsLocallyControlled())
+	{
+		InteractablesSet.Add(Interactable);
+	}
 }
 
-void AWatPlayerCharacter::RemoveInteractable(AInteractable* Interactable)
+void AWatPlayerCharacter::RemoveInteractable_Implementation(AInteractable* Interactable)
 {
-	InteractablesSet.Remove(Interactable);
+	if(HasAuthority() || IsLocallyControlled())
+	{
+		InteractablesSet.Remove(Interactable);
+		auto UserWidget = Interactable->KeyIconWidget->GetUserWidgetObject();
+		if(UserWidget)
+		{
+			UserWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }
 
 bool AWatPlayerCharacter::IsClosestInteractable(AInteractable* Interactable)
@@ -459,7 +470,23 @@ void AWatPlayerCharacter::Interact_Implementation()
 	auto* ClosestInteractable = GetClosestInteractable();
 	if (ClosestInteractable)
 	{
-		ClosestInteractable->Interact();
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = OriginalMaxSpeed;
+		ClosestInteractable->Interact(this);
+	}
+}
+
+void AWatPlayerCharacter::HandleInteractables()
+{
+	auto* ClosestInteractable = GetClosestInteractable();
+	if(ClosestInteractable)
+	{
+		if(!ClosestInteractable->KeyIconWidget->GetUserWidgetObject()->IsVisible())
+		{
+			ClosestInteractable->KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+		}
+		ClosestInteractable->RefreshIconWidgetForCurrentDevice(LocalPlayerController->bIsUsingController);
+		ClosestInteractable->KeyIconWidget->SetWorldRotation((GetActorForwardVector() * -1.f).Rotation());
 	}
 }
 

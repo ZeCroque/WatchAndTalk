@@ -18,6 +18,11 @@ AWatPlayerController::AWatPlayerController()
 	bIsUsingController = false;
 }
 
+void AWatPlayerController::NotifyPossessionEnd_Implementation(ABlendableInteractable* Interactable)
+{
+	Interactable->SetUseState(false);
+}
+
 void AWatPlayerController::BroadcastInteractionEnd_Implementation(AWatPlayerCharacter* InteractingPlayer, ABlendableInteractable* Interactable)
 {
 	InteractingPlayer->OnInteractionEndDispatcher.Broadcast(Interactable);
@@ -35,6 +40,14 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	}
 	GameState->bScientistTurn = !GameState->bScientistTurn;
 
+	for(auto* ObjectiveInteractable : GameState->Objectives)
+	{
+		if(ObjectiveInteractable)
+		{
+			ObjectiveInteractable->CheckInteractionState();
+		}
+	}
+	
 	if (GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;

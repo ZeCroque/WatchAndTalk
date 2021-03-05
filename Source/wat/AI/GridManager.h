@@ -57,6 +57,9 @@ public:
 
 	static bool IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup")
+	int FloorHeight = 405;
+	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int CellPerSide = 10;
@@ -67,8 +70,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	float CoolingInterval = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
-	int FloorHeight = 405;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int GroundHeight = 94;

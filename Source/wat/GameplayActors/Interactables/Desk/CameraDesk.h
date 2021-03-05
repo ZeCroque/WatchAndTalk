@@ -33,6 +33,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
 	UTexture* SecondFloor;
 
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	UMaterialInstance* PlayerIcon;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	float PlayerIconSize = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	float MapXOffset = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	float MapYOffset = 20.f;
+
 	UPROPERTY(EditAnywhere, Category= "WAT HUDSettings")
 	TSubclassOf<UUserWidget> CameraDeskHUDWidgetClass;
 
@@ -54,6 +66,9 @@ private:
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* PostProcessMaterial;
+
+	UPROPERTY()
+	class AWatGameState* GameState;
 	
 	int CurrentIndex;
 	int TargetIndex;

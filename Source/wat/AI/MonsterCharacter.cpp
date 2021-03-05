@@ -24,14 +24,7 @@ AMonsterCharacter::AMonsterCharacter()
 
 void AMonsterCharacter::MeleeAttack(AWatPlayerCharacter* Player)
 {
-	//todo : Execute Melee Attack Animation
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "Attack !");
-	}
-
-
+	OnEventAttackDispatcher.Broadcast();
 	KillPlayer(Player);
 }
 
@@ -67,7 +60,7 @@ void AMonsterCharacter::KillPlayer_Implementation(AWatPlayerCharacter* Player)
 	if (GameOverWidget != nullptr)
 	{
 		GameOverWidget->AddToViewport();
-		auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		auto* PlayerController = GetWorld()->GetFirstPlayerController();
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;
 	}

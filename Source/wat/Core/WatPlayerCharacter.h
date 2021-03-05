@@ -170,15 +170,22 @@ public:
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnInteractionEnd"))
 	FOnInteract OnInteractionEndDispatcher;
 
-	bool AddInteractable(AInteractable* Interactable);
+	UFUNCTION(NetMulticast, Reliable)
+	void AddInteractable(AInteractable* Interactable);
+
+	UFUNCTION(NetMulticast, Reliable)
 	void RemoveInteractable(AInteractable* Interactable);
+
 	bool IsClosestInteractable(AInteractable* Interactable);
+	
 private:
 	UPROPERTY()
 	TSet<AInteractable*> InteractablesSet;
 
 	UFUNCTION(Server, Reliable)
 	void Interact();
+
+	void HandleInteractables();
 	
 	AInteractable* GetClosestInteractable();
 
