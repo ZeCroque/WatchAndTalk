@@ -18,7 +18,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
-#include "wat/PauseWidget.h"
+#include "wat/Widgets/PauseWidget.h"
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"

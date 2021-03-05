@@ -3,8 +3,8 @@
 
 #include "PauseWidget.h"
 
-#include "Core/WatStaticUtils.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Core/WatStaticUtils.h"
 
 void UPauseWidget::DestroyWidget()
 {

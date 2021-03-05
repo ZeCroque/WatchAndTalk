@@ -2,7 +2,7 @@
 
 
 #include "wat/Core/WatPlayerController.h"
-#include "wat/PauseWidget.h"
+#include "wat/Widgets/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
