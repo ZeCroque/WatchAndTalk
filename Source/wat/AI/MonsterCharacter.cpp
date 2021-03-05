@@ -60,7 +60,7 @@ void AMonsterCharacter::KillPlayer_Implementation(AWatPlayerCharacter* Player)
 	if (GameOverWidget != nullptr)
 	{
 		GameOverWidget->AddToViewport();
-		auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		auto* PlayerController = GetWorld()->GetFirstPlayerController();
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;
 	}
