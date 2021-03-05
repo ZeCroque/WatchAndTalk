@@ -132,33 +132,19 @@ private:
 public:
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
 	float CrouchingTransitionDuration = 0.5f;
-	
-	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
-	float CrouchingCapsuleReductionRatio = 0.2f;
 
 private:	
 	UPROPERTY(Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
-	bool bWantsToChangeCrouchState;
-
-	UPROPERTY(ReplicatedUsing = CrouchStateChanged, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	bool bIsCrouching;
 
+	float BaseCameraRelativeHeight;
+	float BaseHalfHeightDelta;
+	float CurrentHalfHeightDelta;
 
-	
-	float BaseCapsuleHeight;
-	float CrouchCapsuleDelta;
-	float CrouchingDeltaTimeCount;
-
-public:
-	void SetMeshZOffset(float ZOffset);
-
-private:
-	UFUNCTION()
-	void CrouchStateChanged();
-	
-	UFUNCTION(Server, Reliable)
 	void ToggleCrouch();
-
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	
 	void HandleCrouch(float DeltaTime);
 	
 //INTERACTIONS

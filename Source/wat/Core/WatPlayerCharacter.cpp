@@ -92,11 +92,10 @@ void AWatPlayerCharacter::BeginPlay()
 		OriginalMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	}
 	
-	BaseCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	CrouchCapsuleDelta = BaseCapsuleHeight * CrouchingCapsuleReductionRatio;
-	bWantsToChangeCrouchState = false;
+	BaseCameraRelativeHeight = FirstPersonCameraComponent->GetRelativeLocation().Z;
+	BaseHalfHeightDelta = 0.f;
+	CurrentHalfHeightDelta = 0.f;
 	bIsCrouching = false;
-	CrouchingDeltaTimeCount = 0.f;
 
 	LaserDeltaTimeCount = 0.f;
 
@@ -183,7 +182,6 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
-	DOREPLIFETIME(AWatPlayerCharacter, bWantsToChangeCrouchState);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsCrouching);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsSprinting);
 	DOREPLIFETIME(AWatPlayerCharacter, LaserPointer);
@@ -331,106 +329,51 @@ void AWatPlayerCharacter::StopSprinting_Implementation()
 	bIsSprinting = false;
 }
 
-void AWatPlayerCharacter::SetMeshZOffset(const float ZOffset)
-{
-	BaseTranslationOffset.Z = ZOffset;
-}
 
-void AWatPlayerCharacter::CrouchStateChanged()
-{
-	if(IsLocallyControlled())
-	{
-		if(bIsCrouching)
-		{
-			const auto CharacterMovementLocalRef = GetCharacterMovement();
-			CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
-			UpdateRemotePlayerSpeed(this, CharacterMovementLocalRef->MaxWalkSpeedCrouched);
-		}
-		else
-		{
-			const auto CharacterMovementLocalRef = GetCharacterMovement();
-			CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
-			UpdateRemotePlayerSpeed(this, OriginalMaxSpeed);
-		}
-	}
-}
-
-void AWatPlayerCharacter::ToggleCrouch_Implementation()
+void AWatPlayerCharacter::ToggleCrouch()
 {
 	if(!bIsSprinting)
 	{
-		bWantsToChangeCrouchState = true;
+		if(!GetCharacterMovement()->IsCrouching())
+		{
+			Crouch();
+		}
+		else
+		{
+			UnCrouch();
+		}
 	}
+}
+
+void AWatPlayerCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	BaseHalfHeightDelta = ScaledHalfHeightAdjust;
+	CurrentHalfHeightDelta = CurrentHalfHeightDelta == 0.f ? ScaledHalfHeightAdjust : CurrentHalfHeightDelta + ScaledHalfHeightAdjust;
+}
+
+void AWatPlayerCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	BaseHalfHeightDelta = ScaledHalfHeightAdjust;
+	CurrentHalfHeightDelta = CurrentHalfHeightDelta == 0.f ? -ScaledHalfHeightAdjust : CurrentHalfHeightDelta - ScaledHalfHeightAdjust;
 }
 
 void AWatPlayerCharacter::HandleCrouch(const float DeltaTime)
 {
-	if(bWantsToChangeCrouchState)
+	auto RelativeLocation = FirstPersonCameraComponent->GetRelativeLocation();
+	if(CurrentHalfHeightDelta != 0.f)
 	{
-		CrouchingDeltaTimeCount += DeltaTime;
+		const auto Sign = CurrentHalfHeightDelta > 0.f ? -1.f : 1.f;
+		CurrentHalfHeightDelta += (BaseHalfHeightDelta * Sign * DeltaTime) / CrouchingTransitionDuration;
 		
-		if(CrouchingDeltaTimeCount <= CrouchingTransitionDuration)
+		if((Sign == -1.f  && CurrentHalfHeightDelta < 0.f) || (Sign == 1.f  && CurrentHalfHeightDelta > 0.f))
 		{
-			auto MeshZOffset = (CrouchCapsuleDelta * DeltaTime) / CrouchingTransitionDuration;	
-			auto CapsuleOffset = (BaseCapsuleHeight * CrouchingCapsuleReductionRatio * DeltaTime) / CrouchingTransitionDuration;
-			
-			if(!bIsCrouching)
-			{
-				CapsuleOffset *= -1.f;
-			}
-			else
-			{
-				MeshZOffset *= -1.f;
-			}
-			
-			const auto NewCapsuleHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + CapsuleOffset;
-			if((!IsLocallyControlled() && HasAuthority()) || !HasAuthority() 
-#ifdef WITH_EDITOR 
-				|| GetWorld()->IsEditorWorld() 
-#endif
-				)
-			{
-				GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-				BaseTranslationOffset.Z += MeshZOffset;
-				if(IsLocallyControlled())
-				{	
-					GetMesh()->SetRelativeLocation(BaseTranslationOffset);
-				}
-			
-				if(!IsLocallyControlled() && !HasAuthority())
-				{
-					LocalPlayerController->UpdatePlayerCapsuleHalfHeight(this, NewCapsuleHeight);
-					LocalPlayerController->UpdatePlayerZOffset(this, BaseTranslationOffset.Z);
-				}
-			}
+			CurrentHalfHeightDelta = 0.f;
 		}
-		else
-		{
-			CrouchingDeltaTimeCount = 0.f;
-			
-			if(HasAuthority())
-			{
-				bWantsToChangeCrouchState = false;
-				if(!bIsCrouching)
-				{	
-					bIsCrouching = true;
-					if(IsLocallyControlled())
-					{
-						const auto CharacterMovementLocalRef = GetCharacterMovement();
-						CharacterMovementLocalRef->MaxWalkSpeed = CharacterMovementLocalRef->MaxWalkSpeedCrouched;
-					}
-				}
-				else
-				{
-					bIsCrouching = false;
-					if(IsLocallyControlled())
-					{
-						const auto CharacterMovementLocalRef = GetCharacterMovement();
-						CharacterMovementLocalRef->MaxWalkSpeed = OriginalMaxSpeed;
-					}
-				}
-			}
-		}
+
+		RelativeLocation.Z = 80.f + CurrentHalfHeightDelta;
+		FirstPersonCameraComponent->SetRelativeLocation(RelativeLocation);
 	}
 }
 
