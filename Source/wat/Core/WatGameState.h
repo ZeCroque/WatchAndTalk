@@ -61,8 +61,11 @@ public:
 	UPROPERTY(Replicated)
 	bool bTutorialActivated;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool bGameStarted;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsInLobby;
 
 	bool bGameEnded;
 

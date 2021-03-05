@@ -21,10 +21,22 @@ public:
 	void PossessRPC(APawn* PawnToPossess, bool bEnableInput = false);
 
 	UFUNCTION(Server, Reliable)
+	void NotifyPossessionEnd(class ABlendableInteractable* Interactable);
+
+	UFUNCTION(Server, Reliable)
+	void BroadcastInteractionEnd(class AWatPlayerCharacter* InteractingPlayer, class ABlendableInteractable* Interactable);
+	
+	UFUNCTION(Server, Reliable)
 	void NotifyObjectiveCompleted(class AObjective* Objective);
 
 	UFUNCTION(Server,Reliable)
 	void UpdateBunkerPlayerCount(const int Value);
+
+	UFUNCTION(Server, Reliable)
+	void UpdatePlayerZOffset(AWatPlayerCharacter* PlayerCharacter, float ZOffset);
+
+	UFUNCTION(Server, Reliable)
+	void UpdatePlayerCapsuleHalfHeight(AWatPlayerCharacter* PlayerCharacter, float Height);
 
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 

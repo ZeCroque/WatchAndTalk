@@ -42,6 +42,7 @@ void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWatGameState, ObjectiveIndex);
 	DOREPLIFETIME(AWatGameState, bScientistTurn);
 	DOREPLIFETIME(AWatGameState, bGameStarted);
+	DOREPLIFETIME(AWatGameState, bIsInLobby);
 }
 
 bool AWatGameState::AreAllObjectivesCompleted() const

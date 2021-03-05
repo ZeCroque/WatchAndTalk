@@ -12,9 +12,9 @@ class WAT_API ABunkerDoor : public AActor
 	GENERATED_BODY()
 
 private:
-        float InitialZ;
+    float InitialZ;
 	float MeshHeight;
-	bool bIsActivated;
+	int OverlappingPlayerCount;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -28,6 +28,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category= "WAT Door")
 	float DoorMovingSpeed;
+
+	UPROPERTY(EditAnywhere, Category="WAT Door")
+	float ZOffset = 1.f;
 
 protected:
 	// Called when the game starts or when spawned

@@ -44,6 +44,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings",  meta = (ClampMin = "0.0") )
 	float TextMargin;
+
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings",  meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MonitorTextSizeRatio = 0.15f;
 	
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
     UMaterialInterface* BaseRenderMaterial;

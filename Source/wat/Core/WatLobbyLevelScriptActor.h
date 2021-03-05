@@ -15,5 +15,5 @@ class WAT_API AWatLobbyLevelScriptActor : public ALevelScriptActor
 	GENERATED_BODY()
 
 protected:
-        virtual void PostInitializeComponents() override;
+        virtual void BeginPlay() override;
 };

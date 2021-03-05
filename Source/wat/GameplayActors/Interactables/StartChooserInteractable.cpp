@@ -9,6 +9,5 @@
 
 void AStartChooserInteractable::OnInteraction()
 {
-	bInUse = false;
 	PlayerCharacter->SwitchStartMode();
 }

@@ -21,16 +21,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* KeyIconWidget;
-
-protected:
-
-	UPROPERTY(Replicated)
-	bool bInUse;
 	
 public:	
 	// Sets default values for this actor's properties
 	AInteractable();
-	void Interact();
+	void Interact(class AWatPlayerCharacter* Player);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(Replicated)
@@ -39,7 +34,9 @@ public:
 	UPROPERTY(Replicated)
 	class AWatPlayerCharacter* PlayerCharacter;
 
-	bool bCanInteract;
+	UPROPERTY()
+	TArray<class AWatPlayerCharacter*> OverlappingPlayers; 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -50,14 +47,14 @@ protected:
 	UFUNCTION()
 	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	virtual void OnInteractionBegin();
-	
-	virtual void OnInteraction(){}
+	virtual void OnInteraction();
 
-	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad) const;
+	virtual bool CanInteract(class AWatPlayerCharacter* Player);
+
+	bool bIsShowingGamepadIcon;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+
+	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad);
 
 };

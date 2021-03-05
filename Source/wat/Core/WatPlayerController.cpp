@@ -7,8 +7,7 @@
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/QTEWidget.h"
-
-#include "WatGameState.h"
+#include "Components/CapsuleComponent.h"
 
 AWatPlayerController::AWatPlayerController()
 {
@@ -17,6 +16,16 @@ AWatPlayerController::AWatPlayerController()
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
 	bIsUsingController = false;
+}
+
+void AWatPlayerController::NotifyPossessionEnd_Implementation(ABlendableInteractable* Interactable)
+{
+	Interactable->SetUseState(false);
+}
+
+void AWatPlayerController::BroadcastInteractionEnd_Implementation(AWatPlayerCharacter* InteractingPlayer, ABlendableInteractable* Interactable)
+{
+	InteractingPlayer->OnInteractionEndDispatcher.Broadcast(Interactable);
 }
 
 void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
@@ -31,6 +40,14 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	}
 	GameState->bScientistTurn = !GameState->bScientistTurn;
 
+	for(auto* ObjectiveInteractable : GameState->Objectives)
+	{
+		if(ObjectiveInteractable)
+		{
+			ObjectiveInteractable->CheckInteractionState();
+		}
+	}
+	
 	if (GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;
@@ -49,6 +66,18 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 	{
 		PawnToPossess->EnableInput(this);
 	}
+}
+
+void AWatPlayerController::UpdatePlayerZOffset_Implementation(AWatPlayerCharacter* PlayerCharacter, const float ZOffset)
+{
+	auto MeshRelativeLocation = PlayerCharacter->GetMesh()->GetRelativeLocation();
+	MeshRelativeLocation.Z = ZOffset;
+	PlayerCharacter->GetMesh()->SetRelativeLocation(MeshRelativeLocation);
+}
+
+void AWatPlayerController::UpdatePlayerCapsuleHalfHeight_Implementation(AWatPlayerCharacter* PlayerCharacter, float Height)
+{
+	PlayerCharacter->GetCapsuleComponent()->SetCapsuleHalfHeight(Height);
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)

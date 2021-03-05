@@ -26,17 +26,15 @@ public:
 	UPROPERTY(Replicated)
 	class UQTEWidget* MiniGameWidget;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     int ObjectiveIndex;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     bool bIsOnlyForMechanist;
 
 	AObjective();
 
-	virtual void OnInteractionBegin() override;
-
-    virtual void OnInteraction() override;
+	virtual bool CanInteract(class AWatPlayerCharacter* Player) override;
 
 	virtual void BeginPlay() override;
 	

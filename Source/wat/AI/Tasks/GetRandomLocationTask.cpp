@@ -56,7 +56,7 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation, 1000);
 		}
 		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
-			|| i < 100);
+			&& i < 100);
 
 		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
 

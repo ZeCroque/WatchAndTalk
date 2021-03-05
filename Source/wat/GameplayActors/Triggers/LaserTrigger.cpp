@@ -19,7 +19,7 @@ void ALaserTrigger::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
     auto* PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
     if (PlayerCharacter)
     {
-        PlayerCharacter->bIsUsingLaser = false;
+        PlayerCharacter->SetIsUsingLaser(false);
     }
 }
 
@@ -29,6 +29,6 @@ void ALaserTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
     auto* PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
     if (PlayerCharacter)
     {
-        PlayerCharacter->bIsUsingLaser = true;
+        PlayerCharacter->SetIsUsingLaser(true);
     }
 }

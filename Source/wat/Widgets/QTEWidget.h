@@ -41,7 +41,7 @@ public:
     int CurrentIndex = 0;
 	
     //TIMER
-    UPROPERTY(EditAnywhere, Category= "WAT QTE")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WAT QTE")
     float TimeLimit;
 	
     UPROPERTY(BlueprintReadWrite)

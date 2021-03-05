@@ -9,12 +9,17 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "wat/GameplayActors/Interactables/Desk/Monitor.h"
 #include "Engine/Canvas.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "wat/AI/GridManager.h"
+#include "wat/Core/WatGameState.h"
 #include "wat/Widgets/CameraDeskHUDWidget.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	MapMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MapMesh"));
 	MapMesh->SetupAttachment(StaticMesh);
 
@@ -45,6 +50,8 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	
 	FVector ScreenStart;
 	FVector ScreenEnd;
 	MapMesh->GetLocalBounds(ScreenStart, ScreenEnd);
@@ -86,8 +93,28 @@ void ACameraDesk::Tick(float DeltaSeconds)
     UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, MapRenderTarget, Canvas, CanvasSize, Context);
 
 	Canvas->K2_DrawTexture(CurrentFloor, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingHeight),FVector2D(0.f,0.f));
-	Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
-   
+	//Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
+
+	const auto LogicBounds = GameState->GridManager->BoxComponent->GetNavigationBounds();
+	
+	for(auto* PlayerStateRef : GameState->PlayerArray)
+	{
+		const auto* Player = PlayerStateRef->GetPawn();
+		if(Player)
+		{
+			const auto PlayerLocation = Player->GetActorLocation();
+			const auto Monitor = GetMonitorByIndex(CurrentIndex);
+		
+			if((PlayerLocation.Z >= GameState->GridManager->FloorHeight && Monitor->FloorIndex) || (PlayerLocation.Z < GameState->GridManager->FloorHeight && !Monitor->FloorIndex))
+			{
+				const auto LogicPlayerLocation = PlayerLocation - LogicBounds.Min;
+				const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
+				const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
+				Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
+			}
+		}
+	}
+	
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 

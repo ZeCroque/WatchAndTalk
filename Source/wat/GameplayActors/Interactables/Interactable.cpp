@@ -14,13 +14,8 @@
 // Sets default values
 AInteractable::AInteractable()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	AutoPossessAI = EAutoPossessAI::Disabled;
 	AIControllerClass = nullptr;
-
-	bInUse = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	
@@ -42,24 +37,22 @@ AInteractable::AInteractable()
 void AInteractable::BeginPlay()
 {
 	Super::BeginPlay();
-
-	bCanInteract = true;
-
+	
+	bIsShowingGamepadIcon = true;
 	RefreshIconWidgetForCurrentDevice(false);
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!PlayerCharacter && bCanInteract)
+	if(HasAuthority())
 	{
-		PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
-		if (PlayerCharacter)
+		const auto PlayerLocalRef = Cast<AWatPlayerCharacter>(OtherActor);
+		if(PlayerLocalRef)
 		{
-			PlayerCharacter->AddInteractable(this);
-			PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
-			if(PlayerController)
+			OverlappingPlayers.Add(PlayerLocalRef);
+			if(CanInteract(PlayerLocalRef))
 			{
-			    RefreshIconWidgetForCurrentDevice(PlayerController->bIsUsingController);
+				PlayerLocalRef->AddInteractable(this);
 			}
 		}
 	}
@@ -67,55 +60,56 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 
 void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (PlayerCharacter == OtherActor)
+	const auto PlayerLocalRef = Cast<AWatPlayerCharacter>(OtherActor);
+	
+	if (PlayerLocalRef && !PlayerLocalRef->IsPendingKill())
 	{
-		PlayerCharacter->RemoveInteractable(this);
-		PlayerCharacter = nullptr;
-		PlayerController = nullptr;
+		if(KeyIconWidget)
+		{
+			auto* UserWidgetObject = KeyIconWidget->GetUserWidgetObject();
+			if(UserWidgetObject)
+			{
+				UserWidgetObject->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}
+		if(HasAuthority())
+		{
+			OverlappingPlayers.Remove(PlayerLocalRef);
+			PlayerLocalRef->RemoveInteractable(this);
+		}
 	}
 }
 
-void AInteractable::OnInteractionBegin()
+void AInteractable::OnInteraction()
 {
 	PlayerCharacter->OnInteractDispatcher.Broadcast(this);
 }
 
-void AInteractable::Interact()
+void AInteractable::Interact(AWatPlayerCharacter* Player)
 {
-	if (PlayerCharacter && PlayerController)
-	{
-		bInUse = true;
-		OnInteractionBegin();
-		OnInteraction();		
-	}
+	PlayerCharacter = Player;
+	PlayerController = Cast<AWatPlayerController>(Player->GetController());
+	OnInteraction();		
 }
 
 void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AInteractable, bInUse);
 	DOREPLIFETIME(AInteractable, PlayerCharacter);
 	DOREPLIFETIME(AInteractable, PlayerController);
 }
 
-void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad) const
+bool AInteractable::CanInteract(AWatPlayerCharacter* Player)
 {
-	Cast<UKeyIconWidget>(KeyIconWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
+	return Player != nullptr;
 }
 
-// Called every frame
-void AInteractable::Tick(float DeltaTime)
+void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad)
 {
-	Super::Tick(DeltaTime);
-
-	if(PlayerCharacter && bCanInteract && !bInUse && PlayerCharacter->IsClosestInteractable(this))
-	 {
-              KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
-			  KeyIconWidget->SetWorldRotation((PlayerCharacter->GetActorForwardVector() * -1.f).Rotation());
-              return;
-	 }
-
-	KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
-
+	if(bIsShowingGamepadIcon != bIsGamePad)
+	{		
+		Cast<UKeyIconWidget>(KeyIconWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
+		bIsShowingGamepadIcon = bIsGamePad;
+	}
 }
 

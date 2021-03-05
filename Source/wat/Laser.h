@@ -11,7 +11,17 @@ class WAT_API ALaser : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* PlayerOneMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* PlayerTwoMaterial;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* LaserMesh;
+	
 	// Sets default values for this actor's properties
 	ALaser();
 

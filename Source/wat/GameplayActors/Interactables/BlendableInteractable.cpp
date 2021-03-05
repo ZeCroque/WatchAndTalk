@@ -3,6 +3,8 @@
 
 #include "wat/GameplayActors/Interactables/BlendableInteractable.h"
 
+
+#include "GeneratedCodeHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "wat/Core/WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
@@ -23,17 +25,15 @@ void ABlendableInteractable::RegisterBlendCompleteCallback_Implementation(AWatPl
 	}
 }
 
-void ABlendableInteractable::OnInteractionBegin()
+void ABlendableInteractable::OnInteraction()
 {
-	Super::OnInteractionBegin();
+	Super::OnInteraction();
 	
+	SetUseState(true);
 	bIsFinalBlend = false;
 	PlayerCharacter->DisableInput(PlayerController);
 	RegisterBlendCompleteCallback(PlayerController);
-}	
-
-void ABlendableInteractable::OnInteraction()
-{
+	KeyIconWidget->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
 	PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
 }
 
@@ -45,7 +45,7 @@ void ABlendableInteractable::OnNotFinalBlend()
 void ABlendableInteractable::OnFinalBlend()
 {
 	bIsFinalBlend = false;
-	bInUse = false;
+	PlayerController->NotifyPossessionEnd(this);
 	PlayerController->PossessRPC(PlayerCharacter, true);
     PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);
 }
@@ -54,18 +54,51 @@ void ABlendableInteractable::BlendToPlayer()
 {
 	bIsFinalBlend = true;
 	PlayerController->SetViewTargetWithBlend(PlayerCharacter, BlendTime, VTBlend_Linear, 0, true);
-	PlayerCharacter->OnInteractionEndDispatcher.Broadcast(this);
+	PlayerController->BroadcastInteractionEnd(PlayerCharacter, this);
+}
+
+void ABlendableInteractable::CheckInteractionState()
+{
+	for(auto* OverlappingPlayer : OverlappingPlayers)
+	{
+		if(CanInteract(OverlappingPlayer))
+		{
+			OverlappingPlayer->AddInteractable(this);
+		}
+		else
+		{
+			OverlappingPlayer->RemoveInteractable(this);
+		}
+	}
+}
+
+bool ABlendableInteractable::CanInteract(AWatPlayerCharacter* Player)
+{
+	return Super::CanInteract(Player) && !bIsInUse;
+}
+
+void ABlendableInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlendableInteractable, bIsInUse);
+}
+
+void ABlendableInteractable::SetUseState(bool bInUse)
+{
+	bIsInUse = bInUse;
+
+	CheckInteractionState();
 }
 
 void ABlendableInteractable::OnBlendComplete()
 {
-
-        if(!bIsFinalBlend)
-        {
-	        OnNotFinalBlend();		
-        }
-        else
-        {
-    	        OnFinalBlend();
-        }	
+    if(!bIsFinalBlend)
+    {
+        OnNotFinalBlend();		
     }
+    else
+    {
+        OnFinalBlend();
+    }	
+}
