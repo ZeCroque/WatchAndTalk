@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "MiniGames/MiniGameWidget.h"
-#include "wat/GameplayActors/Interactables/Objectives/QTEInteractable.h"
+#include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 
 #include "QTEWidget.generated.h"
 
