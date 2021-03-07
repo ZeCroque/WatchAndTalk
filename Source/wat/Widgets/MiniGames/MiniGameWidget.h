@@ -17,8 +17,15 @@ class WAT_API UMiniGameWidget : public UUserWidget
 public:
 	UPROPERTY()
     class AObjective* ParentInteractable;
-	
-	virtual void Start(){}
-	virtual void Stop(){}
-	virtual void OnInput(FKey PressedInput){}
+
+	UPROPERTY(meta=(BindWidget))
+    class UKeyIconWidget* ReturnIcon;
+
+	virtual void Start();
+	virtual void Stop();
+	virtual bool OnInput(FKey PressedInput);
+
+	void OnComplete();
+	void OnCancel();
+	void OnFail();
 };

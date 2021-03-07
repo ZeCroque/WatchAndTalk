@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "wat/Core/WatPlayerCharacter.h"
-#include "wat/Laser.h"
+#include "wat/GameplayActors/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"

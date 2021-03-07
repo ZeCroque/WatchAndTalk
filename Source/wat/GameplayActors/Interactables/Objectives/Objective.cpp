@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
-#include "wat/Widgets/QTEWidget.h"
+#include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AObjective::AObjective()
 {
