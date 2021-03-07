@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "MiniGames/MiniGameWidget.h"
 #include "wat/GameplayActors/Interactables/Objectives/QTEInteractable.h"
 
 #include "QTEWidget.generated.h"
@@ -12,7 +13,7 @@
  * 
  */
 UCLASS()
-class WAT_API UQTEWidget : public UUserWidget
+class WAT_API UQTEWidget : public UMiniGameWidget
 {
 	GENERATED_BODY()
 
@@ -20,9 +21,6 @@ public:
 	virtual void NativeConstruct() override;
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	
-    UPROPERTY()
-    AObjective* ParentInteractable;
 	
     // Array de définition des inputs pouvant être utilisés dans le QTE
     UPROPERTY(EditAnywhere, Category= "WAT QTE")
@@ -50,11 +48,11 @@ public:
     UPROPERTY(meta=(BindWidget))
     class UKeyIconWidget* KeyIconWidget;
 
-    void OnInput(FKey PressedInput);
+    virtual void OnInput(FKey PressedInput) override;
 
-    void Start();
+    virtual void Start() override;
 
-    void Stop();
+    virtual void Stop() override;
     
 private:
 

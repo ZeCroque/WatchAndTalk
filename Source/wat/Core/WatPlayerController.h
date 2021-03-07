@@ -37,7 +37,7 @@ public:
 	bool bIsInMiniGame;
 
 	UPROPERTY()
-	class UQTEWidget* Widget;
+	class UMiniGameWidget* MiniGameWidget;
 
 	UPROPERTY()
 	class UCameraDeskHUDWidget* CameraDeskHUDWidget;

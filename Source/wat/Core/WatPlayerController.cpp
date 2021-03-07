@@ -10,7 +10,7 @@
 
 AWatPlayerController::AWatPlayerController()
 {
-	Widget = nullptr;
+	MiniGameWidget = nullptr;
 	PauseWidget = nullptr;
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
@@ -70,9 +70,9 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
-	if (Widget && EventType == EInputEvent::IE_Pressed)
+	if (MiniGameWidget && EventType == EInputEvent::IE_Pressed)
 	{
-		Widget->OnInput(Key);
+		MiniGameWidget->OnInput(Key);
 		return true;
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);

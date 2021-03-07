@@ -96,7 +96,8 @@ void UQTEWidget::Stop()
 	bIsStarted = false;
 	TimeLeft = TimeLimit;
     CurrentIndex = 0;
-	ParentInteractable->PlayerController->Widget = nullptr;
+	RemoveFromParent();
+	ParentInteractable->PlayerController->MiniGameWidget = nullptr;
 }
 
 void UQTEWidget::OnComplete()

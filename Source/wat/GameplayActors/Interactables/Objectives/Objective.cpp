@@ -8,9 +8,6 @@
 
 AObjective::AObjective()
 {
-	MiniGameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniGameWidget"));
-	MiniGameWidgetComponent->SetupAttachment(RootComponent);
-
 	ObjectiveIndex = 0;
 	bIsOnlyForMechanist = true;
 }
@@ -24,15 +21,13 @@ void AObjective::BeginPlay()
 {
 	Super::BeginPlay();
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-	MiniGameWidget = Cast<UQTEWidget>(MiniGameWidgetComponent->GetUserWidgetObject());
-	MiniGameWidget->ParentInteractable = this;
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
 {
     if (PlayerController)
     {
-    	MiniGameWidget->Stop();  	
+    	PlayerController->MiniGameWidget->Stop();
     	if(bSuccess)
     	{
             bCompleted = true;
@@ -46,10 +41,32 @@ void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
     }
 }
 
+void AObjective::OnNotFinalBlend()
+{
+    Super::OnNotFinalBlend();
+    PlayerController->MiniGameWidget = CreateWidget<UMiniGameWidget>(PlayerController, MiniGameWidgetClass);
+	PlayerController->MiniGameWidget->AddToViewport();
+	PlayerController->MiniGameWidget->ParentInteractable = this;
+	PlayerController->MiniGameWidget->Start();
+}
+
+void AObjective::OnFinalBlend()
+{
+    if(bCompleted)
+    {
+	    PlayerController->NotifyObjectiveCompleted(this);
+	}
+
+	if(!GameState->bGameEnded)
+	{
+		PlayerController->SetInputMode(FInputModeGameOnly());
+	}
+
+	Super::OnFinalBlend();
+}
+
 void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AObjective, bCompleted);
-    DOREPLIFETIME(AObjective, MiniGameWidgetComponent);
-    DOREPLIFETIME(AObjective, MiniGameWidget);
 }
