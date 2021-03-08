@@ -27,7 +27,7 @@ void UGridClearComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Timer = RayTraceCooldown;
+	Timer = TracePeriod;
 }
 
 
@@ -43,43 +43,48 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 
 	Timer += DeltaTime;
-	if (Timer >= RayTraceCooldown && GridManager)
+	if (Timer >= TracePeriod && GridManager)
 	{
 		Timer = 0;
 
 		auto const Start = GetOwner()->GetActorLocation() + (FVector::UpVector * ViewUpOffset) + (GetOwner()->
 			GetActorForwardVector() * ViewForwardOffset);
 
-		TArray<FVector> Polygon;
-		Polygon.Add(Start);
-		for (int i = 0; i < RayNumber; ++i)
+		const auto AngleBetweenRows = (RaysRowMaximumAngle - RaysRowMinimumAngle) / static_cast<float>(RaysRowCount);
+		
+		for(int j = 0; j < RaysRowCount; j++)
 		{
-			const float Angle = (i * (FieldOfView / RayNumber)) - (FieldOfView / 2);
-
-			const auto Rotator = FRotator(GetComponentRotation().Pitch * -1 + RayTraceRoll,
-			                            GetComponentRotation().Yaw + Angle,
-			                            GetComponentRotation().Roll );
-			FVector Direction = Rotator.Vector() * RaySize;
-			auto const End = Start + Direction;
-
-			if (bDebug)
+			TArray<FVector> Polygon;
+			Polygon.Add(Start);
+			for (int i = 0; i < RayCountByRow; ++i)
 			{
-				DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, RayTraceCooldown, 0, 1);
-			}
+				const float Angle = (i * (FieldOfView / RayCountByRow)) - (FieldOfView / 2);
 
-			FHitResult Result;
-			GetWorld()->LineTraceSingleByChannel(Result, Start, End, ECC_Visibility);
+				const auto Rotator = FRotator(GetComponentRotation().Pitch * -1 + RaysRowMinimumAngle + AngleBetweenRows * j,
+				                            GetComponentRotation().Yaw + Angle,
+				                            GetComponentRotation().Roll );
+				FVector Direction = Rotator.Vector() * RayLength;
+				auto const End = Start + Direction;
 
-			if (Result.bBlockingHit)
-			{
-				Polygon.Add(Result.Location);
-				if (bDebug)
+				if (bShowLineTraces)
 				{
-					DrawDebugSphere(GetWorld(), Result.Location, 20, 16, FColor::Purple, false, RayTraceCooldown, 0, 1);
+					DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, TracePeriod, 0, 1);
+				}
+
+				FHitResult Result;
+				GetWorld()->LineTraceSingleByChannel(Result, Start, End, ECC_Visibility);
+
+				if (Result.bBlockingHit)
+				{
+					Polygon.Add(Result.Location);
+					if (bShowLineTraces)
+					{
+						DrawDebugSphere(GetWorld(), Result.Location, 20, 16, FColor::Purple, false, TracePeriod, 0, 1);
+					}
 				}
 			}
-		}
 
-		GridManager->CleanPolygon(Polygon);
+			GridManager->CleanPolygon(Polygon);
+		}
 	}
 }
