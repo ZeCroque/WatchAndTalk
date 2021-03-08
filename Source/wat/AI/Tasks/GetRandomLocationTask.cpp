@@ -44,7 +44,7 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 			GridManager->SetValueAround(Origin, Radius);
 			GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight);
 		}
-		#ifdef WITH_EDITOR
+		#if WITH_EDITOR
 		GridManager->PickedHotPointCoordinate = GridManager->GetGridCoordinate(Location);
 		#endif
 		FVector NavLocation;
