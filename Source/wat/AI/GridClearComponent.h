@@ -43,7 +43,10 @@ private:
 	int ViewUpOffset = 45;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	float Cooldown = 1;
+	float RayTraceCooldown = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
+	float RayTraceRoll = 30.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Debug", meta = (AllowPrivateAccess = "true"))
 	bool bDebug = false;

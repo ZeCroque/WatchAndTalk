@@ -27,7 +27,7 @@ void UGridClearComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Timer = Cooldown;
+	Timer = RayTraceCooldown;
 }
 
 
@@ -43,7 +43,7 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 
 	Timer += DeltaTime;
-	if (Timer >= Cooldown && GridManager)
+	if (Timer >= RayTraceCooldown && GridManager)
 	{
 		Timer = 0;
 
@@ -56,15 +56,15 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		{
 			const float Angle = (i * (FieldOfView / RayNumber)) - (FieldOfView / 2);
 
-			FRotator Rotator = FRotator(GetComponentRotation().Pitch * -1,
+			const auto Rotator = FRotator(GetComponentRotation().Pitch * -1 + RayTraceRoll,
 			                            GetComponentRotation().Yaw + Angle,
-			                            0);
+			                            GetComponentRotation().Roll );
 			FVector Direction = Rotator.Vector() * RaySize;
 			auto const End = Start + Direction;
 
 			if (bDebug)
 			{
-				DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, Cooldown, 0, 1);
+				DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, RayTraceCooldown, 0, 1);
 			}
 
 			FHitResult Result;
@@ -75,7 +75,7 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 				Polygon.Add(Result.Location);
 				if (bDebug)
 				{
-					DrawDebugSphere(GetWorld(), Result.Location, 20, 16, FColor::Purple, false, Cooldown, 0, 1);
+					DrawDebugSphere(GetWorld(), Result.Location, 20, 16, FColor::Purple, false, RayTraceCooldown, 0, 1);
 				}
 			}
 		}

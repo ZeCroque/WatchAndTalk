@@ -128,18 +128,20 @@ float AGridManager::GetValueAround(const FVector& Center, const int Ray)
 	}
 
 	float AverageValue = 0;
-	for (int i = IStart; i < IEnd; i++)
+	int ValueCount = 0;
+	for (int i = IStart; i < IEnd; ++i)
 	{
-		for (int j = 0; j < CellPerSide; j++)
+		for (int j = 0; j < CellPerSide; ++j)
 		{
 			if (((j - GridCoordinate.X) * (j - GridCoordinate.X) + (i - GridCoordinate.Y) * (i - GridCoordinate.Y)) <=
 				Ray * Ray)
 			{
-				AverageValue = (AverageValue + GetValueAt(j, i)) / 2;
+				++ValueCount;
+				AverageValue = AverageValue + GetValueAt(j, i);
 			}
 		}
 	}
-	return AverageValue;
+	return AverageValue / static_cast<float>(ValueCount);
 }
 
 void AGridManager::SetValueOutside(const FVector& Center, const int Ray)

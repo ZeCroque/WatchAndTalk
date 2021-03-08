@@ -39,13 +39,14 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 				                       : NPC->GetActorLocation();
 			const auto Radius = WatGameState->NumberOfActorInBunker != 1 && WatGameState->NumberOfActorInBunker != 3
 				                    ? WatGameState->BunkerTriggerBox->GridDrawRay
-				                    : SearchRadius;
+				                    : DefaultFillRadius;
 
 			GridManager->SetValueAround(Origin, Radius);
 			GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight);
 		}
-
-
+		#ifdef WITH_EDITOR
+		GridManager->PickedHotPointCoordinate = GridManager->GetGridCoordinate(Location);
+		#endif
 		FVector NavLocation;
 		UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 
@@ -53,11 +54,14 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
 		do
 		{
 			++i;
-			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation, 1000);
+			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation, RandomPointInNavmeshRadius);
 		}
 		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
 			&& i < 100);
-
+#if WITH_EDITOR
+		GridManager->PickedNavMeshCoordinate = GridManager->GetGridCoordinate(NavLocation);
+#endif
+		
 		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
 
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

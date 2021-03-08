@@ -19,6 +19,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* BoxComponent;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D PickedHotPointCoordinate;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D PickedNavMeshCoordinate;
+#endif
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -52,7 +59,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	bool SmartRandomHotWorldCoordinate(FVector& Vector, int Try, int Ray);
 
+	UFUNCTION(BlueprintCallable)
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
+	
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
 	static bool IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point);
@@ -84,6 +93,6 @@ private:
 	float SumOfWeight;
 
 	float Timer;
-
+	
 	TArray<float> Grid;
 };
