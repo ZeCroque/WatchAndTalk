@@ -366,7 +366,7 @@ void ACameraDesk::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)
 	Super::SetupPlayerInputComponent(DeskInputComponent);
 	// Bind action events
 	DeskInputComponent->BindAction("Return", IE_Pressed, this, &ACameraDesk::Return);
-	DeskInputComponent->BindAction("Interact", IE_Pressed, this,&ACameraDesk::SwitchFloor);
+	//DeskInputComponent->BindAction("Interact", IE_Pressed, this,&ACameraDesk::SwitchFloor);
 	
 	// Bind movement events
 	DeskInputComponent->BindAxis("MoveForward", this, &ACameraDesk::MoveForward);
