@@ -2,7 +2,11 @@
 
 
 #include "wat/AI/GridManager.h"
+
+
+#include "NavModifierVolume.h"
 #include "Containers/Array.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -31,6 +35,28 @@ void AGridManager::BeginPlay()
 	CellWidth = (MaxWorld.X - MinWorld.X) / CellPerSide;
 
 	Timer = CoolingInterval;
+
+
+	TArray<AActor*> NavModifierVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANavModifierVolume::StaticClass(), NavModifierVolumes);
+
+	for (auto NavModifierVolume : NavModifierVolumes)
+	{
+		FVector Origin;
+		FVector BoxExtent;
+		NavModifierVolume->GetActorBounds(false, Origin, BoxExtent);
+
+		FVector A = FVector((Origin + BoxExtent).X, (Origin + BoxExtent).Y, (Origin - BoxExtent).Z);
+		FVector B = FVector((Origin - BoxExtent).X, (Origin - BoxExtent).Y, (Origin - BoxExtent).Z);
+		FVector C = FVector(A.X, B.Y, (Origin - BoxExtent).Z);
+		FVector D = FVector(B.X, A.Y, (Origin - BoxExtent).Z);
+
+		TArray<FVector> NavModifierPolygon;
+		NavModifierPolygon.Add(A);
+		NavModifierPolygon.Add(B);
+		NavModifierPolygon.Add(C);
+		NavModifierPolygon.Add(D);
+	}
 }
 
 // Called every frame
@@ -134,7 +160,7 @@ void AGridManager::SetValueOutside(const FVector& Center, const int Ray)
 	}
 }
 
-void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
+void AGridManager::SetValueInPolygon(const TArray<FVector>& WorldPolygon, const float Value)
 {
 	int XMin = CellPerSide + 1;
 	int XMax = -1;
@@ -160,7 +186,7 @@ void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 		{
 			if (IsInsidePolygon(GridPolygon, FVector2D(j, i)))
 			{
-				SetValueAt(j, i, 0.0f);
+				SetValueAt(j, i, Value);
 			}
 		}
 	}

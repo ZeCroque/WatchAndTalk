@@ -51,7 +51,7 @@ public:
 	void SetValueOutside(const FVector& Center, const int Ray);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
-	void CleanPolygon(const TArray<FVector>& WorldPolygon);
+	void SetValueInPolygon(const TArray<FVector>& WorldPolygon, const float Value = 0.0f);
 
 	UFUNCTION(BlueprintCallable, Category="WAT - Function")
 	bool RandomHotWorldCoordinate(FVector& Vector);
@@ -61,12 +61,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FVector2D GetGridCoordinate(const FVector& WorldCoordinate) const;
-	
+
 	FVector GetWorldCoordinate(const FVector2D& GridCoordinate) const;
 
 	static bool IsInsidePolygon(const TArray<FVector2D>& Polygon, const FVector2D& Point);
 
-	
+	float FloorHeight = 450;
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int CellPerSide = 10;
@@ -76,7 +77,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	float CoolingInterval = 1.f;
-
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
@@ -89,6 +89,6 @@ private:
 	float CellHeight; // Y
 
 	float Timer;
-	
+
 	TArray<float> Grid;
 };
