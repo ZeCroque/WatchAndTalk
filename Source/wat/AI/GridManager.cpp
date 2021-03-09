@@ -15,8 +15,6 @@ AGridManager::AGridManager()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Grid Component"));
 	BoxComponent->SetupAttachment(RootComponent);
 	BoxComponent->SetHiddenInGame(true);
-
-	SumOfWeight = 0;
 }
 
 // Called when the game starts or when spawned
@@ -24,7 +22,7 @@ void AGridManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Grid.Init(0.f, CellPerSide * CellPerSide * 2);
+	Grid.Init(0.f, CellPerSide * CellPerSide);
 
 	MinWorld = FVector2D(BoxComponent->GetNavigationBounds().Min);
 	MaxWorld = FVector2D(BoxComponent->GetNavigationBounds().Max);
@@ -52,14 +50,6 @@ void AGridManager::Tick(float DeltaTime)
 				DecrementValueAt(j, i, CoolingStrength);
 			}
 		}
-
-		for (int i = CellPerSide; i < CellPerSide * 2; i++)
-		{
-			for (int j = 0; j < CellPerSide; j++)
-			{
-				DecrementValueAt(j, i, CoolingStrength);
-			}
-		}
 	}
 }
 
@@ -71,16 +61,12 @@ float AGridManager::GetValueAt(const int X, const int Y)
 
 void AGridManager::SetValueAt(const int X, const int Y, const float Value)
 {
-	SumOfWeight -= Grid[X + Y * CellPerSide];
-	SumOfWeight += Value;
 	Grid[X + Y * CellPerSide] = Value;
 }
 
 void AGridManager::DecrementValueAt(const int X, const int Y, const float Value)
 {
 	const auto ClampValue = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
-	SumOfWeight -= Grid[X + Y * CellPerSide];
-	SumOfWeight += ClampValue;
 	Grid[X + Y * CellPerSide] = ClampValue;
 }
 
@@ -91,15 +77,7 @@ void AGridManager::SetValueAround(const FVector& Center, const int Ray)
 
 	const FVector2D GridCoordinate = GetGridCoordinate(Center);
 
-	int IStart = 0;
-	int IEnd = CellPerSide;
-	if (Center.Z >= FloorHeight)
-	{
-		IStart = CellPerSide;
-		IEnd = CellPerSide * 2;
-	}
-
-	for (int i = IStart; i < IEnd; i++)
+	for (int i = 0; i < CellPerSide; i++)
 	{
 		for (int j = 0; j < CellPerSide; j++)
 		{
@@ -119,17 +97,9 @@ float AGridManager::GetValueAround(const FVector& Center, const int Ray)
 
 	const FVector2D GridCoordinate = GetGridCoordinate(Center);
 
-	int IStart = 0;
-	int IEnd = CellPerSide;
-	if (Center.Z >= FloorHeight)
-	{
-		IStart = CellPerSide;
-		IEnd = CellPerSide * 2;
-	}
-
 	float AverageValue = 0;
 	int ValueCount = 0;
-	for (int i = IStart; i < IEnd; ++i)
+	for (int i = 0; i < CellPerSide; ++i)
 	{
 		for (int j = 0; j < CellPerSide; ++j)
 		{
@@ -151,12 +121,7 @@ void AGridManager::SetValueOutside(const FVector& Center, const int Ray)
 
 	const FVector2D GridCoordinate = GetGridCoordinate(Center);
 
-	int IStart = 0;
-
-	int IEnd = CellPerSide * 2;
-
-
-	for (int i = IStart; i < IEnd; i++)
+	for (int i = 0; i < CellPerSide; i++)
 	{
 		for (int j = 0; j < CellPerSide; j++)
 		{
@@ -171,9 +136,9 @@ void AGridManager::SetValueOutside(const FVector& Center, const int Ray)
 
 void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 {
-	int XMin = (CellPerSide * 2);
+	int XMin = CellPerSide + 1;
 	int XMax = -1;
-	int YMin = (CellPerSide * 2);
+	int YMin = CellPerSide + 1;
 	int YMax = -1;
 
 	TArray<FVector2D> GridPolygon;
@@ -189,9 +154,9 @@ void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 		GridPolygon.Add(GridPoint);
 	}
 
-	for (int i = YMin; i < YMax + 1; i++)
+	for (int i = FMath::Max(YMin, 0); i < FMath::Min(YMax, CellPerSide); i++)
 	{
-		for (int j = XMin; j < XMax + 1; j++)
+		for (int j = FMath::Max(XMin, 0); j < FMath::Min(XMax, CellPerSide); j++)
 		{
 			if (IsInsidePolygon(GridPolygon, FVector2D(j, i)))
 			{
@@ -203,6 +168,12 @@ void AGridManager::CleanPolygon(const TArray<FVector>& WorldPolygon)
 
 bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 {
+	float SumOfWeight = 0;
+	for (auto Element : Grid)
+	{
+		SumOfWeight += Element;
+	}
+
 	if (SumOfWeight > 0)
 	{
 		float Rnd;
@@ -212,17 +183,19 @@ bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 		}
 		while (Rnd == 0.f);
 
-		for (int i = 0; i < Grid.Num(); i++)
-		{
-			if (Rnd < Grid[i])
-			{
-				const int x = i % CellPerSide;
-				const int y = i / CellPerSide;
 
-				Vector = GetWorldCoordinate(FVector2D(x, y));
-				return true;
+		float Cursor = 0;
+		for (int i = 0; i < CellPerSide; i++)
+		{
+			for (int j = 0; j < CellPerSide; j++)
+			{
+				Cursor += GetValueAt(j, i);
+				if (Cursor >= Rnd)
+				{
+					Vector = GetWorldCoordinate(FVector2D(j, i));
+					return true;
+				}
 			}
-			Rnd -= Grid[i];
 		}
 	}
 
@@ -254,10 +227,8 @@ bool AGridManager::SmartRandomHotWorldCoordinate(FVector& Vector, const int Try,
 
 FVector2D AGridManager::GetGridCoordinate(const FVector& WorldCoordinate) const
 {
-	const int ZOffset = WorldCoordinate.Z < FloorHeight ? 0 : CellPerSide;
-
 	const int GridX = static_cast<int>((WorldCoordinate.X - MinWorld.X) / CellWidth);
-	const int GridY = static_cast<int>((WorldCoordinate.Y - MinWorld.Y) / CellHeight) + ZOffset;
+	const int GridY = static_cast<int>((WorldCoordinate.Y - MinWorld.Y) / CellHeight);
 
 	return FVector2D(GridX, GridY);
 }
@@ -265,18 +236,8 @@ FVector2D AGridManager::GetGridCoordinate(const FVector& WorldCoordinate) const
 FVector AGridManager::GetWorldCoordinate(const FVector2D& GridCoordinate) const
 {
 	const float WorldX = GridCoordinate.X * CellWidth + MinWorld.X + CellWidth / 2.f;
-	float WorldY, WorldZ;
-
-	if (GridCoordinate.Y < CellPerSide)
-	{
-		WorldZ = GroundHeight;
-		WorldY = GridCoordinate.Y * CellHeight + MinWorld.Y + CellHeight / 2.f;
-	}
-	else
-	{
-		WorldZ = FloorHeight;
-		WorldY = (GridCoordinate.Y - CellPerSide) * CellHeight + MinWorld.Y + CellHeight / 2.f;
-	}
+	const float WorldY = GridCoordinate.Y * CellHeight + MinWorld.Y + CellHeight / 2.f;
+	const float WorldZ = GroundHeight;
 
 	return FVector(WorldX, WorldY, WorldZ);
 }
