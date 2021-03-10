@@ -68,6 +68,9 @@ public:
 
 	float FloorHeight = 450;
 
+	float CellWidth; // X
+	float CellHeight; // Y
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
 	int CellPerSide = 10;
@@ -84,9 +87,6 @@ private:
 
 	FVector2D MinWorld;
 	FVector2D MaxWorld;
-
-	float CellWidth; // X
-	float CellHeight; // Y
 
 	float Timer;
 

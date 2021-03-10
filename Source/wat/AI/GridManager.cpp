@@ -26,7 +26,7 @@ void AGridManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Grid.Init(0.f, CellPerSide * CellPerSide);
+	Grid.Init(0.0f, CellPerSide * CellPerSide);
 
 	MinWorld = FVector2D(BoxComponent->GetNavigationBounds().Min);
 	MaxWorld = FVector2D(BoxComponent->GetNavigationBounds().Max);
@@ -46,16 +46,18 @@ void AGridManager::BeginPlay()
 		FVector BoxExtent;
 		NavModifierVolume->GetActorBounds(false, Origin, BoxExtent);
 
-		FVector A = FVector((Origin + BoxExtent).X, (Origin + BoxExtent).Y, (Origin - BoxExtent).Z);
-		FVector B = FVector((Origin - BoxExtent).X, (Origin - BoxExtent).Y, (Origin - BoxExtent).Z);
-		FVector C = FVector(A.X, B.Y, (Origin - BoxExtent).Z);
-		FVector D = FVector(B.X, A.Y, (Origin - BoxExtent).Z);
+		FVector A = FVector((Origin - BoxExtent).X, (Origin - BoxExtent).Y, (Origin - BoxExtent).Z);
+		FVector B = FVector((Origin + BoxExtent).X, (Origin - BoxExtent).Y, (Origin - BoxExtent).Z);
+		FVector C = FVector(B.X, Origin.Y + BoxExtent.Y, (Origin - BoxExtent).Z);
+		FVector D = FVector(A.X, C.Y, (Origin - BoxExtent).Z);
 
 		TArray<FVector> NavModifierPolygon;
 		NavModifierPolygon.Add(A);
 		NavModifierPolygon.Add(B);
 		NavModifierPolygon.Add(C);
 		NavModifierPolygon.Add(D);
+
+		SetValueInPolygon(NavModifierPolygon, -1);
 	}
 }
 
@@ -87,13 +89,19 @@ float AGridManager::GetValueAt(const int X, const int Y)
 
 void AGridManager::SetValueAt(const int X, const int Y, const float Value)
 {
-	Grid[X + Y * CellPerSide] = Value;
+	if (Grid[X + Y * CellPerSide] != -1)
+	{
+		Grid[X + Y * CellPerSide] = Value;
+	}
 }
 
 void AGridManager::DecrementValueAt(const int X, const int Y, const float Value)
 {
-	const auto ClampValue = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
-	Grid[X + Y * CellPerSide] = ClampValue;
+	if (Grid[X + Y * CellPerSide] != -1)
+	{
+		const auto ClampValue = FMath::Max(0.0f, Grid[X + Y * CellPerSide] - Value);
+		Grid[X + Y * CellPerSide] = ClampValue;
+	}
 }
 
 void AGridManager::SetValueAround(const FVector& Center, const int Ray)
@@ -133,7 +141,7 @@ float AGridManager::GetValueAround(const FVector& Center, const int Ray)
 				Ray * Ray)
 			{
 				++ValueCount;
-				AverageValue = AverageValue + GetValueAt(j, i);
+				AverageValue = AverageValue + GetValueAt(j, i) != -1 ? GetValueAt(j, i) : 0;
 			}
 		}
 	}
@@ -197,7 +205,7 @@ bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 	float SumOfWeight = 0;
 	for (auto Element : Grid)
 	{
-		SumOfWeight += Element;
+		SumOfWeight += FMath::Max(Element, 0.0f);
 	}
 
 	if (SumOfWeight > 0)
@@ -215,7 +223,7 @@ bool AGridManager::RandomHotWorldCoordinate(FVector& Vector)
 		{
 			for (int j = 0; j < CellPerSide; j++)
 			{
-				Cursor += GetValueAt(j, i);
+				Cursor += GetValueAt(j, i) != -1 ? GetValueAt(j, i) : 0;
 				if (Cursor >= Rnd)
 				{
 					Vector = GetWorldCoordinate(FVector2D(j, i));
