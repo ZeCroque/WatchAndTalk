@@ -84,7 +84,7 @@ void UGridClearComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 				}
 			}
 
-			GridManager->CleanPolygon(Polygon);
+			GridManager->SetValueInPolygon(Polygon);
 		}
 	}
 }

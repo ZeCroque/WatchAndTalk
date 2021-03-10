@@ -27,7 +27,7 @@ private:
 	int DefaultFillRadius = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
-	float RandomPointInNavmeshRadius;
+	float RandomPointInNavmeshRadiusOffset = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
 	int TryForBestWeight = 10;
