@@ -48,4 +48,6 @@ public:
 	void Init() const;
 
 	void Update(bool bIsOnMap, int MonitorIndex = 0, bool bIsFirstFloor = true) const;
+
+	void HideAll() const;
 };

@@ -29,9 +29,17 @@ void UCameraDeskHUDWidget::Update(bool bIsOnMap, int MonitorIndex, bool bIsFirst
 	{
 		TopArrow->SetVisibility(ESlateVisibility::Visible);
 		RightArrow->SetVisibility(MonitorIndex == 3 ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
-		BottomArrow->SetVisibility(ESlateVisibility::Hidden);
+		BottomArrow->SetVisibility(MonitorIndex == 0 || MonitorIndex == 3 ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 		LeftArrow->SetVisibility(MonitorIndex ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 	}
 
 	SwitchFloorsIcon->SetBrushTexture(bIsFirstFloor ? FirstFloorIcon : SecondFloorIcon);
+}
+
+void UCameraDeskHUDWidget::HideAll() const
+{
+	TopArrow->SetVisibility(ESlateVisibility::Hidden);
+	RightArrow->SetVisibility(ESlateVisibility::Hidden);
+	BottomArrow->SetVisibility(ESlateVisibility::Hidden);
+	LeftArrow->SetVisibility(ESlateVisibility::Hidden);
 }

@@ -223,14 +223,14 @@ void AMonitor::Tick(float DeltaTime)
 		//Texts
 		const auto FontScalingFactor = (MonitorTextSizeRatio * RenderTargetHeight) / Font->GetMaxCharHeight();
 		
-		auto TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":1", FVector2D(FontScalingFactor));
-		Canvas->DrawText(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":1", RenderTargetWidth - TextSize.X - TextMargin, RenderTargetHeight - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
-		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":2", FVector2D(FontScalingFactor));
-		Canvas->DrawText(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":2", CanvasSize.X - TextSize.X  - TextMargin, RenderTargetHeight - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
-		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":3", FVector2D(FontScalingFactor));
-		Canvas->DrawText(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":3", RenderTargetWidth - TextSize.X - TextMargin, CanvasSize.Y - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
-		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":4", FVector2D(FontScalingFactor));
-		Canvas->DrawText(Font, CameraNumberPrefix + FString::FromInt(FloorIndex) + ":4", CanvasSize.X - TextSize.X  - TextMargin, CanvasSize.Y - TextSize.Y - TextMargin, FontScalingFactor,FontScalingFactor);
+		auto TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + "1" /*FString::FromInt(FloorIndex) + ":1"*/, FVector2D(FontScalingFactor));
+		Canvas->DrawText(Font, CameraNumberPrefix + "1" /*FString::FromInt(FloorIndex) + ":1"*/, RenderTargetWidth - TextSize.X - TextMargin, RenderTargetHeight - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
+		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + "2" /*FString::FromInt(FloorIndex) + ":2"*/, FVector2D(FontScalingFactor));
+		Canvas->DrawText(Font, CameraNumberPrefix + "2" /*FString::FromInt(FloorIndex) + ":2"*/, CanvasSize.X - TextSize.X  - TextMargin, RenderTargetHeight - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
+		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + "3" /*FString::FromInt(FloorIndex) + ":3"*/, FVector2D(FontScalingFactor));
+		Canvas->DrawText(Font, CameraNumberPrefix + "3" /*FString::FromInt(FloorIndex) + ":3"*/, RenderTargetWidth - TextSize.X - TextMargin, CanvasSize.Y - TextSize.Y  - TextMargin, FontScalingFactor,FontScalingFactor);
+		TextSize = Canvas->K2_TextSize(Font, CameraNumberPrefix + "4" /*FString::FromInt(FloorIndex) + ":4"*/, FVector2D(FontScalingFactor));
+		Canvas->DrawText(Font, CameraNumberPrefix + "4" /*FString::FromInt(FloorIndex) + ":4"*/, CanvasSize.X - TextSize.X  - TextMargin, CanvasSize.Y - TextSize.Y - TextMargin, FontScalingFactor,FontScalingFactor);
 		
 		//Snow
 	    Canvas->K2_DrawMaterial(SnowMaterial, FVector2D(0.f,0.f), FVector2D(RenderTargetWidth,RenderTargetHeight),FVector2D(0.f,0.f));
