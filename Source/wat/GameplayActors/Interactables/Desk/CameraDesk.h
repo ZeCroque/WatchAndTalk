@@ -89,7 +89,8 @@ private:
 	float RenderingHeight;
 
 	//Inputs
-	bool bToggle;
+	bool bHorizontalToggle;
+	bool bVerticalToggle;
 
 public:
 	// Sets default values for this actor's properties
@@ -121,6 +122,7 @@ public:
 	//Inputs
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+	
 	void Return();
 	void SwitchFloor();
 	

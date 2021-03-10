@@ -122,7 +122,8 @@ void ACameraDesk::Initialize()
 {
 	CurrentIndex = 0;
 	TargetIndex = 0;
-	bToggle = false;
+	bHorizontalToggle = false;
+	bVerticalToggle = false;
 	bIsInternalBlend = false;
 	bIsBlendingHorizontally = false;
 	bIsBlendingVertically = false;
@@ -192,6 +193,8 @@ AMonitor* ACameraDesk::GetMonitorByIndex(const int Index)
 
 void ACameraDesk::BlendToTargetMonitor()
 {
+	PlayerController->CameraDeskHUDWidget->HideAll();
+	
 	bIsBlendingHorizontally = true;
 
 	const int IndexDelta = TargetIndex - LastHoveredScreenIndex;
@@ -274,18 +277,42 @@ void ACameraDesk::MoveForward(float Value)
 {
 	if (bIsInternalBlend && !bIsBlendingHorizontally && !bIsSwitchingFloors && PlayerController)
 	{
-		if (Value > 0.0f)
+		if (Value > 0.0f && !bIsOnMap && !bVerticalToggle && !bHorizontalToggle)
 		{
+			bVerticalToggle = true;
 			bIsOnMap = true;
 			bIsBlendingVertically = true;
 			PlayerController->SetViewTargetWithBlend(this, BlendTime, VTBlend_Linear, 0, true);
 			SetCurrentMonitorRenderingState(false);
+			PlayerController->CameraDeskHUDWidget->HideAll();
 		}
-		else if (Value < 0.0f)
+		else if (Value < 0.0f && !bVerticalToggle && !bHorizontalToggle)
 		{
-			bIsOnMap = false;
-			bIsBlendingVertically = true;
-			PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime, VTBlend_Linear, 0, true);
+			bVerticalToggle = true;
+			if(bIsOnMap)
+			{
+				bIsOnMap = false;
+				bIsBlendingVertically = true;
+				PlayerController->SetViewTargetWithBlend(GetMonitorByIndex(CurrentIndex), BlendTime, VTBlend_Linear, 0, true);
+				PlayerController->CameraDeskHUDWidget->HideAll();
+			}
+			else if(CurrentIndex == 0 || CurrentIndex == 3)
+			{
+				SetCurrentMonitorRenderingState(false);
+				if(CurrentIndex == 3)
+				{
+					TargetIndex = 0;
+				}
+				else if(CurrentIndex == 0)
+				{
+					TargetIndex = 3;
+				}
+				BlendToTargetMonitor();
+			}
+		}
+		else if(Value == 0.0f && bVerticalToggle)
+		{
+			bVerticalToggle = false;
 		}
 	}
 }
@@ -294,9 +321,9 @@ void ACameraDesk::MoveRight(float Value)
 {
 	if (bIsInternalBlend && !bIsBlendingVertically && !bIsOnMap && !bIsSwitchingFloors && PlayerController)
 	{
-		if (Value > 0.0f && !bToggle)
+		if (Value > 0.0f && !bHorizontalToggle && !bVerticalToggle)
 		{
-			bToggle = true;
+			bHorizontalToggle = true;
 			if (TargetIndex < Monitors.Num() - 1)
 			{
 				SetCurrentMonitorRenderingState(false);
@@ -304,9 +331,9 @@ void ACameraDesk::MoveRight(float Value)
 				BlendToTargetMonitor();
 			}
 		}
-		else if (Value < 0.0f && !bToggle)
+		else if (Value < 0.0f && !bHorizontalToggle && !bVerticalToggle)
 		{
-			bToggle = true;
+			bHorizontalToggle = true;
 			if (TargetIndex > 0)
 			{
 				SetCurrentMonitorRenderingState(false);
@@ -314,9 +341,9 @@ void ACameraDesk::MoveRight(float Value)
 				BlendToTargetMonitor();
 			}
 		}
-		else if (Value == 0.0f && bToggle)
+		else if (Value == 0.0f && bHorizontalToggle)
 		{
-			bToggle = false;
+			bHorizontalToggle = false;
 		}
 	}
 }
