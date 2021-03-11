@@ -28,10 +28,10 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	int RayNumber = 32;
+	int RayCountByRow = 32;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	int RaySize = 3000;
+	int RayLength = 3000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
 	int FieldOfView = 210;
@@ -43,10 +43,19 @@ private:
 	int ViewUpOffset = 45;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
-	float Cooldown = 1;
+	float TracePeriod = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
+	float RaysRowMinimumAngle = -10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
+	float RaysRowMaximumAngle = -30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Grid", meta = (AllowPrivateAccess = "true"))
+	int RaysRowCount = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Debug", meta = (AllowPrivateAccess = "true"))
-	bool bDebug = false;
+	bool bShowLineTraces = false;
 
 	UPROPERTY()
 	AGridManager* GridManager;

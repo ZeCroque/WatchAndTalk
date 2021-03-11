@@ -15,5 +15,8 @@ class WAT_API UPauseWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-    void OnInput(FKey PressedInput);
+    UFUNCTION(BlueprintCallable)
+    void DestroyWidget();
+    
+    virtual FReply NativeOnKeyDown( const FGeometry& InGeometry, const FKeyEvent& InKeyEvent ) override;
 };

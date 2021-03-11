@@ -24,7 +24,10 @@ public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
-	int SearchRadius = 2;
+	int DefaultFillRadius = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
+	float RandomPointInNavmeshRadiusOffset = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WAT - Search", meta= (AllowPrivateAccess = "true"))
 	int TryForBestWeight = 10;

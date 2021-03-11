@@ -2,16 +2,15 @@
 
 
 #include "wat/Core/WatPlayerController.h"
-#include "wat/PauseWidget.h"
+#include "wat/Widgets/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
-#include "wat/Widgets/QTEWidget.h"
-#include "Components/CapsuleComponent.h"
+#include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
 {
-	Widget = nullptr;
+	MiniGameWidget = nullptr;
 	PauseWidget = nullptr;
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
@@ -68,29 +67,12 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 	}
 }
 
-void AWatPlayerController::UpdatePlayerZOffset_Implementation(AWatPlayerCharacter* PlayerCharacter, const float ZOffset)
-{
-	auto MeshRelativeLocation = PlayerCharacter->GetMesh()->GetRelativeLocation();
-	MeshRelativeLocation.Z = ZOffset;
-	PlayerCharacter->GetMesh()->SetRelativeLocation(MeshRelativeLocation);
-}
-
-void AWatPlayerController::UpdatePlayerCapsuleHalfHeight_Implementation(AWatPlayerCharacter* PlayerCharacter, float Height)
-{
-	PlayerCharacter->GetCapsuleComponent()->SetCapsuleHalfHeight(Height);
-}
-
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
-	if (Widget && EventType == EInputEvent::IE_Pressed)
+	if (MiniGameWidget && EventType == EInputEvent::IE_Pressed)
 	{
-		Widget->OnInput(Key);
-		return true;
-	}
-	if (PauseWidget && EventType == EInputEvent::IE_Pressed)
-	{
-		PauseWidget->OnInput(Key);
+		MiniGameWidget->OnInput(Key);
 		return true;
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
