@@ -7,24 +7,26 @@
 #include "Engine/Canvas.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Components/Image.h"
-#include "Brushes/SlateImageBrush.h"
-#include "Kismet/GameplayStatics.h"
+#include "wat/Core/WatPlayerController.h"
+#include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 
-void UMiniGameMouseWidget::NativeConstruct()
+
+void UMiniGameMouseWidget::Start()
 {
-	Super::NativeConstruct();
+	Super::Start();
 
 	PointList.Empty();
 	LocalSize = Image->Brush.ImageSize;
 	RenderTarget = NewObject<UTextureRenderTarget2D>(this);
 	RenderTarget->InitAutoFormat(LocalSize.X, LocalSize.Y);
-
+	ParentInteractable->PlayerController->bShowMouseCursor = true;
+	SetUserFocus(ParentInteractable->PlayerController);
 
 	Image->Brush.SetResourceObject(RenderTarget);
 
 
-	StartPoint = FVector2D(LocalSize.X * 0.1, FMath::RandRange(LocalSize.Y * 0.33f, LocalSize.Y * 0.66f));
-	const auto EndOfCourse = LocalSize * 0.90f;
+	StartPoint = FVector2D(LocalSize.X * 0.25, FMath::RandRange(LocalSize.Y * 0.33f, LocalSize.Y * 0.66f));
+	const auto EndOfCourse = LocalSize * 0.75f;
 
 	bool Vertical = false;
 	PointList.Add(StartPoint);
@@ -62,6 +64,40 @@ void UMiniGameMouseWidget::NativeConstruct()
 		Vertical = !Vertical;
 	}
 	while (LastPoint.X < EndOfCourse.X);
+
+	bIsClicking = false;
+	LastMouseMove.Set(0, 0);
+	OldMouseMove = StartPoint;
+	bIsDraw = false;
+}
+
+void UMiniGameMouseWidget::Stop()
+{
+	ParentInteractable->PlayerController->bShowMouseCursor = false;
+	Super::Stop();
+}
+
+FReply UMiniGameMouseWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (bIsClicking)
+	{
+		LastMouseMove = (InMouseEvent.GetScreenSpacePosition() - MousePosition) / 250;
+	}
+
+	return FReply::Handled();
+}
+
+FReply UMiniGameMouseWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	bIsClicking = true;
+	MousePosition = InMouseEvent.GetScreenSpacePosition();
+	return FReply::Handled();
+}
+
+FReply UMiniGameMouseWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	bIsClicking = false;
+	return FReply::Handled();
 }
 
 void UMiniGameMouseWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -70,14 +106,81 @@ void UMiniGameMouseWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 
 	auto* Canvas = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
 	FVector2D CanvasSize;
-	FDrawToRenderTargetContext Context;;
+	FDrawToRenderTargetContext Context;
 	UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, RenderTarget, Canvas, CanvasSize, Context);
 
-
-	for (int i = 1; i < PointList.Num(); ++i)
+	if (!bIsDraw)
 	{
-		Canvas->K2_DrawLine(PointList[i - 1], PointList[i], 10, FLinearColor::Red);
+		bIsDraw = true;
+		for (int i = 1; i < PointList.Num(); ++i)
+		{
+			Canvas->K2_DrawLine(PointList[i - 1], PointList[i], 10, FLinearColor::Red);
+		}
+	}
+
+	if (bIsClicking)
+	{
+		Canvas->K2_DrawLine(OldMouseMove, OldMouseMove + LastMouseMove, WeldingRange, FLinearColor::White);
+		OldMouseMove = OldMouseMove + LastMouseMove;
 	}
 
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+
+
+	if (PointList.Num() == 1 || OldPoint.X < PointList[0].X)
+	{
+		DirectionState = EDirection::Forward;
+	}
+	else if (OldPoint.Y < PointList[0].Y)
+	{
+		DirectionState = EDirection::Down;
+	}
+	else if (OldPoint.Y > PointList[0].Y)
+	{
+		DirectionState = EDirection::Up;
+	}
+
+
+	bool bHasReached = false;
+	switch (DirectionState)
+	{
+	case EDirection::Up:
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldMouseMove.Y - OldPoint.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+			OnFail();
+		break;
+	case EDirection::Down:
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldPoint.Y - OldMouseMove.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+			OnFail();
+		break;
+	case EDirection::Forward:
+		if (FMath::Abs(PointList[0].X - OldMouseMove.X) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldPoint.X - OldMouseMove.X > WeldingRange || FMath::Abs(PointList[0].Y - OldMouseMove.Y) > WeldingRange)
+			OnFail();
+		break;
+	}
+
+	if (bHasReached)
+	{
+		OldPoint = PointList[0];
+		PointList.RemoveAt(0);
+	}
+
+	if (PointList.Num() == 0)
+	{
+		OnComplete();
+	}
 }

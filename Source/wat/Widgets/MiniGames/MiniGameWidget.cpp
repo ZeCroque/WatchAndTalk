@@ -42,6 +42,5 @@ void UMiniGameWidget::OnCancel()
 
 void UMiniGameWidget::OnFail()
 {
-
     ParentInteractable->EndInteraction(false, true);
 }
