@@ -30,6 +30,7 @@ void UMiniGameMouseWidget::Start()
 
 	bool Vertical = false;
 	PointList.Add(StartPoint);
+	DrawPointList.Add(StartPoint);
 	FVector2D LastPoint = StartPoint;
 
 	do
@@ -42,7 +43,7 @@ void UMiniGameMouseWidget::Start()
 			float Y;
 			if (FMath::RandBool())
 			{
-				Y = FMath::Clamp(PosCursor - Distance, LocalSize.Y * 0.10f, PosCursor);
+				Y = FMath::Clamp(PosCursor - Distance, LocalSize.Y * 0.20f, PosCursor);
 			}
 			else
 			{
@@ -68,7 +69,7 @@ void UMiniGameMouseWidget::Start()
 	bIsClicking = false;
 	LastMouseMove.Set(0, 0);
 	OldMouseMove = StartPoint;
-	bIsDraw = false;
+	FirstDrawPointList = PointList;
 }
 
 void UMiniGameMouseWidget::Stop()
@@ -104,25 +105,34 @@ void UMiniGameMouseWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+
+	if (bIsClicking)
+	{
+		DrawPointList.Add(OldMouseMove + LastMouseMove);
+		OldMouseMove = OldMouseMove + LastMouseMove;
+	}
+
 	auto* Canvas = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
 	FVector2D CanvasSize;
 	FDrawToRenderTargetContext Context;
 	UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, RenderTarget, Canvas, CanvasSize, Context);
 
-	if (!bIsDraw)
+
+	Canvas->K2_DrawTexture(BackGround, FVector2D(0, 0), LocalSize, FVector2D(0, 0));
+
+	for (int i = 1; i < FirstDrawPointList.Num(); ++i)
 	{
-		bIsDraw = true;
-		for (int i = 1; i < PointList.Num(); ++i)
-		{
-			Canvas->K2_DrawLine(PointList[i - 1], PointList[i], 10, FLinearColor::Red);
-		}
+		Canvas->K2_DrawLine(FirstDrawPointList[i - 1], FirstDrawPointList[i], 10, FLinearColor::Red);
 	}
 
-	if (bIsClicking)
+	for (int i = 1; i < DrawPointList.Num(); ++i)
 	{
-		Canvas->K2_DrawLine(OldMouseMove, OldMouseMove + LastMouseMove, WeldingRange, FLinearColor::White);
-		OldMouseMove = OldMouseMove + LastMouseMove;
+		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], WeldingRange, FLinearColor::White);
 	}
+
+	Canvas->K2_DrawTexture(
+		WeldingGun, OldMouseMove - FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()),
+		FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()), FVector2D(0, 0));
 
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 

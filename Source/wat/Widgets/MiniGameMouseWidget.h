@@ -43,7 +43,12 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 	UPROPERTY()
 	TArray<FVector2D> PointList;
 
+	TArray<FVector2D> DrawPointList;
+
+	TArray<FVector2D> FirstDrawPointList;
+
 	virtual void Start() override;
+
 	virtual void Stop() override;
 
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -54,9 +59,6 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT - Setup", meta = (AllowPrivateAccess = "true"))
-	int WeldingRange = 40;
-
 	FVector2D OldMouseMove;
 	FVector2D LastMouseMove;
 
@@ -64,7 +66,16 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 
 	bool bIsClicking;
 
-	bool bIsDraw;
-
 	EDirection DirectionState;
+
+public:
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	int WeldingRange = 40;
+
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	class UTexture* BackGround;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	class UTexture* WeldingGun;
+	
 };
