@@ -113,7 +113,7 @@ void ACameraDesk::Tick(float DeltaSeconds)
 			if((PlayerLocation.Z >= GameState->GridManager->FloorHeight && Monitor->FloorIndex) || (PlayerLocation.Z < GameState->GridManager->FloorHeight && !Monitor->FloorIndex))
 			{
 				const auto LogicPlayerLocation = PlayerLocation - LogicBounds.Min;
-				const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
+				const auto MapX = ((LogicPlayerLocation.X  / (LogicBounds.Max.X - LogicBounds.Min.X)) * (FirstFloor->GetSurfaceWidth() - MapWidthReduction) + MapXOffset) * (RenderingWidth / FirstFloor->GetSurfaceWidth()) ;
 				const auto MapY = (LogicPlayerLocation.Y * RenderingWidth * TextureAspectRatio * GridManagerAspectRatio) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
 				Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
 			}
