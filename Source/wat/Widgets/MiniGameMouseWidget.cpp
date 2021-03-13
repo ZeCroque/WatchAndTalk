@@ -105,9 +105,10 @@ void UMiniGameMouseWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-
+	auto TmpWeldingGunOffset = WeldingGunOffset;
 	if (bIsClicking)
 	{
+		TmpWeldingGunOffset = FVector2D(0, 0);
 		DrawPointList.Add(OldMouseMove + LastMouseMove);
 		OldMouseMove = OldMouseMove + LastMouseMove;
 	}
@@ -122,16 +123,17 @@ void UMiniGameMouseWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 
 	for (int i = 1; i < FirstDrawPointList.Num(); ++i)
 	{
-		Canvas->K2_DrawLine(FirstDrawPointList[i - 1], FirstDrawPointList[i], 10, FLinearColor::Red);
+		Canvas->K2_DrawLine(FirstDrawPointList[i - 1], FirstDrawPointList[i], 10, WayColor);
 	}
 
 	for (int i = 1; i < DrawPointList.Num(); ++i)
 	{
-		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], WeldingRange, FLinearColor::White);
+		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], WeldingRange, WeldingColor);
 	}
 
 	Canvas->K2_DrawTexture(
-		WeldingGun, OldMouseMove - FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()),
+		WeldingGun,
+		OldMouseMove - FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()) - TmpWeldingGunOffset,
 		FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()), FVector2D(0, 0));
 
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);

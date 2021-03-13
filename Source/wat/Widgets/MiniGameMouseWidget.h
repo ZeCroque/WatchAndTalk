@@ -70,12 +70,21 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 
 public:
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	UTexture* BackGround;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	UTexture* WeldingGun;
+
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	FLinearColor WeldingColor = FLinearColor::White ;
+
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
+	FLinearColor WayColor = FLinearColor::Red;
+
+	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	int WeldingRange = 40;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	class UTexture* BackGround;
-	
-	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	class UTexture* WeldingGun;
+	FVector2D WeldingGunOffset = FVector2D(0, 100);
 	
 };
