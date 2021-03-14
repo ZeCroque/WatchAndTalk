@@ -38,6 +38,8 @@ public:
 
 	virtual void OnFinalBlend() override;
 
+	virtual FColor GetColor() override;
+
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

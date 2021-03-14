@@ -65,7 +65,23 @@ void AObjective::OnFinalBlend()
 	Super::OnFinalBlend();
 }
 
-void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
+FColor AObjective::GetColor()
+{
+	if (bCompleted)
+	{
+		return FColor::Green;
+	}
+
+	if (CanInteract(LocalPlayerCharacter))
+	{
+		return FColor::White;
+	}
+
+
+	return FColor::Orange;
+}
+
+void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AObjective, bCompleted);
