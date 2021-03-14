@@ -6,6 +6,7 @@
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
+#include "wat/Widgets/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
@@ -74,6 +75,11 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
 	{
 		MiniGameWidget->OnInput(Key);
 		return true;
+	}
+
+	if(TutoMessageWidget && EventType == EInputEvent::IE_Pressed)
+	{
+		TutoMessageWidget->OnInput(Key);
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }

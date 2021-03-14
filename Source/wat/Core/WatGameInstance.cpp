@@ -13,6 +13,8 @@ UWatGameInstance::UWatGameInstance(const FObjectInitializer& ObjectInitializer) 
     OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnFindSessionsComplete);
     OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnJoinSessionComplete);
     OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnDestroySessionComplete);
+
+	bIsInTutorialMode = false;
 }
 
 void UWatGameInstance::BeginDestroy()

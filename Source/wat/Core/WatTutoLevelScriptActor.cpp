@@ -3,44 +3,26 @@
 
 #include "WatTutoLevelScriptActor.h"
 
+
+#include "WatGameInstance.h"
 #include "WatGameState.h"
 
-void AWatTutoLevelScriptActor::BeginPlay()
+void AWatTutoLevelScriptActor::PostInitializeComponents()
 {
-    Super::BeginPlay();
+	Super::PostInitializeComponents();
 
-    APlayerController* PlayerController = nullptr;
-    if(!HasAuthority())
-    {
-        PlayerController = GetWorld()->GetFirstPlayerController();
-    }
-    else
-    {
-        for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-        {
+	if(HasAuthority())
+	{
+	    auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	    if(GameState)
+	    {
+	    	GameState->bIsInTutorialMode = true;
+	    }
 
-            if ((*Iterator)->IsLocalController())
-            {
-                PlayerController = (*Iterator).Get();
-            }
-        }
-    }
-	
-    if (PlayerController)
-    {
-        PlayerController->EnableInput(nullptr);
-        PlayerController->SetInputMode(FInputModeGameOnly());
-        auto* Pawn = PlayerController->GetPawn();
-        if(Pawn)
-        {
-            Pawn->SetActorTickEnabled(true);
-        }
-    }
-
-    auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-    if(GameState)
-    {
-        GameState->bIsInLobby = false;
-    }
-  
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		if(GameInstance)
+		{
+			GameInstance->bIsInTutorialMode = true;
+		}
+	}
 }
