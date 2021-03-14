@@ -25,6 +25,7 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 {
 	GENERATED_BODY()
 
+protected:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* Image;
 
@@ -71,12 +72,12 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 public:
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	UTexture* BackGround;
-	
+
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	UTexture* WeldingGun;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	FLinearColor WeldingColor = FLinearColor::White ;
+	FLinearColor WeldingColor = FLinearColor::White;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	FLinearColor WayColor = FLinearColor::Red;
@@ -86,5 +87,4 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	FVector2D WeldingGunOffset = FVector2D(0, 100);
-	
 };
