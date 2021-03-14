@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
-#include "wat/Widgets/TutoMessageWidget.h"
+#include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 
 #include "TutoMessageTriggerBox.generated.h"
 

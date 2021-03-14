@@ -6,7 +6,7 @@
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
-#include "wat/Widgets/TutoMessageWidget.h"
+#include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()

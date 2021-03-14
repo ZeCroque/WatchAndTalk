@@ -2,15 +2,13 @@
 
 
 #include "TutoMessageWidget.h"
-#include "KeyIconWidget.h"
-#include "wat/Core/WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Core/WatStaticUtils.h"
+#include "wat/Widgets/KeyIconWidget.h"
 
 void UTutoMessageWidget::Init()
 {
 	TutoKeyIcon->SetBrushTexture(UWatStaticUtils::GetKeyIcon(ActionName, Controller->bIsUsingController));
-	Character->bCrouchEnabled = true;
 }
 
 void UTutoMessageWidget::OnInput(FKey PressedInput)
