@@ -14,14 +14,15 @@ void UMiniGameMouseWidgetAdn::Start()
 	const auto EndOfCourse = LocalSize * 0.75f;
 
 	const int Size = EndOfCourse.X - StartPoint.X;
-	const int Height = 80;
+	const int Height = FMath::RandRange(LocalSize.Y * 0.05f, LocalSize.Y * 0.1f);
+	const float RatioPeriod = Size * FMath::RandRange(0.09f, 0.13f);
 
 	for (int i = 0; i < Size; ++i)
 	{
 		if (!(i % 3))
 		{
-			PointList.Add(StartPoint + FVector2D(i, Height * std::cos(i / (Size * 0.1))));
-			ShadowPointList.Add(StartPoint + FVector2D(i, -(Height * std::cos(i / (Size * 0.1)))));
+			PointList.Add(StartPoint + FVector2D(i, Height * FMath::Cos(i / RatioPeriod)));
+			ShadowPointList.Add(StartPoint + FVector2D(i, -(Height * FMath::Cos(i / RatioPeriod))));
 		}
 	}
 

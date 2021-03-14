@@ -3,19 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Blueprint/UserWidget.h"
 #include "MiniGames/MiniGameWidget.h"
-
-
 #include "MiniGameMouseWidget.generated.h"
-
-
-enum class EDirection
-{
-	Forward,
-	Up,
-	Down
-};
 
 /**
  * 
@@ -52,13 +43,13 @@ protected:
 
 	virtual void Stop() override;
 
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	FVector2D OldMouseMove;
 	FVector2D LastMouseMove;
@@ -66,8 +57,6 @@ protected:
 	FVector2D MousePosition;
 
 	bool bIsClicking;
-
-	EDirection DirectionState;
 
 public:
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")

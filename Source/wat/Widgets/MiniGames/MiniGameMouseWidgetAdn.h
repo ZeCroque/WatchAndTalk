@@ -19,11 +19,12 @@ class WAT_API UMiniGameMouseWidgetAdn : public UMiniGameMouseWidget
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+	TArray<FVector2D> ShadowPointList;
+
+public:
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	float ErrorToleranceRatio = 1.5f;
+	float ErrorToleranceRatio = 1.1f;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	int StrandRatio = 15;
-
-	TArray<FVector2D> ShadowPointList;
 };

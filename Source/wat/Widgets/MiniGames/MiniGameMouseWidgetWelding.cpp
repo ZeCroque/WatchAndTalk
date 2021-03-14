@@ -3,6 +3,9 @@
 
 #include "MiniGameMouseWidgetWelding.h"
 
+#include "Engine/Canvas.h"
+#include "Kismet/KismetRenderingLibrary.h"
+
 
 void UMiniGameMouseWidgetWelding::Start()
 {
@@ -16,14 +19,14 @@ void UMiniGameMouseWidgetWelding::Start()
 	DrawPointList.Add(StartPoint);
 	FVector2D LastPoint = StartPoint;
 
-	
+
 	do
 	{
 		if (Vertical)
 		{
 			const auto PosCursor = LastPoint.Y;
 			const auto Distance = FMath::RandRange(LocalSize.Y * 0.10f, LocalSize.Y * 0.20f);
-	
+
 			float Y;
 			if (FMath::RandBool())
 			{
@@ -33,7 +36,7 @@ void UMiniGameMouseWidgetWelding::Start()
 			{
 				Y = FMath::Clamp(PosCursor + Distance, PosCursor, EndOfCourse.Y);
 			}
-	
+
 			LastPoint = FVector2D(LastPoint.X, Y);
 			PointList.Add(LastPoint);
 		}
@@ -42,7 +45,7 @@ void UMiniGameMouseWidgetWelding::Start()
 			const auto PosCursor = LastPoint.X;
 			const auto Distance = FMath::RandRange(LocalSize.X * 0.10f, LocalSize.X * 0.20f);
 			const auto X = FMath::Clamp(PosCursor + Distance, PosCursor, EndOfCourse.X);
-	
+
 			LastPoint = FVector2D(X, LastPoint.Y);
 			PointList.Add(LastPoint);
 		}
@@ -54,4 +57,98 @@ void UMiniGameMouseWidgetWelding::Start()
 	LastMouseMove.Set(0, 0);
 	OldMouseMove = StartPoint;
 	FirstDrawPointList = PointList;
+}
+
+void UMiniGameMouseWidgetWelding::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	auto TmpWeldingGunOffset = WeldingGunOffset;
+	if (bIsClicking)
+	{
+		TmpWeldingGunOffset = FVector2D(0, 0);
+		DrawPointList.Add(OldMouseMove + LastMouseMove);
+		OldMouseMove = OldMouseMove + LastMouseMove;
+	}
+
+	auto* Canvas = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();
+	FVector2D CanvasSize;
+	FDrawToRenderTargetContext Context;
+	UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, RenderTarget, Canvas, CanvasSize, Context);
+
+
+	Canvas->K2_DrawTexture(BackGround, FVector2D(0, 0), LocalSize, FVector2D(0, 0));
+
+	for (int i = 1; i < FirstDrawPointList.Num(); ++i)
+	{
+		Canvas->K2_DrawLine(FirstDrawPointList[i - 1], FirstDrawPointList[i], 10, WayColor);
+	}
+
+	for (int i = 1; i < DrawPointList.Num(); ++i)
+	{
+		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], WeldingRange, WeldingColor);
+	}
+
+	Canvas->K2_DrawTexture(
+		WeldingGun,
+		OldMouseMove - FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()) - TmpWeldingGunOffset,
+		FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()), FVector2D(0, 0));
+
+	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+
+
+	if (PointList.Num() == 1 || OldPoint.X < PointList[0].X)
+	{
+		DirectionState = EDirection::Forward;
+	}
+	else if (OldPoint.Y < PointList[0].Y)
+	{
+		DirectionState = EDirection::Down;
+	}
+	else if (OldPoint.Y > PointList[0].Y)
+	{
+		DirectionState = EDirection::Up;
+	}
+
+
+	bool bHasReached = false;
+	switch (DirectionState)
+	{
+	case EDirection::Up:
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldMouseMove.Y - OldPoint.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+			OnFail();
+		break;
+	case EDirection::Down:
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldPoint.Y - OldMouseMove.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+			OnFail();
+		break;
+	case EDirection::Forward:
+		if (FMath::Abs(PointList[0].X - OldMouseMove.X) <= WeldingRange)
+		{
+			bHasReached = true;
+			break;
+		}
+		if (OldPoint.X - OldMouseMove.X > WeldingRange || FMath::Abs(PointList[0].Y - OldMouseMove.Y) > WeldingRange)
+			OnFail();
+		break;
+	}
+
+	if (bHasReached)
+	{
+		OldPoint = PointList[0];
+		PointList.RemoveAt(0);
+	}
+
+	if (PointList.Num() == 0)
+	{
+		OnComplete();
+	}
 }
