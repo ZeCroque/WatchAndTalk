@@ -3,3 +3,10 @@
 
 #include "ObjectiveTutoMessageWidget.h"
 
+#include "wat/Core/WatPlayerCharacter.h"
+
+void UObjectiveTutoMessageWidget::Init()
+{
+	Super::Init();
+	Character->bObjectiveInputEnabled = true;
+}

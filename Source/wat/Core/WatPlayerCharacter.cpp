@@ -615,7 +615,8 @@ void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
 	if(bObjectiveInputEnabled)
 	{
-		if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
+		
+		if (GameState && GameState->bGameStarted || GameState->bIsInTutorialMode)
 		{
 			if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
 			{

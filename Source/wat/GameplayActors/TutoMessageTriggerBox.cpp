@@ -25,8 +25,14 @@ void ATutoMessageTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 {
 	auto* PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
     if (!bShown && PlayerCharacter && PlayerCharacter->IsLocallyControlled())
-    {
+    {	
     	auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
+
+    	if(PlayerController->TutoMessageWidget)
+    	{
+    		PlayerController->TutoMessageWidget->RemoveFromParent();
+    		PlayerController->TutoMessageWidget = nullptr;
+    	}
     	PlayerController->TutoMessageWidget = CreateWidget<UTutoMessageWidget>(PlayerController, TutoMessageClass);
     	PlayerController->TutoMessageWidget->Controller = PlayerController;
     	PlayerController->TutoMessageWidget->Character = PlayerCharacter;

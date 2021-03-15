@@ -13,5 +13,6 @@ UCLASS()
 class WAT_API UObjectiveTutoMessageWidget : public UTutoMessageWidget
 {
 	GENERATED_BODY()
-	
+
+	virtual void Init() override;
 };
