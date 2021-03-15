@@ -56,17 +56,6 @@ void AWatPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-
-	if (GameState->bIsInLobby || GameState->bGameStarted)
-	{
-		SetActorTickEnabled(true);
-	}
-	else
-	{
-		SetActorTickEnabled(false);
-	}
-	
 	if (!IsLocallyControlled())
 	{
 		GetMesh()->SetVisibility(true);
@@ -79,6 +68,37 @@ void AWatPlayerCharacter::BeginPlay()
 		{
 			bIsMechanist = true;
 		}
+	}
+
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+
+	if(IsLocallyControlled() && GameState->bIsInLobby || GameState->bGameStarted || GameState->bIsInTutorialMode)
+	{
+		SetActorTickEnabled(true);
+		LocalPlayerController->EnableInput(nullptr);
+        LocalPlayerController->SetInputMode(FInputModeGameOnly());
+		if(GameState->bIsInLobby)
+		{
+			bCrouchEnabled = true;
+			bSprintEnabled = true;
+			bObjectiveInputEnabled = false;
+		}
+		else if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
+		{
+			bCrouchEnabled = false;
+			bSprintEnabled = false;
+			bObjectiveInputEnabled = false;
+		}
+		else
+		{
+			bCrouchEnabled = true;
+			bSprintEnabled = true;
+			bObjectiveInputEnabled = true;
+		}
+	}
+	else
+	{
+		SetActorTickEnabled(false);
 	}
 	
 	bIsAlive = true;
@@ -119,7 +139,7 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 
 	if (IsLocallyControlled())
 	{
-		if (GameState && GameState->bGameStarted)
+		if (GameState && GameState->bIsInTutorialMode || GameState->bGameStarted)
 		{
 			if (!LocalPlayerController->ObjectivesHUDWidget)
 			{
@@ -184,7 +204,11 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
 {
 	GameState->bTutorialActivated = !GameState->bTutorialActivated;
-	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
+	auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+	if(GameInstance)
+	{
+		GameInstance->bIsInTutorialMode = !GameInstance->bIsInTutorialMode;
+	}
 }
 
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
@@ -312,11 +336,14 @@ void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
 
 void AWatPlayerCharacter::NotifyWantsToSprint()
 {
-	if(GetCharacterMovement()->IsCrouching())
+	if(bSprintEnabled)
 	{
-		UnCrouch();
+		if(GetCharacterMovement()->IsCrouching())
+		{
+			UnCrouch();
+		}
+		StartSprinting();
 	}
-	StartSprinting();
 }
 
 void AWatPlayerCharacter::StartSprinting_Implementation()
@@ -332,17 +359,20 @@ void AWatPlayerCharacter::StopSprinting_Implementation()
 
 void AWatPlayerCharacter::ToggleCrouch()
 {
-	if(bIsSprinting)
+	if(bCrouchEnabled)
 	{
-		StopSprinting();
-	}
-	if(!GetCharacterMovement()->IsCrouching())
-	{
-		Crouch();
-	}
-	else
-	{
-		UnCrouch();
+		if(bIsSprinting)
+		{
+			StopSprinting();
+		}
+		if(!GetCharacterMovement()->IsCrouching())
+		{
+			Crouch();
+		}
+		else
+		{
+			UnCrouch();
+		}
 	}
 }
 
@@ -583,15 +613,19 @@ void AWatPlayerCharacter::CreateObjectiveList()
 
 void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
-	if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
+	if(bObjectiveInputEnabled)
 	{
-		if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
+		
+		if (GameState && GameState->bGameStarted || GameState->bIsInTutorialMode)
 		{
-			LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
-		}
-		else
-		{
-			LocalPlayerController->ObjectivesHUDWidget->AddToViewport();
+			if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
+			{
+				LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+			}
+			else
+			{
+				LocalPlayerController->ObjectivesHUDWidget->AddToViewport();
+			}
 		}
 	}
 }

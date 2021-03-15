@@ -46,6 +46,9 @@ public:
 	class UObjectivesHUDWidget* ObjectivesHUDWidget;
 
 	UPROPERTY()
+	class UTutoMessageWidget* TutoMessageWidget;
+	
+	UPROPERTY()
 	UUserWidget* DebugGridWidget;
 
 	UPROPERTY(BlueprintReadWrite)
