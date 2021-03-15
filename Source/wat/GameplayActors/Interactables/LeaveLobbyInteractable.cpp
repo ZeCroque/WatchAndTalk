@@ -12,7 +12,10 @@
 
 void ALeaveLobbyInteractable::SetTextRenderToReadyString_Implementation()
 {
-	TextRender->SetText(FText::FromString(ReadyString));
+	if(!HasAuthority())
+	{
+		TextRender->SetText(FText::FromString(ReadyString));
+	}
 }
 
 void ALeaveLobbyInteractable::BeginPlay()
