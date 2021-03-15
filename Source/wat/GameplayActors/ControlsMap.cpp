@@ -20,7 +20,8 @@ void AControlsMap::BeginPlay()
 	Super::BeginPlay();
 	
 	PlayerController = nullptr;
-	bIsShowingGamepad = true;
+	bIsShowingGamepad = false;
+	MapMesh->SetMaterial(0, KeyboardControlsMaterial);
 }
 
 // Called every frame

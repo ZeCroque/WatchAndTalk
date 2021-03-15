@@ -40,10 +40,13 @@ public:
 	float PlayerIconSize = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
-	float MapXOffset = 50.f;
+	float MapWidthReduction = 281.f;
 
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
-	float MapYOffset = 20.f;
+	float MapXOffset = 85.f;
+	
+	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
+	float MapYOffset = 23.f;
 
 	UPROPERTY(EditAnywhere, Category= "WAT HUDSettings")
 	TSubclassOf<UUserWidget> CameraDeskHUDWidgetClass;
