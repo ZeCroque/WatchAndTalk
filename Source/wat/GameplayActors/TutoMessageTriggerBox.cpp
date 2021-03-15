@@ -6,6 +6,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/BoxComponent.h"
+#include "wat/Core/WatGameState.h"
 #include "wat/Core/WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 
@@ -21,10 +22,15 @@ ATutoMessageTriggerBox::ATutoMessageTriggerBox()
 	bShown = false;
 }
 
+void ATutoMessageTriggerBox::BeginPlay()
+{
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+}
+
 void ATutoMessageTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	auto* PlayerCharacter = Cast<AWatPlayerCharacter>(OtherActor);
-    if (!bShown && PlayerCharacter && PlayerCharacter->IsLocallyControlled())
+    if (GameState && GameState->bIsInTutorialMode && !bShown && PlayerCharacter && PlayerCharacter->IsLocallyControlled())
     {	
     	auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
 

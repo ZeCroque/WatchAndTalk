@@ -4,14 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "wat/Widgets/Tutorial/TutoMessageWidget.h"
-#include "MapTutoMessageWidget.generated.h"
+#include "DoorTutoMessageWidget.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API UMapTutoMessageWidget : public UTutoMessageWidget
+class WAT_API UDoorTutoMessageWidget : public UTutoMessageWidget
 {
 	GENERATED_BODY()
-	
+
+	virtual void Init() override;
 };
