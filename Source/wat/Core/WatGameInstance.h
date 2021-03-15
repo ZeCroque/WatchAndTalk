@@ -76,9 +76,10 @@ public:
 private:
   FName SubsystemName;
   FName CurrentSessionName;
-
-#if WITH_EDITOR
 public:
+	bool bIsInTutorialMode;
+#if WITH_EDITOR
+
 	bool bIsHost;
 #endif
 

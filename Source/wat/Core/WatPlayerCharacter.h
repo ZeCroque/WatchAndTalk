@@ -114,11 +114,11 @@ public:
 	UPROPERTY(EditAnywhere, Category= "WAT Sprint")
 	TSubclassOf<UCameraShake> SprintShake;
 
-	
+	bool bSprintEnabled;
 private:
 	UPROPERTY(Replicated)
 	bool bIsSprinting;
-
+	
 	void HandleSprint(float DeltaTime);
 
 	void NotifyWantsToSprint();
@@ -135,6 +135,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
 	float CrouchingTransitionDuration = 0.5f;
 
+	bool bCrouchEnabled;
 private:	
 	float BaseCameraRelativeHeight;
 	float BaseHalfHeightDelta;
@@ -236,6 +237,8 @@ public:
 	UPROPERTY(EditAnywhere, Category="WAT Objectives")
 	TSubclassOf<UUserWidget> ObjectivesHUDWidgetClass;
 
+	bool bObjectiveInputEnabled;
+	
 	UFUNCTION(Server, Reliable)
 	void SwitchPlayersClasses();
 	

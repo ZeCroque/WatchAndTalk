@@ -22,8 +22,8 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     int ObjectiveIndex;
-
-    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
+	
+    UPROPERTY(Replicated, EditAnywhere, Category = "WAT Objectives")
     bool bIsOnlyForMechanist;
 
 	AObjective();

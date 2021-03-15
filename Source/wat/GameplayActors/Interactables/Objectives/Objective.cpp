@@ -85,4 +85,5 @@ void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AObjective, bCompleted);
+	DOREPLIFETIME(AObjective, bIsOnlyForMechanist);
 }

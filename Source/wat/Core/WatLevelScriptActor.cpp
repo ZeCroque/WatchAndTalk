@@ -2,6 +2,8 @@
 
 
 #include "wat/Core/WatLevelScriptActor.h"
+
+#include "WatGameInstance.h"
 #include "wat/GameplayActors/Interactables/Desk/SecurityCamera.h"
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
@@ -20,7 +22,7 @@ void AWatLevelScriptActor::PostInitializeComponents()
 	{
 		auto* GameState = GetWorld()->GetGameState();
 		AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
-
+		
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
 		if (FoundActors.Num() != 0)
@@ -73,7 +75,12 @@ void AWatLevelScriptActor::PostInitializeComponents()
 
 		MainGameState->NumberOfActorInBunker = 2;
 
-		MainGameState->bIsInLobby = false;
 		MainGameState->bGameStarted = true;
+
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		if(GameInstance)
+		{
+			MainGameState->bIsInTutorialMode = GameInstance->bIsInTutorialMode;
+		}
 	}
 }

@@ -5,7 +5,9 @@
 #include "wat/Widgets/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
+#include "WatSettings.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
+#include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
@@ -37,8 +39,25 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	{
 		GameState->ObjectiveIndex++;
 	}
-	GameState->bScientistTurn = !GameState->bScientistTurn;
+	
 
+	if(GameState->bIsInTutorialMode)
+	{
+		if(GameState->ObjectiveIndex == 1)
+		{
+			if(HasAuthority())
+			{
+				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
+				GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
+			}
+			return;
+		}
+		Objective->bIsOnlyForMechanist = false;
+		Objective->bCompleted = false;
+	}
+
+	GameState->bScientistTurn = !GameState->bScientistTurn;
+	
 	for(auto* ObjectiveInteractable : GameState->Objectives)
 	{
 		if(ObjectiveInteractable)
@@ -47,7 +66,7 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		}
 	}
 	
-	if (GameState->AreAllObjectivesCompleted() == true)
+	if (!GameState->bIsInTutorialMode && GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;
 
@@ -74,6 +93,11 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
 	{
 		MiniGameWidget->OnInput(Key);
 		return true;
+	}
+
+	if(TutoMessageWidget && EventType == EInputEvent::IE_Pressed)
+	{
+		TutoMessageWidget->OnInput(Key);
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }
