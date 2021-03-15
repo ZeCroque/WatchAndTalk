@@ -40,3 +40,8 @@ void USpamWidget::Start()
     }
     KeyIconWidget->SetBrushTexture(*PossibleInputs.Find(UWatStaticUtils::GetKeyForDevice(PossibleActionsName[0], ParentInteractable->PlayerController->bIsUsingController)));
 }
+
+void USpamWidget::::OnComplete()
+{
+	ParentInteractable->EndInteraction(true, false);
+}
