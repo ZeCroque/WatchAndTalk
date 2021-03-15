@@ -38,7 +38,7 @@ public:
 
 	virtual void OnFinalBlend() override;
 
-	virtual FColor GetColor() override;
+	virtual int GetStencilIndex() override;
 
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

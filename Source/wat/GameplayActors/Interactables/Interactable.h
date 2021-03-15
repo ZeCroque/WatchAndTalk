@@ -54,7 +54,7 @@ protected:
 
 	virtual bool CanInteract(class AWatPlayerCharacter* Player);
 
-	virtual FColor GetColor();
+	virtual int GetStencilIndex();
 
 	UPROPERTY()
 	AWatPlayerCharacter* LocalPlayerCharacter;

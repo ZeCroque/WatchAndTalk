@@ -105,7 +105,7 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	virtual  FColor GetColor() override;
+	virtual  int GetStencilIndex() override;
 
 private:
 	void Initialize();

@@ -42,6 +42,7 @@ void AInteractable::BeginPlay()
 	RefreshIconWidgetForCurrentDevice(false);
 
 	LocalPlayerCharacter = Cast<AWatPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	StaticMesh->SetRenderCustomDepth(true);
 }
 
 void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -109,15 +110,15 @@ bool AInteractable::CanInteract(AWatPlayerCharacter* Player)
 	return Player != nullptr;
 }
 
-FColor AInteractable::GetColor()
+int AInteractable::GetStencilIndex()
 {
-	return FColor::Blue;
+	return 4;
 }
 
 void AInteractable::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	GEngine->AddOnScreenDebugMessage(-1, 0, GetColor(), "TEST ");
+	StaticMesh->SetCustomDepthStencilValue(GetStencilIndex()); 
 }
 
 void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad)

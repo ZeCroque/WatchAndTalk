@@ -123,14 +123,14 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 
-FColor ACameraDesk::GetColor()
+int ACameraDesk::GetStencilIndex()
 {
 	if (CanInteract(LocalPlayerCharacter))
 	{
-		return FColor::White;
+		return 1;
 	}
 
-	return FColor::Orange;
+	return 2;
 }
 
 void ACameraDesk::Initialize()

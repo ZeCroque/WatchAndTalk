@@ -65,20 +65,19 @@ void AObjective::OnFinalBlend()
 	Super::OnFinalBlend();
 }
 
-FColor AObjective::GetColor()
+int AObjective::GetStencilIndex()
 {
 	if (bCompleted)
 	{
-		return FColor::Green;
+		return 3;
 	}
 
 	if (CanInteract(LocalPlayerCharacter))
 	{
-		return FColor::White;
+		return 1;
 	}
 
-
-	return FColor::Orange;
+	return 2;
 }
 
 void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
