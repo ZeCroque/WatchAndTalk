@@ -13,5 +13,10 @@ UCLASS()
 class WAT_API USprintTutoMessageWidget : public UTutoMessageWidget
 {
 	GENERATED_BODY()
-	
+
+public:
+	UPROPERTY(EditAnywhere)
+	class USoundBase* MonsterScreamSound;
+protected:	
+	virtual void Init() override;
 };

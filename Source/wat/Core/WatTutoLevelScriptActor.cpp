@@ -13,16 +13,15 @@ void AWatTutoLevelScriptActor::PostInitializeComponents()
 
 	if(HasAuthority())
 	{
-	    auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-	    if(GameState)
-	    {
-	    	GameState->bIsInTutorialMode = true;
-	    }
-
-		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
-		if(GameInstance)
+		auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+		if(GameState)
 		{
-			GameInstance->bIsInTutorialMode = true;
+			auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+			if(GameInstance)
+			{
+				GameState->bIsInTutorialMode = GameInstance->bIsInTutorialMode;
+				GameState->ObjectiveIndex = 0;
+			}
 		}
 	}
 }

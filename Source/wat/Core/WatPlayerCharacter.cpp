@@ -139,7 +139,7 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 
 	if (IsLocallyControlled())
 	{
-		if (GameState && GameState->bGameStarted)
+		if (GameState && GameState->bIsInTutorialMode || GameState->bGameStarted)
 		{
 			if (!LocalPlayerController->ObjectivesHUDWidget)
 			{
@@ -204,7 +204,11 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
 {
 	GameState->bTutorialActivated = !GameState->bTutorialActivated;
-	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
+	auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+	if(GameInstance)
+	{
+		GameInstance->bIsInTutorialMode = !GameInstance->bIsInTutorialMode;
+	}
 }
 
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
