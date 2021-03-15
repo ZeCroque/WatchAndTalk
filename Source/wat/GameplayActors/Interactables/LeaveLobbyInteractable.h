@@ -3,18 +3,34 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "wat/GameplayActors/Interactables/Interactable.h"
+#include "TextRenderInteractable.h"
 #include "LeaveLobbyInteractable.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WAT_API ALeaveLobbyInteractable : public AInteractable
+class WAT_API ALeaveLobbyInteractable : public ATextRenderInteractable
 {
 	GENERATED_BODY()
 
-	TArray<uint32> ReadyPlayersIds;
+public:
+
+	UPROPERTY(EditAnywhere, Category="WAT Lobby")
+	FString NotReadyString;
+
+	UPROPERTY(EditAnywhere, Category="WAT Lobby")
+	FString ReadyString;
+
+protected:
+	UFUNCTION(NetMulticast, Reliable)
+	void SetTextRenderToReadyString();
+	
+	virtual void BeginPlay() override;
 	
 	virtual void OnInteraction() override;
+
+private:
+
+	TArray<uint32> ReadyPlayersIds;
 };

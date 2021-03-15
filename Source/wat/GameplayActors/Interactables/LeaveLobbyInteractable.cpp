@@ -2,14 +2,40 @@
 
 
 #include "wat/GameplayActors/Interactables/LeaveLobbyInteractable.h"
+
+#include "Components/TextRenderComponent.h"
 #include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/WatSettings.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "wat/Core/WatGameState.h"
 
+void ALeaveLobbyInteractable::SetTextRenderToReadyString_Implementation()
+{
+	TextRender->SetText(FText::FromString(ReadyString));
+}
+
+void ALeaveLobbyInteractable::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TextRender->SetText(FText::FromString(NotReadyString));
+}
+
 void ALeaveLobbyInteractable::OnInteraction()
 {
+	if(HasAuthority())
+	{
+		if(PlayerCharacter->IsLocallyControlled())
+		{
+			TextRender->SetText(FText::FromString(ReadyString));
+		}
+		else
+		{
+			SetTextRenderToReadyString();
+		}
+	}
+	
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
 
 	auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
