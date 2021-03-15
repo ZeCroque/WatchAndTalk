@@ -38,6 +38,8 @@ public:
 
 	virtual void OnFinalBlend() override;
 
+	virtual int GetStencilIndex() override;
+
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

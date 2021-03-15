@@ -65,7 +65,22 @@ void AObjective::OnFinalBlend()
 	Super::OnFinalBlend();
 }
 
-void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
+int AObjective::GetStencilIndex()
+{
+	if (bCompleted)
+	{
+		return 3;
+	}
+
+	if (CanInteract(LocalPlayerCharacter))
+	{
+		return 1;
+	}
+
+	return 2;
+}
+
+void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AObjective, bCompleted);

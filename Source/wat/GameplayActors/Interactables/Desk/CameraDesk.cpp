@@ -123,6 +123,16 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 }
 
+int ACameraDesk::GetStencilIndex()
+{
+	if (CanInteract(LocalPlayerCharacter))
+	{
+		return 1;
+	}
+
+	return 2;
+}
+
 void ACameraDesk::Initialize()
 {
 	CurrentIndex = 0;
