@@ -121,6 +121,15 @@ void AWatPlayerCharacter::BeginPlay()
 	BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
 }
 
+void AWatPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(LocalPlayerController && LocalPlayerController->ObjectivesHUDWidget)
+	{
+		LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+		LocalPlayerController->ObjectivesHUDWidget = nullptr;
+	}
+}
+
 void AWatPlayerCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
