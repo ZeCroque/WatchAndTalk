@@ -31,6 +31,8 @@ public:
 	virtual bool CanInteract(class AWatPlayerCharacter* Player) override;
 
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 	
 	virtual void EndInteraction(bool bSuccess, bool bShouldWarnMonster);
 

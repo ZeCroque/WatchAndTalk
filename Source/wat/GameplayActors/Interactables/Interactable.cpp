@@ -6,7 +6,6 @@
 #include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/WatPlayerController.h"
 #include "Engine/AssetManager.h"
-#include "GameFramework/InputSettings.h"
 #include "wat/Widgets/KeyIconWidget.h"
 #include "Net/UnrealNetwork.h"
 #include "wat/Core/WatStaticUtils.h"

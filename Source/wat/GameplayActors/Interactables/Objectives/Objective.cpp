@@ -24,6 +24,13 @@ void AObjective::BeginPlay()
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 }
 
+void AObjective::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	StaticMesh->SetRenderCustomDepth(CanInteract(LocalPlayerCharacter));
+}
+
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)
 {
 	if (PlayerController)
