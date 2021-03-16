@@ -16,6 +16,7 @@ AWatPlayerController::AWatPlayerController()
 	PauseWidget = nullptr;
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
+	MainHUDWidget = nullptr;
 	bIsUsingController = false;
 }
 

@@ -22,6 +22,7 @@
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Widgets/MainHUDWidget.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
 #if WITH_EDITOR
@@ -44,7 +45,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
-
 
 	auto* Mesh3P = this->GetMesh();
 	Mesh3P->SetVisibleFlag(false);
@@ -95,6 +95,16 @@ void AWatPlayerCharacter::BeginPlay()
 			bSprintEnabled = true;
 			bObjectiveInputEnabled = true;
 		}
+
+		if(!LocalPlayerController->MainHUDWidget)
+		{
+			LocalPlayerController->MainHUDWidget = CreateWidget<UMainHUDWidget>(LocalPlayerController, MainHUDWidgetClass);
+			if(LocalPlayerController->MainHUDWidget)
+			{
+				LocalPlayerController->MainHUDWidget->AddToViewport();
+				LocalPlayerController->MainHUDWidget->ParentCharacter = this;
+			}
+		}
 	}
 	else
 	{
@@ -123,10 +133,18 @@ void AWatPlayerCharacter::BeginPlay()
 
 void AWatPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if(LocalPlayerController && LocalPlayerController->ObjectivesHUDWidget)
+	if(LocalPlayerController)
 	{
-		LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
-		LocalPlayerController->ObjectivesHUDWidget = nullptr;
+		if(LocalPlayerController->ObjectivesHUDWidget)
+		{
+			LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+			LocalPlayerController->ObjectivesHUDWidget = nullptr;
+		}
+		else if(LocalPlayerController->MainHUDWidget)
+		{
+			LocalPlayerController->MainHUDWidget->RemoveFromParent();
+			LocalPlayerController->MainHUDWidget = nullptr;
+		}
 	}
 }
 
