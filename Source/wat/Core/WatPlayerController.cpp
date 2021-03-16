@@ -42,10 +42,15 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	}
 	
 
-	if(GameState->bIsInTutorialMode)
+	if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
 	{
 		if(GameState->ObjectiveIndex == 1)
 		{
+			if(MainHUDWidget)
+			{
+				MainHUDWidget->RemoveFromParent();
+				MainHUDWidget = nullptr;
+			}
 			if(HasAuthority())
 			{
 				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				

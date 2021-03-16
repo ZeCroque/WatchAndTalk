@@ -21,11 +21,15 @@ void ALaserTrigger::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
     if (PlayerCharacter)
     {
         PlayerCharacter->SetIsUsingLaser(false);
-    	auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
-    	if(PlayerController)
+
+    	if(PlayerCharacter->IsLocallyControlled())
     	{
-    		PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Visible);
-    	}
+    		auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
+    		if(PlayerController && PlayerController->MainHUDWidget)
+    		{
+    			PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Visible);
+    		}
+        }
     }
 }
 
@@ -36,10 +40,14 @@ void ALaserTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
     if (PlayerCharacter)
     {
         PlayerCharacter->SetIsUsingLaser(true);
-    	auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
-    	if(PlayerController)
+
+    	if(PlayerCharacter->IsLocallyControlled())
     	{
-    		PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Hidden);
-    	}
+    		auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
+    		if(PlayerController && PlayerController->MainHUDWidget)
+    		{
+    			PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Hidden);
+    		}
+        }
     }
 }
