@@ -3,6 +3,7 @@
 
 #include "wat/Core/WatGameInstance.h"
 #include "OnlineSessionSettings.h"
+#include "WatPlayerController.h"
 #include "wat/Core/WatSettings.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -16,6 +17,7 @@ UWatGameInstance::UWatGameInstance(const FObjectInitializer& ObjectInitializer) 
 
 	bIsInTutorialMode = false;
 	bHostIsScientist = false;
+	LoadingScreenWidget = nullptr;
 }
 
 void UWatGameInstance::BeginDestroy()
@@ -192,6 +194,7 @@ void UWatGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSucces
     }
     if (bWasSuccessful)
     {
+    	Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ShowLoadingWidget();
     	const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
         UGameplayStatics::OpenLevel(GetWorld(), *NetworkSettingsWat->LobbyLevel.GetAssetName(), true, "listen");
     }
@@ -210,12 +213,13 @@ void UWatGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCo
         {
             Sessions->ClearOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegateHandle);
 
-            APlayerController * const PlayerController = GetFirstLocalPlayerController();
+            auto* const PlayerController = Cast<AWatPlayerController>(GetFirstLocalPlayerController());
 
             FString TravelURL;
 
             if (PlayerController && Sessions->GetResolvedConnectString(SessionName, TravelURL))
             {
+            	PlayerController->ShowLoadingWidget();
                 PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute);
             }
         }
@@ -239,6 +243,7 @@ void UWatGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
                 auto* World = GetWorld();
             	if(World)
                 {
+            		Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ShowLoadingWidget();
             		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
 				    UGameplayStatics::OpenLevel(World, *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
 				}
