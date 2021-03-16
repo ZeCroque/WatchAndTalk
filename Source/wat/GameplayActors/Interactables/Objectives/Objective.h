@@ -22,8 +22,8 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     int ObjectiveIndex;
-
-    UPROPERTY(EditAnywhere, Category = "WAT Objectives")
+	
+    UPROPERTY(Replicated, EditAnywhere, Category = "WAT Objectives")
     bool bIsOnlyForMechanist;
 
 	AObjective();
@@ -37,6 +37,8 @@ public:
 	virtual void OnNotFinalBlend() override;
 
 	virtual void OnFinalBlend() override;
+
+	virtual int GetStencilIndex() override;
 
 private:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

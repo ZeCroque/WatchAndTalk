@@ -39,12 +39,14 @@ void ABlendableInteractable::OnInteraction()
 
 void ABlendableInteractable::OnNotFinalBlend()
 {
+	PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Hidden);
 	PlayerController->PossessRPC(this);
 }
 
 void ABlendableInteractable::OnFinalBlend()
 {
 	bIsFinalBlend = false;
+	PlayerController->MainHUDWidget->SetVisibility(ESlateVisibility::Visible);
 	PlayerController->NotifyPossessionEnd(this);
 	PlayerController->PossessRPC(PlayerCharacter, true);
     PlayerController->PlayerCameraManager->OnBlendComplete().RemoveAll(this);

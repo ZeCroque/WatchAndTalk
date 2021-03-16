@@ -7,6 +7,8 @@
 
 #include "GameFramework/Character.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "wat/Widgets/MainHUDWidget.h"
+
 
 #include "WatPlayerCharacter.generated.h"
 
@@ -31,6 +33,7 @@ public:
 protected:
 	AWatPlayerCharacter();
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -60,9 +63,11 @@ private:
 //GAMEPLAY
 //========
 public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
+	
 	bool IsAlive() const;
 	void Die();
-
 private:
 	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess = "true"))
 	bool bIsAlive;
@@ -114,11 +119,11 @@ public:
 	UPROPERTY(EditAnywhere, Category= "WAT Sprint")
 	TSubclassOf<UCameraShake> SprintShake;
 
-	
+	bool bSprintEnabled;
 private:
 	UPROPERTY(Replicated)
 	bool bIsSprinting;
-
+	
 	void HandleSprint(float DeltaTime);
 
 	void NotifyWantsToSprint();
@@ -135,6 +140,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT Crouch")
 	float CrouchingTransitionDuration = 0.5f;
 
+	bool bCrouchEnabled;
 private:	
 	float BaseCameraRelativeHeight;
 	float BaseHalfHeightDelta;
@@ -236,6 +242,8 @@ public:
 	UPROPERTY(EditAnywhere, Category="WAT Objectives")
 	TSubclassOf<UUserWidget> ObjectivesHUDWidgetClass;
 
+	bool bObjectiveInputEnabled;
+	
 	UFUNCTION(Server, Reliable)
 	void SwitchPlayersClasses();
 	

@@ -96,26 +96,41 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	//Canvas->K2_DrawMaterial(PostProcessMaterial, FVector2D(0.f,0.f), FVector2D(RenderingWidth,RenderingWidth),FVector2D(0.f,0.f));
 
 	const auto LogicBounds = GameState->GridManager->BoxComponent->GetNavigationBounds();
+	const auto GridManagerAspectRatio = (LogicBounds.Max.Y - LogicBounds.Min.Y) / (LogicBounds.Max.X - LogicBounds.Min.X);
 	
 	for(auto* PlayerStateRef : GameState->PlayerArray)
 	{
 		const auto* Player = PlayerStateRef->GetPawn();
 		if(Player)
 		{
+
+			
 			const auto PlayerLocation = Player->GetActorLocation();
 			const auto Monitor = GetMonitorByIndex(CurrentIndex);
+			const auto TextureAspectRatio =  FirstFloor->GetSurfaceHeight() / FirstFloor->GetSurfaceWidth();
+			
 		
 			if((PlayerLocation.Z >= GameState->GridManager->FloorHeight && Monitor->FloorIndex) || (PlayerLocation.Z < GameState->GridManager->FloorHeight && !Monitor->FloorIndex))
 			{
 				const auto LogicPlayerLocation = PlayerLocation - LogicBounds.Min;
-				const auto MapX = (LogicPlayerLocation.X * RenderingWidth) / (LogicBounds.Max.X - LogicBounds.Min.X) + MapXOffset;
-				const auto MapY = (LogicPlayerLocation.Y * RenderingHeight) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
+				const auto MapX = ((LogicPlayerLocation.X  / (LogicBounds.Max.X - LogicBounds.Min.X)) * (FirstFloor->GetSurfaceWidth() - MapWidthReduction) + MapXOffset) * (RenderingWidth / FirstFloor->GetSurfaceWidth()) ;
+				const auto MapY = (LogicPlayerLocation.Y * RenderingWidth * TextureAspectRatio * GridManagerAspectRatio) / (LogicBounds.Max.Y - LogicBounds.Min.Y) + MapYOffset;
 				Canvas->K2_DrawMaterial(PlayerIcon, FVector2D(MapX,MapY),FVector2D(PlayerIconSize,PlayerIconSize),FVector2D(0.f, 0.f));
 			}
 		}
 	}
 	
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+}
+
+int ACameraDesk::GetStencilIndex()
+{
+	if (CanInteract(LocalPlayerCharacter))
+	{
+		return 1;
+	}
+
+	return 2;
 }
 
 void ACameraDesk::Initialize()

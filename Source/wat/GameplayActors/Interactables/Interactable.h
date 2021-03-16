@@ -11,8 +11,8 @@ UCLASS()
 class WAT_API AInteractable : public APawn
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionBox;
 
@@ -21,8 +21,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* KeyIconWidget;
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AInteractable();
 	void Interact(class AWatPlayerCharacter* Player);
@@ -35,26 +35,35 @@ public:
 	class AWatPlayerCharacter* PlayerCharacter;
 
 	UPROPERTY()
-	TArray<class AWatPlayerCharacter*> OverlappingPlayers; 
+	TArray<class AWatPlayerCharacter*> OverlappingPlayers;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
+	                            class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	                            const FHitResult& SweepResult);
 
 	UFUNCTION()
-	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
+	                          class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	virtual void OnInteraction();
 
 	virtual bool CanInteract(class AWatPlayerCharacter* Player);
 
+	virtual int GetStencilIndex();
+
+	UPROPERTY()
+	AWatPlayerCharacter* LocalPlayerCharacter;
+
+	virtual void Tick(float DeltaSeconds) override;
+
 	bool bIsShowingGamepadIcon;
 
-public:	
+public:
 
 	void RefreshIconWidgetForCurrentDevice(bool bIsGamePad);
-
 };
