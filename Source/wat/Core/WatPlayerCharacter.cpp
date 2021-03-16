@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "wat/Core/WatPlayerCharacter.h"
+
+#include "WatStaticUtils.h"
 #include "wat/GameplayActors/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
@@ -70,11 +72,17 @@ void AWatPlayerCharacter::BeginPlay()
 		}
 	}
 
+	auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+	if(GameInstance && GameInstance->LoadingScreenWidget)
+	{
+		GameInstance->LoadingScreenWidget->RemoveFromParent();
+		GameInstance->LoadingScreenWidget = nullptr;
+	}
+	
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 
 	if(HasAuthority())
 	{
-		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
 		if(GameInstance && GameInstance->bHostIsScientist)
 		{
 			if(IsLocallyControlled())
@@ -280,6 +288,7 @@ void AWatPlayerCharacter::RestartGame_Implementation(const uint32 PlayerId)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
 		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+		UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
 		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
 		GameState->PlayersReadyForRestartIds.Empty();
 	}

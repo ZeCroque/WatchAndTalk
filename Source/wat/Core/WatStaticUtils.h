@@ -18,4 +18,6 @@ public:
 	static UTexture2D* GetKeyIcon(FName ActionMappingName, bool bIsGamePad);
 
 	static FKey GetKeyForDevice(FName ActionMappingName, bool bIsGamePad);
+
+	static void ShowLoadingScreenOnAllPlayers(UWorld* World);
 };

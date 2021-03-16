@@ -9,6 +9,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "wat/Core/WatGameState.h"
+#include "wat/Core/WatStaticUtils.h"
 
 void ALeaveLobbyInteractable::SetTextRenderToReadyString_Implementation()
 {
@@ -61,7 +62,8 @@ void ALeaveLobbyInteractable::OnInteraction()
 		if(MatchingPlayersIdsCount == PlayerStates.Num())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to level"));
-			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
+			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+			UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
 			GetWorld()->ServerTravel(Cast<AWatGameState>(GetWorld()->GetGameState())->bTutorialActivated ? *NetworkSettingsWat->TutoLevel.GetAssetName() : *NetworkSettingsWat->MainLevel.GetAssetName());
 		}
 	}

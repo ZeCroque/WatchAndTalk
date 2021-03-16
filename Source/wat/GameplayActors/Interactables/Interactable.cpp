@@ -40,8 +40,6 @@ void AInteractable::BeginPlay()
 
 	bIsShowingGamepadIcon = true;
 	RefreshIconWidgetForCurrentDevice(false);
-
-	LocalPlayerCharacter = Cast<AWatPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	StaticMesh->SetRenderCustomDepth(true);
 }
 
@@ -118,6 +116,12 @@ int AInteractable::GetStencilIndex()
 void AInteractable::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	if(!LocalPlayerCharacter)
+	{
+		LocalPlayerCharacter = Cast<AWatPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	}
+	
 	StaticMesh->SetCustomDepthStencilValue(GetStencilIndex()); 
 }
 

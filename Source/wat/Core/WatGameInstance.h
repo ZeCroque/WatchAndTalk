@@ -79,6 +79,9 @@ private:
 public:
 	bool bIsInTutorialMode;
 	bool bHostIsScientist;
+
+	UPROPERTY()
+	class UUserWidget* LoadingScreenWidget;
 #if WITH_EDITOR
 
 	bool bIsHost;

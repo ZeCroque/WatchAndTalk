@@ -2,10 +2,13 @@
 
 
 #include "wat/Core/WatPlayerController.h"
+
+#include "WatGameInstance.h"
 #include "wat/Widgets/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
 #include "WatSettings.h"
+#include "WatStaticUtils.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
@@ -42,13 +45,14 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	}
 	
 
-	if(GameState->bIsInTutorialMode)
+	if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
 	{
 		if(GameState->ObjectiveIndex == 1)
 		{
 			if(HasAuthority())
 			{
-				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
+				UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
+				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
 				GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
 			}
 			return;
@@ -84,6 +88,25 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 	if (bEnableInput)
 	{
 		PawnToPossess->EnableInput(this);
+	}
+}
+
+void AWatPlayerController::ShowLoadingWidget_Implementation()
+{
+	if(IsLocalController())
+	{
+		if(MainHUDWidget)
+		{
+			MainHUDWidget->RemoveFromParent();
+			MainHUDWidget = nullptr;
+		}
+		
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		if(GameInstance)
+		{
+			GameInstance->LoadingScreenWidget = CreateWidget<UUserWidget>(this, LoadingScreenClass);
+			GameInstance->LoadingScreenWidget->AddToViewport();
+		}
 	}
 }
 
