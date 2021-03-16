@@ -15,6 +15,7 @@ UWatGameInstance::UWatGameInstance(const FObjectInitializer& ObjectInitializer) 
     OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UWatGameInstance::OnDestroySessionComplete);
 
 	bIsInTutorialMode = false;
+	bHostIsScientist = false;
 }
 
 void UWatGameInstance::BeginDestroy()

@@ -72,6 +72,22 @@ void AWatPlayerCharacter::BeginPlay()
 
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 
+	if(HasAuthority())
+	{
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		if(GameInstance && GameInstance->bHostIsScientist)
+		{
+			if(IsLocallyControlled())
+			{
+				bIsMechanist = false;
+			}
+			else
+			{
+				bIsMechanist = true;
+			}
+		}
+	}
+	
 	if(IsLocallyControlled() && GameState->bIsInLobby || GameState->bGameStarted || GameState->bIsInTutorialMode)
 	{
 		SetActorTickEnabled(true);
@@ -621,6 +637,12 @@ void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 		{
 			auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
 			PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
+
+			if(PlayerCharacter->IsLocallyControlled() && !PlayerCharacter->bIsMechanist || !PlayerCharacter->IsLocallyControlled() && PlayerCharacter->bIsMechanist)
+			{
+				auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+				GameInstance->bHostIsScientist = true;
+			}
 		}
 	}
 }
