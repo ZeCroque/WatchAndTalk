@@ -18,6 +18,9 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	class UKeyIconWidget* ClassIcon;
 
+	UPROPERTY(meta=(BindWidget))
+	class UTextBlock* Crosshair;
+
 	UPROPERTY(EditAnywhere, Category="WAT HUD")
 	UTexture2D* MechanistIcon;
 
