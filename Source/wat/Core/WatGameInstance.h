@@ -78,6 +78,7 @@ private:
   FName CurrentSessionName;
 public:
 	bool bIsInTutorialMode;
+	bool bHostIsScientist;
 #if WITH_EDITOR
 
 	bool bIsHost;

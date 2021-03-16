@@ -7,6 +7,8 @@
 
 #include "GameFramework/Character.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "wat/Widgets/MainHUDWidget.h"
+
 
 #include "WatPlayerCharacter.generated.h"
 
@@ -61,9 +63,11 @@ private:
 //GAMEPLAY
 //========
 public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
+	
 	bool IsAlive() const;
 	void Die();
-
 private:
 	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess = "true"))
 	bool bIsAlive;
