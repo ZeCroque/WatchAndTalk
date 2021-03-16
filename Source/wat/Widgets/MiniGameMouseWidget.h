@@ -63,17 +63,17 @@ public:
 	UTexture* BackGround;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	UTexture* WeldingGun;
+	UTexture* ToolTexture;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	FLinearColor WeldingColor = FLinearColor::White;
+	FLinearColor ProgressColor = FLinearColor::White;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	FLinearColor WayColor = FLinearColor::Red;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	int WeldingRange = 40;
+	int ProgressRange = 40;
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
-	FVector2D WeldingGunOffset = FVector2D(0, 100);
+	FVector2D ToolTextureOffset = FVector2D(0, 100);
 };

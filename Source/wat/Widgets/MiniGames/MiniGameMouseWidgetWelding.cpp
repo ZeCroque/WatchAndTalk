@@ -61,7 +61,7 @@ void UMiniGameMouseWidgetWelding::Start()
 
 void UMiniGameMouseWidgetWelding::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	auto TmpWeldingGunOffset = WeldingGunOffset;
+	auto TmpWeldingGunOffset = ToolTextureOffset;
 	if (bIsClicking)
 	{
 		TmpWeldingGunOffset = FVector2D(0, 0);
@@ -84,13 +84,13 @@ void UMiniGameMouseWidgetWelding::NativeTick(const FGeometry& MyGeometry, float 
 
 	for (int i = 1; i < DrawPointList.Num(); ++i)
 	{
-		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], WeldingRange, WeldingColor);
+		Canvas->K2_DrawLine(DrawPointList[i - 1], DrawPointList[i], ProgressRange, ProgressColor);
 	}
 
 	Canvas->K2_DrawTexture(
-		WeldingGun,
-		OldMouseMove - FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()) - TmpWeldingGunOffset,
-		FVector2D(WeldingGun->GetSurfaceWidth(), WeldingGun->GetSurfaceHeight()), FVector2D(0, 0));
+		ToolTexture,
+		OldMouseMove - FVector2D(ToolTexture->GetSurfaceWidth(), ToolTexture->GetSurfaceHeight()) - TmpWeldingGunOffset,
+		FVector2D(ToolTexture->GetSurfaceWidth(), ToolTexture->GetSurfaceHeight()), FVector2D(0, 0));
 
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 
@@ -113,30 +113,30 @@ void UMiniGameMouseWidgetWelding::NativeTick(const FGeometry& MyGeometry, float 
 	switch (DirectionState)
 	{
 	case EDirection::Up:
-		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= ProgressRange)
 		{
 			bHasReached = true;
 			break;
 		}
-		if (OldMouseMove.Y - OldPoint.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+		if (OldMouseMove.Y - OldPoint.Y > ProgressRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > ProgressRange)
 			OnFail();
 		break;
 	case EDirection::Down:
-		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= WeldingRange)
+		if (FMath::Abs(PointList[0].Y - OldMouseMove.Y) <= ProgressRange)
 		{
 			bHasReached = true;
 			break;
 		}
-		if (OldPoint.Y - OldMouseMove.Y > WeldingRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > WeldingRange)
+		if (OldPoint.Y - OldMouseMove.Y > ProgressRange || FMath::Abs(PointList[0].X - OldMouseMove.X) > ProgressRange)
 			OnFail();
 		break;
 	case EDirection::Forward:
-		if (FMath::Abs(PointList[0].X - OldMouseMove.X) <= WeldingRange)
+		if (FMath::Abs(PointList[0].X - OldMouseMove.X) <= ProgressRange)
 		{
 			bHasReached = true;
 			break;
 		}
-		if (OldPoint.X - OldMouseMove.X > WeldingRange || FMath::Abs(PointList[0].Y - OldMouseMove.Y) > WeldingRange)
+		if (OldPoint.X - OldMouseMove.X > ProgressRange || FMath::Abs(PointList[0].Y - OldMouseMove.Y) > ProgressRange)
 			OnFail();
 		break;
 	}
