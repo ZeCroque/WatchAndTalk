@@ -2,14 +2,44 @@
 
 
 #include "wat/GameplayActors/Interactables/LeaveLobbyInteractable.h"
+
+#include "Components/TextRenderComponent.h"
 #include "wat/Core//WatPlayerCharacter.h"
 #include "wat/Core/WatSettings.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "wat/Core/WatGameState.h"
+#include "wat/Core/WatStaticUtils.h"
+
+void ALeaveLobbyInteractable::SetTextRenderToReadyString_Implementation()
+{
+	if(!HasAuthority())
+	{
+		TextRender->SetText(FText::FromString(ReadyString));
+	}
+}
+
+void ALeaveLobbyInteractable::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TextRender->SetText(FText::FromString(NotReadyString));
+}
 
 void ALeaveLobbyInteractable::OnInteraction()
 {
+	if(HasAuthority())
+	{
+		if(PlayerCharacter->IsLocallyControlled())
+		{
+			TextRender->SetText(FText::FromString(ReadyString));
+		}
+		else
+		{
+			SetTextRenderToReadyString();
+		}
+	}
+	
 	ReadyPlayersIds.Add(PlayerCharacter->GetPlayerState()->GetPlayerId());
 
 	auto& PlayerStates = GetWorld()->GetGameState()->PlayerArray;
@@ -32,7 +62,8 @@ void ALeaveLobbyInteractable::OnInteraction()
 		if(MatchingPlayersIdsCount == PlayerStates.Num())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready, moving to level"));
-			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
+			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+			UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
 			GetWorld()->ServerTravel(Cast<AWatGameState>(GetWorld()->GetGameState())->bTutorialActivated ? *NetworkSettingsWat->TutoLevel.GetAssetName() : *NetworkSettingsWat->MainLevel.GetAssetName());
 		}
 	}

@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "wat/Core/WatPlayerCharacter.h"
+
+#include "WatStaticUtils.h"
 #include "wat/GameplayActors/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
@@ -22,6 +24,7 @@
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/Widgets/MainHUDWidget.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
 #if WITH_EDITOR
@@ -45,7 +48,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 
-
 	auto* Mesh3P = this->GetMesh();
 	Mesh3P->SetVisibleFlag(false);
 
@@ -55,17 +57,6 @@ AWatPlayerCharacter::AWatPlayerCharacter()
 void AWatPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-
-	if (GameState->bIsInLobby || GameState->bGameStarted)
-	{
-		SetActorTickEnabled(true);
-	}
-	else
-	{
-		SetActorTickEnabled(false);
-	}
 	
 	if (!IsLocallyControlled())
 	{
@@ -79,6 +70,69 @@ void AWatPlayerCharacter::BeginPlay()
 		{
 			bIsMechanist = true;
 		}
+	}
+
+	auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+	if(GameInstance && GameInstance->LoadingScreenWidget)
+	{
+		GameInstance->LoadingScreenWidget->RemoveFromParent();
+		GameInstance->LoadingScreenWidget = nullptr;
+	}
+	
+	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+
+	if(HasAuthority())
+	{
+		if(GameInstance && GameInstance->bHostIsScientist)
+		{
+			if(IsLocallyControlled())
+			{
+				bIsMechanist = false;
+			}
+			else
+			{
+				bIsMechanist = true;
+			}
+		}
+	}
+	
+	if(IsLocallyControlled() && GameState->bIsInLobby || GameState->bGameStarted || GameState->bIsInTutorialMode)
+	{
+		SetActorTickEnabled(true);
+		LocalPlayerController->EnableInput(nullptr);
+        LocalPlayerController->SetInputMode(FInputModeGameOnly());
+		if(GameState->bIsInLobby)
+		{
+			bCrouchEnabled = true;
+			bSprintEnabled = true;
+			bObjectiveInputEnabled = false;
+		}
+		else if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
+		{
+			bCrouchEnabled = false;
+			bSprintEnabled = false;
+			bObjectiveInputEnabled = false;
+		}
+		else
+		{
+			bCrouchEnabled = true;
+			bSprintEnabled = true;
+			bObjectiveInputEnabled = true;
+		}
+
+		if(!LocalPlayerController->MainHUDWidget)
+		{
+			LocalPlayerController->MainHUDWidget = CreateWidget<UMainHUDWidget>(LocalPlayerController, MainHUDWidgetClass);
+			if(LocalPlayerController->MainHUDWidget)
+			{
+				LocalPlayerController->MainHUDWidget->AddToViewport();
+				LocalPlayerController->MainHUDWidget->ParentCharacter = this;
+			}
+		}
+	}
+	else
+	{
+		SetActorTickEnabled(false);
 	}
 	
 	bIsAlive = true;
@@ -101,6 +155,23 @@ void AWatPlayerCharacter::BeginPlay()
 	BRange = static_cast<float>(MaxRangFromMonster) - ARange * (OriginalMaxSpeed + SprintAdditionalSpeedValue);
 }
 
+void AWatPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(LocalPlayerController)
+	{
+		if(LocalPlayerController->ObjectivesHUDWidget)
+		{
+			LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+			LocalPlayerController->ObjectivesHUDWidget = nullptr;
+		}
+		else if(LocalPlayerController->MainHUDWidget)
+		{
+			LocalPlayerController->MainHUDWidget->RemoveFromParent();
+			LocalPlayerController->MainHUDWidget = nullptr;
+		}
+	}
+}
+
 void AWatPlayerCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -119,7 +190,7 @@ void AWatPlayerCharacter::Tick(const float DeltaTime)
 
 	if (IsLocallyControlled())
 	{
-		if (GameState && GameState->bGameStarted)
+		if (GameState && GameState->bIsInTutorialMode || GameState->bGameStarted)
 		{
 			if (!LocalPlayerController->ObjectivesHUDWidget)
 			{
@@ -184,7 +255,11 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()
 {
 	GameState->bTutorialActivated = !GameState->bTutorialActivated;
-	GameState->ObjectiveIndex = !GameState->ObjectiveIndex;
+	auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+	if(GameInstance)
+	{
+		GameInstance->bIsInTutorialMode = !GameInstance->bIsInTutorialMode;
+	}
 }
 
 void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
@@ -213,6 +288,7 @@ void AWatPlayerCharacter::RestartGame_Implementation(const uint32 PlayerId)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
 		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+		UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
 		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
 		GameState->PlayersReadyForRestartIds.Empty();
 	}
@@ -312,11 +388,14 @@ void AWatPlayerCharacter::HandleSprint(const float DeltaTime)
 
 void AWatPlayerCharacter::NotifyWantsToSprint()
 {
-	if(GetCharacterMovement()->IsCrouching())
+	if(bSprintEnabled)
 	{
-		UnCrouch();
+		if(GetCharacterMovement()->IsCrouching())
+		{
+			UnCrouch();
+		}
+		StartSprinting();
 	}
-	StartSprinting();
 }
 
 void AWatPlayerCharacter::StartSprinting_Implementation()
@@ -332,17 +411,20 @@ void AWatPlayerCharacter::StopSprinting_Implementation()
 
 void AWatPlayerCharacter::ToggleCrouch()
 {
-	if(bIsSprinting)
+	if(bCrouchEnabled)
 	{
-		StopSprinting();
-	}
-	if(!GetCharacterMovement()->IsCrouching())
-	{
-		Crouch();
-	}
-	else
-	{
-		UnCrouch();
+		if(bIsSprinting)
+		{
+			StopSprinting();
+		}
+		if(!GetCharacterMovement()->IsCrouching())
+		{
+			Crouch();
+		}
+		else
+		{
+			UnCrouch();
+		}
 	}
 }
 
@@ -564,6 +646,12 @@ void AWatPlayerCharacter::SwitchPlayersClasses_Implementation()
 		{
 			auto* PlayerCharacter = Cast<AWatPlayerCharacter>(PlayerController->GetPawn());
 			PlayerCharacter->bIsMechanist = !PlayerCharacter->bIsMechanist;
+
+			if(PlayerCharacter->IsLocallyControlled() && !PlayerCharacter->bIsMechanist || !PlayerCharacter->IsLocallyControlled() && PlayerCharacter->bIsMechanist)
+			{
+				auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+				GameInstance->bHostIsScientist = true;
+			}
 		}
 	}
 }
@@ -583,15 +671,19 @@ void AWatPlayerCharacter::CreateObjectiveList()
 
 void AWatPlayerCharacter::ToggleObjectivesHUDVisibility()
 {
-	if (Cast<AWatGameState>(GetWorld()->GetGameState())->bGameStarted)
+	if(bObjectiveInputEnabled)
 	{
-		if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
+		
+		if (GameState && GameState->bGameStarted || GameState->bIsInTutorialMode)
 		{
-			LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
-		}
-		else
-		{
-			LocalPlayerController->ObjectivesHUDWidget->AddToViewport();
+			if (LocalPlayerController->ObjectivesHUDWidget->IsInViewport())
+			{
+				LocalPlayerController->ObjectivesHUDWidget->RemoveFromParent();
+			}
+			else
+			{
+				LocalPlayerController->ObjectivesHUDWidget->AddToViewport();
+			}
 		}
 	}
 }

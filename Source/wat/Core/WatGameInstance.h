@@ -76,9 +76,14 @@ public:
 private:
   FName SubsystemName;
   FName CurrentSessionName;
-
-#if WITH_EDITOR
 public:
+	bool bIsInTutorialMode;
+	bool bHostIsScientist;
+
+	UPROPERTY()
+	class UUserWidget* LoadingScreenWidget;
+#if WITH_EDITOR
+
 	bool bIsHost;
 #endif
 

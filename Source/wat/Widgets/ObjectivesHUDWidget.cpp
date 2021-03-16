@@ -44,7 +44,7 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 		ObjectiveRow->ObjectiveDescription->SetText(FText::FromString(TEXT("En attente de l'autre joueur")));
 		ObjectivesList->AddChildToVerticalBox(ObjectiveRow);
 	}
-	else if(Objectives.Num() - 1 != GameState->ObjectiveIndex + GameState->bTutorialActivated)
+	else if(Objectives.Num() - 1 != GameState->ObjectiveIndex + GameState->bIsInTutorialMode)
 	{
 		if((Parent->IsMechanist() && Objectives.Num() > 1) || (!Parent->IsMechanist() && Objectives.Num() > 0))
 		{

@@ -57,7 +57,6 @@ public:
 	UPROPERTY()
 	int NumberOfActorInBunker;
 
-
 	UPROPERTY(Replicated)
 	bool bTutorialActivated;
 
@@ -65,8 +64,11 @@ public:
 	bool bGameStarted;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsInTutorialMode;
+	
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool bIsInLobby;
-
+	
 	bool bGameEnded;
 
 	UPROPERTY(Replicated)

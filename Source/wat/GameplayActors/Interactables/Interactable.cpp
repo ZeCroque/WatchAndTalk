@@ -18,8 +18,8 @@ AInteractable::AInteractable()
 	AIControllerClass = nullptr;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	
-	CollisionBox = CreateDefaultSubobject <UBoxComponent>(TEXT("CollisionBox"));
+
+	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionBox->SetGenerateOverlapEvents(true);
 	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AInteractable::OnOverlapBegin);
@@ -37,20 +37,23 @@ AInteractable::AInteractable()
 void AInteractable::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	bIsShowingGamepadIcon = true;
 	RefreshIconWidgetForCurrentDevice(false);
+	StaticMesh->SetRenderCustomDepth(true);
 }
 
-void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                   const FHitResult& SweepResult)
 {
-	if(HasAuthority())
+	if (HasAuthority())
 	{
 		const auto PlayerLocalRef = Cast<AWatPlayerCharacter>(OtherActor);
-		if(PlayerLocalRef)
+		if (PlayerLocalRef)
 		{
 			OverlappingPlayers.Add(PlayerLocalRef);
-			if(CanInteract(PlayerLocalRef))
+			if (CanInteract(PlayerLocalRef))
 			{
 				PlayerLocalRef->AddInteractable(this);
 			}
@@ -58,21 +61,22 @@ void AInteractable::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 	}
 }
 
-void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AInteractable::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	const auto PlayerLocalRef = Cast<AWatPlayerCharacter>(OtherActor);
-	
+
 	if (PlayerLocalRef && !PlayerLocalRef->IsPendingKill())
 	{
-		if(KeyIconWidget)
+		if (KeyIconWidget)
 		{
 			auto* UserWidgetObject = KeyIconWidget->GetUserWidgetObject();
-			if(UserWidgetObject)
+			if (UserWidgetObject)
 			{
 				UserWidgetObject->SetVisibility(ESlateVisibility::Hidden);
 			}
 		}
-		if(HasAuthority())
+		if (HasAuthority())
 		{
 			OverlappingPlayers.Remove(PlayerLocalRef);
 			PlayerLocalRef->RemoveInteractable(this);
@@ -89,7 +93,7 @@ void AInteractable::Interact(AWatPlayerCharacter* Player)
 {
 	PlayerCharacter = Player;
 	PlayerController = Cast<AWatPlayerController>(Player->GetController());
-	OnInteraction();		
+	OnInteraction();
 }
 
 void AInteractable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -104,12 +108,29 @@ bool AInteractable::CanInteract(AWatPlayerCharacter* Player)
 	return Player != nullptr;
 }
 
+int AInteractable::GetStencilIndex()
+{
+	return 4;
+}
+
+void AInteractable::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if(!LocalPlayerCharacter)
+	{
+		LocalPlayerCharacter = Cast<AWatPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	}
+	
+	StaticMesh->SetCustomDepthStencilValue(GetStencilIndex()); 
+}
+
 void AInteractable::RefreshIconWidgetForCurrentDevice(bool bIsGamePad)
 {
-	if(bIsShowingGamepadIcon != bIsGamePad)
-	{		
-		Cast<UKeyIconWidget>(KeyIconWidget->GetUserWidgetObject())->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
+	if (bIsShowingGamepadIcon != bIsGamePad)
+	{
+		Cast<UKeyIconWidget>(KeyIconWidget->GetUserWidgetObject())->SetBrushTexture(
+			UWatStaticUtils::GetKeyIcon("Interact", bIsGamePad));
 		bIsShowingGamepadIcon = bIsGamePad;
 	}
 }
-

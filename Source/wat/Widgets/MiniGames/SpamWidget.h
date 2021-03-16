@@ -29,6 +29,10 @@ public:
 
 	virtual void Start() override;
 
+	virtual void OnComplete() override;
+
+	virtual void OnCancel() override;
+
 protected:
 	UPROPERTY()
 	TMap<FKey, UTexture2D*> PossibleInputs;

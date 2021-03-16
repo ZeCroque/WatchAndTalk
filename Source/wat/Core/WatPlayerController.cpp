@@ -2,10 +2,15 @@
 
 
 #include "wat/Core/WatPlayerController.h"
+
+#include "WatGameInstance.h"
 #include "wat/Widgets/PauseWidget.h"
 #include "WatGameState.h"
 #include "WatPlayerCharacter.h"
+#include "WatSettings.h"
+#include "WatStaticUtils.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
+#include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
 
 AWatPlayerController::AWatPlayerController()
@@ -14,6 +19,7 @@ AWatPlayerController::AWatPlayerController()
 	PauseWidget = nullptr;
 	CameraDeskHUDWidget = nullptr;
 	ObjectivesHUDWidget = nullptr;
+	MainHUDWidget = nullptr;
 	bIsUsingController = false;
 }
 
@@ -37,8 +43,26 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	{
 		GameState->ObjectiveIndex++;
 	}
-	GameState->bScientistTurn = !GameState->bScientistTurn;
+	
 
+	if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
+	{
+		if(GameState->ObjectiveIndex == 1)
+		{
+			if(HasAuthority())
+			{
+				UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
+				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+				GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
+			}
+			return;
+		}
+		Objective->bIsOnlyForMechanist = false;
+		Objective->bCompleted = false;
+	}
+
+	GameState->bScientistTurn = !GameState->bScientistTurn;
+	
 	for(auto* ObjectiveInteractable : GameState->Objectives)
 	{
 		if(ObjectiveInteractable)
@@ -47,7 +71,7 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		}
 	}
 	
-	if (GameState->AreAllObjectivesCompleted() == true)
+	if (!GameState->bIsInTutorialMode && GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;
 
@@ -67,6 +91,25 @@ void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool 
 	}
 }
 
+void AWatPlayerController::ShowLoadingWidget_Implementation()
+{
+	if(IsLocalController())
+	{
+		if(MainHUDWidget)
+		{
+			MainHUDWidget->RemoveFromParent();
+			MainHUDWidget = nullptr;
+		}
+		
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		if(GameInstance)
+		{
+			GameInstance->LoadingScreenWidget = CreateWidget<UUserWidget>(this, LoadingScreenClass);
+			GameInstance->LoadingScreenWidget->AddToViewport();
+		}
+	}
+}
+
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
@@ -74,6 +117,11 @@ bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float Amoun
 	{
 		MiniGameWidget->OnInput(Key);
 		return true;
+	}
+
+	if(TutoMessageWidget && EventType == EInputEvent::IE_Pressed)
+	{
+		TutoMessageWidget->OnInput(Key);
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }

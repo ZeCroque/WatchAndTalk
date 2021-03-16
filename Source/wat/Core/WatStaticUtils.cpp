@@ -2,6 +2,9 @@
 
 
 #include "WatStaticUtils.h"
+
+#include "WatPlayerCharacter.h"
+#include "WatPlayerController.h"
 #include "WatSettings.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/InputSettings.h"
@@ -31,4 +34,16 @@ FKey UWatStaticUtils::GetKeyForDevice(FName ActionMappingName, bool bIsGamePad)
 		}
 	}
 	return FKey();
+}
+
+void UWatStaticUtils::ShowLoadingScreenOnAllPlayers(UWorld* World)
+{
+	for (auto Iterator = World->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
+		if (PlayerController)
+		{
+			PlayerController->ShowLoadingWidget();
+		}
+	}
 }

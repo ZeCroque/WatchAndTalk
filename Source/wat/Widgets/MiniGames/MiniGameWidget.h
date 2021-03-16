@@ -25,7 +25,7 @@ public:
 	virtual void Stop();
 	virtual bool OnInput(FKey PressedInput);
 
-	void OnComplete();
-	void OnCancel();
-	void OnFail();
+	virtual void OnComplete();
+	virtual void OnCancel();
+	virtual void OnFail();
 };

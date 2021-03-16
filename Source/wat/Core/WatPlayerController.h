@@ -32,8 +32,14 @@ public:
 	UFUNCTION(Server,Reliable)
 	void UpdateBunkerPlayerCount(const int Value);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void ShowLoadingWidget();
+
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> LoadingScreenClass;
+	
 	bool bIsInMiniGame;
 
 	UPROPERTY()
@@ -45,6 +51,12 @@ public:
 	UPROPERTY()
 	class UObjectivesHUDWidget* ObjectivesHUDWidget;
 
+	UPROPERTY()
+	class UTutoMessageWidget* TutoMessageWidget;
+
+	UPROPERTY()
+	class UMainHUDWidget* MainHUDWidget;
+	
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;
 

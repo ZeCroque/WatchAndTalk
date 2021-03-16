@@ -2,7 +2,10 @@
 
 
 #include "LaserTrigger.h"
+
+#include "Components/TextBlock.h"
 #include "wat/Core/WatPlayerCharacter.h"
+#include "wat/Core/WatPlayerController.h"
 
 ALaserTrigger::ALaserTrigger()
 {
@@ -20,6 +23,15 @@ void ALaserTrigger::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Ot
     if (PlayerCharacter)
     {
         PlayerCharacter->SetIsUsingLaser(false);
+
+    	if(PlayerCharacter->IsLocallyControlled())
+    	{
+    		auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
+    		if(PlayerController && PlayerController->MainHUDWidget)
+    		{
+    			PlayerController->MainHUDWidget->Crosshair->SetVisibility(ESlateVisibility::Visible);
+    		}
+        }
     }
 }
 
@@ -30,5 +42,14 @@ void ALaserTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
     if (PlayerCharacter)
     {
         PlayerCharacter->SetIsUsingLaser(true);
+
+    	if(PlayerCharacter->IsLocallyControlled())
+    	{
+    		auto* PlayerController = Cast<AWatPlayerController>(PlayerCharacter->GetController());
+    		if(PlayerController && PlayerController->MainHUDWidget)
+    		{
+    			PlayerController->MainHUDWidget->Crosshair->SetVisibility(ESlateVisibility::Hidden);
+    		}
+        }
     }
 }
