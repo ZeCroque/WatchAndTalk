@@ -57,8 +57,10 @@ private:
 	UPROPERTY(Replicated)
 	bool bShouldMove;
 
+	UPROPERTY(Replicated)
 	bool bIsDown;
-	
+
+	UPROPERTY(Replicated)
 	bool bIsOverlappingWithMonster;
 
 	float AccumulatedDeltaTime;

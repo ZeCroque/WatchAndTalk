@@ -156,5 +156,7 @@ void ACage::CloseDoors()
 void ACage::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	DOREPLIFETIME(ACage, bShouldMove);
+	DOREPLIFETIME(ACage, bIsDown);
+	DOREPLIFETIME(ACage, bIsOverlappingWithMonster);
 }
 
