@@ -42,7 +42,7 @@ public:
 
     UPROPERTY(VisibleAnywhere)
     UAudioComponent* AudioComponentB;
-    
+
     UPROPERTY(VisibleAnywhere)
     UAudioComponent* AudioComponentC;
 
@@ -88,4 +88,7 @@ public:
     UFUNCTION()
     virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
                               class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+private:
+    void StopSound() const;
 };

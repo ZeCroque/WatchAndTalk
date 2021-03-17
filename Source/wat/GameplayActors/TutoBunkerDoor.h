@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundCue.h"
+
 #include "TutoBunkerDoor.generated.h"
 
 UCLASS()
@@ -24,8 +26,34 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* DoorTrigger;
 
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentD;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentAC;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentC;
+	
 	UPROPERTY(EditAnywhere, Category= "WAT Door")
 	float DoorMovingSpeed;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* ButtonOn;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* ButtonOff;
+	
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorEnd;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorUpFromBottom;
+	
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorUpFromNotBottom;
+
+	bool bHasMove;
 
 protected:
 	// Called when the game starts or when spawned

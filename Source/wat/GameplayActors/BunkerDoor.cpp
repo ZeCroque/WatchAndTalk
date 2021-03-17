@@ -49,10 +49,7 @@ void ABunkerDoor::Tick(float DeltaTime)
         {
             if (AudioComponentAC && AudioComponentAC->IsPlaying() || AudioComponentC && AudioComponentC->IsPlaying())
             {
-                if (AudioComponentAC)
-                    AudioComponentAC->Stop();
-                if (AudioComponentC)
-                    AudioComponentC->Stop();
+                StopSound();
                 AudioComponentB =
                     UGameplayStatics::SpawnSoundAtLocation(this, DoorDownFromNotTop, DoorMesh->GetComponentLocation());
             }
@@ -68,6 +65,7 @@ void ABunkerDoor::Tick(float DeltaTime)
         {
             DoorMesh->SetRelativeLocation(GetActorUpVector() * -1.f * (InitialZ + MeshHeight));
             bHasMove = false;
+            StopSound();
             AudioComponentD =
                 UGameplayStatics::SpawnSoundAtLocation(this, DoorEnd, DoorMesh->GetComponentLocation());
         }
@@ -78,10 +76,7 @@ void ABunkerDoor::Tick(float DeltaTime)
         {
             if (AudioComponentAB && AudioComponentAB->IsPlaying() || AudioComponentB && AudioComponentB->IsPlaying())
             {
-                if (AudioComponentAB)
-                    AudioComponentAB->Stop();
-                if (AudioComponentB)
-                    AudioComponentB->Stop();
+                StopSound();
                 AudioComponentC =
                     UGameplayStatics::SpawnSoundAtLocation(this, DoorUpFromNotBottom, DoorMesh->GetComponentLocation());
             }
@@ -97,10 +92,23 @@ void ABunkerDoor::Tick(float DeltaTime)
         {
             bHasMove = false;
             DoorMesh->SetRelativeLocation(GetActorUpVector() * InitialZ);
+            StopSound();
             AudioComponentD =
                 UGameplayStatics::SpawnSoundAtLocation(this, DoorEnd, DoorMesh->GetComponentLocation());
         }
     }
+}
+
+void ABunkerDoor::StopSound() const
+{
+    if (AudioComponentAB)
+        AudioComponentAB->Stop();
+    if (AudioComponentAC)
+        AudioComponentAC->Stop();
+    if (AudioComponentB)
+        AudioComponentB->Stop();
+    if (AudioComponentC)
+        AudioComponentC->Stop();
 }
 
 void ABunkerDoor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
