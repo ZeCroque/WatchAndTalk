@@ -9,6 +9,7 @@
 #include "wat/AI/MonsterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatGameState.h"
+#include "wat/GameplayActors/Cage.h"
 #include "wat/GameplayActors/Triggers/BunkerTriggerBox.h"
 
 
@@ -66,12 +67,21 @@ void AWatLevelScriptActor::PostInitializeComponents()
 			}
 		}
 
+		FoundActors.Empty();
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
+		if(FoundActors.Num() > 0)
+		{
+			MainGameState->Gas = FoundActors[0];
+		}
+
 		MainGameState->MonsterCharacter = Cast<AMonsterCharacter>(
 			UGameplayStatics::GetActorOfClass(GetWorld(), AMonsterCharacter::StaticClass()));
 		MainGameState->GridManager = Cast<AGridManager>(
 			UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
 		MainGameState->BunkerTriggerBox = Cast<ABunkerTriggerBox>(
 			UGameplayStatics::GetActorOfClass(GetWorld(), ABunkerTriggerBox::StaticClass()));
+		MainGameState->Cage = Cast<ACage>(
+			UGameplayStatics::GetActorOfClass(GetWorld(), ACage::StaticClass()));
 
 		MainGameState->NumberOfActorInBunker = 2;
 
