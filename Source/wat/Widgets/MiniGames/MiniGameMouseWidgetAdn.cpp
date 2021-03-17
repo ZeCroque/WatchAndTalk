@@ -37,7 +37,7 @@ void UMiniGameMouseWidgetAdn::NativeTick(const FGeometry& MyGeometry, float InDe
     auto TmpWeldingGunOffset = ToolTextureOffset;
     if (bIsClicking)
     {
-        TmpWeldingGunOffset = FVector2D(0, 0);
+        TmpWeldingGunOffset = FVector2D(-15, 0);
         DrawPointList.Add(OldMouseMove + LastMouseMove);
         OldMouseMove = OldMouseMove + LastMouseMove;
     }

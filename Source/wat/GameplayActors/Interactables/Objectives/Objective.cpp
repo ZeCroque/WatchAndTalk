@@ -28,7 +28,7 @@ void AObjective::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    StaticMesh->SetRenderCustomDepth(CanInteract(LocalPlayerCharacter));
+    StaticMesh->SetRenderCustomDepth(bCompleted || CanInteract(LocalPlayerCharacter));
 }
 
 void AObjective::EndInteraction(bool bSuccess, bool bShouldWarnMonster)

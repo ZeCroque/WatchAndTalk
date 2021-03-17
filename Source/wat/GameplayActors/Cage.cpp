@@ -214,6 +214,4 @@ void ACage::StopSound() const
         AudioComponentAC->Stop();
     if (AudioComponentB)
         AudioComponentB->Stop();
-    if (AudioComponentC)
-        AudioComponentC->Stop();
 }
