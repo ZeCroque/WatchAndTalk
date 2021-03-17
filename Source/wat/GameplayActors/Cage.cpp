@@ -135,21 +135,22 @@ void ACage::Tick(float DeltaTime)
 	else if(bIsDown && bIsOverlappingWithMonster && !GameState->bGameEnded)
 	{
 		ChangeGasVisibility(true);
-		AccumulatedDeltaTime += DeltaTime;
-		if(AccumulatedDeltaTime >= MonsterDeathCooldown)
+		if(HasAuthority())
 		{
-			auto MaxIndex = 0;
-			AObjective* MaxObjective = nullptr;
-			for(auto* Objective : GameState->Objectives)
+			AccumulatedDeltaTime += DeltaTime;
+			if(AccumulatedDeltaTime >= MonsterDeathCooldown)
 			{
-				if(Objective && Objective->ObjectiveIndex >= MaxIndex)
+				auto MaxIndex = 0;
+				AObjective* MaxObjective = nullptr;
+				for(auto* Objective : GameState->Objectives)
 				{
-					MaxIndex = Objective->ObjectiveIndex;
-					MaxObjective = Objective;
+					if(Objective && Objective->ObjectiveIndex >= MaxIndex)
+					{
+						MaxIndex = Objective->ObjectiveIndex;
+						MaxObjective = Objective;
+					}
 				}
-			}
-			if(HasAuthority())
-			{
+
 				MaxObjective->bCompleted =true;
 				Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->NotifyObjectiveCompleted(MaxObjective);
 			}
