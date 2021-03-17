@@ -101,6 +101,7 @@ void ACage::Tick(float DeltaTime)
 	}
 	else if(bIsDown && !bIsOverlappingWithMonster && !GameState->bGameEnded)
 	{
+		GameState->Gas->GetRootComponent()->SetVisibility(false);
 		//UP
 		if(LeftDoorMesh->GetRelativeLocation().Z < InitialZ)
 		{

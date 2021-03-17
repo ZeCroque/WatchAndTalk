@@ -54,7 +54,7 @@ public:
 	UPROPERTY()
 	class ACage* Cage;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AActor* Gas;
 	
 	UPROPERTY()
