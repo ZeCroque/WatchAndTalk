@@ -32,6 +32,9 @@ public:
 	UFUNCTION(Server,Reliable)
 	void UpdateBunkerPlayerCount(const int Value);
 
+	UFUNCTION(Server, Reliable)
+	void CloseCage();
+
 	UFUNCTION(NetMulticast, Reliable)
 	void ShowLoadingWidget();
 

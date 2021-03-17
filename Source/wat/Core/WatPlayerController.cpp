@@ -9,6 +9,10 @@
 #include "WatPlayerCharacter.h"
 #include "WatSettings.h"
 #include "WatStaticUtils.h"
+#include "Kismet/GameplayStatics.h"
+#include "wat/AI/MonsterCharacter.h"
+#include "wat/GameplayActors/Cage.h"
+#include "wat/GameplayActors/Interactables/Desk/CameraDesk.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
@@ -43,7 +47,23 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	{
 		GameState->ObjectiveIndex++;
 	}
-	
+
+	if(HasAuthority())
+	{
+		auto MaxIndex = 0;
+		for(auto* LocalObjective : GameState->Objectives)
+		{
+			if(LocalObjective && LocalObjective->ObjectiveIndex >= MaxIndex)
+			{
+				MaxIndex = LocalObjective->ObjectiveIndex;
+			}
+		}
+		if(GameState->ObjectiveIndex == MaxIndex)
+		{
+			auto* CameraDesk = Cast<ACameraDesk>(UGameplayStatics::GetActorOfClass(GetWorld(), ACameraDesk::StaticClass()));
+			CameraDesk->bShouldShowEndGameInteraction = true;
+		}
+	}
 
 	if(GameState->bIsInTutorialMode && !GameState->bGameStarted)
 	{
@@ -71,10 +91,9 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		}
 	}
 	
-	if (!GameState->bIsInTutorialMode && GameState->AreAllObjectivesCompleted() == true)
+	if (HasAuthority() && !GameState->bIsInTutorialMode && GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;
-
 		GameState->EndGame();
 		return;
 	}
@@ -108,6 +127,12 @@ void AWatPlayerController::ShowLoadingWidget_Implementation()
 			GameInstance->LoadingScreenWidget->AddToViewport();
 		}
 	}
+}
+
+void AWatPlayerController::CloseCage_Implementation()
+{
+	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	GameState->Cage->CloseDoors();
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)

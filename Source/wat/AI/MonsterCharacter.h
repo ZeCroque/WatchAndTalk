@@ -64,6 +64,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "WAT")
 	bool bNotAnimPlaying = true;
 
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsDying;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Montage;

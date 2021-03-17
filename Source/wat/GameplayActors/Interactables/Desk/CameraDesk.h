@@ -52,6 +52,9 @@ public:
 	TSubclassOf<UUserWidget> CameraDeskHUDWidgetClass;
 
 	bool bIsSwitchingFloors;
+
+	UPROPERTY(Replicated)
+	bool bShouldShowEndGameInteraction;
 	
 private:
 
@@ -105,6 +108,8 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual  int GetStencilIndex() override;
 
 private:
@@ -123,6 +128,8 @@ private:
 	UFUNCTION()
 	void OnSnowTransitionEnd(bool bWasOn);
 
+	void CloseCage();
+
 public:
 	//Inputs
 	void MoveForward(float Value);
@@ -130,7 +137,7 @@ public:
 	
 	void Return();
 	void SwitchFloor();
-	
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* DeskInputComponent) override;
 

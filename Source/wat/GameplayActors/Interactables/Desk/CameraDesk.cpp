@@ -50,6 +50,8 @@ void ACameraDesk::BeginPlay()
 		}
 	}
 
+	bShouldShowEndGameInteraction = false;
+	
 	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	
 	FVector ScreenStart;
@@ -121,6 +123,13 @@ void ACameraDesk::Tick(float DeltaSeconds)
 	}
 	
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+}
+
+void ACameraDesk::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ACameraDesk, bShouldShowEndGameInteraction);
 }
 
 int ACameraDesk::GetStencilIndex()
@@ -288,6 +297,11 @@ void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
 	}
 }
 
+void ACameraDesk::CloseCage()
+{
+	PlayerController->CloseCage();
+}
+
 void ACameraDesk::MoveForward(float Value)
 {
 	if (bIsInternalBlend && !bIsBlendingHorizontally && !bIsSwitchingFloors && PlayerController)
@@ -409,6 +423,7 @@ void ACameraDesk::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)
 	// Bind action events
 	DeskInputComponent->BindAction("Return", IE_Pressed, this, &ACameraDesk::Return);
 	//DeskInputComponent->BindAction("Interact", IE_Pressed, this,&ACameraDesk::SwitchFloor);
+	DeskInputComponent->BindAction("Interact", IE_Pressed, this,&ACameraDesk::CloseCage);
 	
 	// Bind movement events
 	DeskInputComponent->BindAxis("MoveForward", this, &ACameraDesk::MoveForward);

@@ -15,6 +15,9 @@ class WAT_API UCameraDeskHUDWidget : public UUserWidget
 	GENERATED_BODY()
 
 	UPROPERTY(meta=(BindWidget))
+    class UHorizontalBox* EndGameHBox;
+	
+	UPROPERTY(meta=(BindWidget))
     class UKeyIconWidget* ReturnKeyIcon;
 
 	UPROPERTY(meta=(BindWidget))

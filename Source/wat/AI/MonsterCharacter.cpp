@@ -2,6 +2,8 @@
 
 
 #include "MonsterCharacter.h"
+
+#include "GeneratedCodeHelpers.h"
 #include "Blueprint/UserWidget.h"
 #include "wat/Core/WatPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -37,6 +39,8 @@ UAnimMontage* AMonsterCharacter::GetMontage() const
 void AMonsterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bIsDying = false;
 }
 
 // Called every frame
@@ -76,4 +80,11 @@ void AMonsterCharacter::StartGoalReaction(ACharacter* Character)
 void AMonsterCharacter::StopGoalReaction()
 {
 	PlayerToChase = nullptr;
+}
+
+void AMonsterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(AMonsterCharacter, bIsDying);
 }

@@ -2,6 +2,8 @@
 
 
 #include "CameraDeskHUDWidget.h"
+
+#include "Components/HorizontalBox.h"
 #include "wat/GameplayActors/Interactables/Desk/CameraDesk.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Widgets/KeyIconWidget.h"
@@ -13,6 +15,8 @@ void UCameraDeskHUDWidget::Init() const
 	SwitchFloorsKeyIcon->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Interact", Parent->PlayerController->bIsUsingController));
 	ReturnKeyIcon->SetBrushTexture(UWatStaticUtils::GetKeyIcon("Return", Parent->PlayerController->bIsUsingController));
 
+	EndGameHBox->SetVisibility(Parent->bShouldShowEndGameInteraction ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	
 	Update(true);
 }
 
