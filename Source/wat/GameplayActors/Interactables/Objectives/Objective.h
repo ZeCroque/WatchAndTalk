@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Sound/SoundCue.h"
 #include "wat/GameplayActors/Interactables/BlendableInteractable.h"
 #include "Objective.generated.h"
 
@@ -22,6 +24,9 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "WAT Objectives")
     int ObjectiveIndex;
+
+	UPROPERTY(EditAnywhere, Category = "WAT Objectives")
+	USoundCue* EndInteractionSound;
 	
     UPROPERTY(Replicated, EditAnywhere, Category = "WAT Objectives")
     bool bIsOnlyForMechanist;
