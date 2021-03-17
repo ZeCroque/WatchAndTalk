@@ -131,7 +131,6 @@ void ACage::Tick(float DeltaTime)
 		AccumulatedDeltaTime += DeltaTime;
 		if(AccumulatedDeltaTime >= MonsterDeathCooldown)
 		{
-			GEngine->AddOnScreenDebugMessage(-1,0.f,FColor::Emerald, "THE MOTHERF*CKER IS DEAD");
 			auto MaxIndex = 0;
 			AObjective* MaxObjective = nullptr;
 			for(auto* Objective : GameState->Objectives)
