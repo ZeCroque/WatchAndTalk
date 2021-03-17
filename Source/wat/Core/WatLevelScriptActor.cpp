@@ -89,10 +89,13 @@ void AWatLevelScriptActor::PostInitializeComponents()
 		}
 	}
 
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
-	if(FoundActors.Num() > 0)
+	if(MainGameState)
 	{
-		MainGameState->Gas = FoundActors[0];
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
+		if(FoundActors.Num() > 0)
+		{
+			MainGameState->Gas = FoundActors[0];
+		}
 	}
 }
