@@ -19,10 +19,12 @@ void AWatLevelScriptActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	auto* GameState = GetWorld()->GetGameState();
+	AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
+	
 	if (GetWorld()->IsServer())
 	{
-		auto* GameState = GetWorld()->GetGameState();
-		AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
+
 		
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
@@ -67,13 +69,6 @@ void AWatLevelScriptActor::PostInitializeComponents()
 			}
 		}
 
-		FoundActors.Empty();
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
-		if(FoundActors.Num() > 0)
-		{
-			MainGameState->Gas = FoundActors[0];
-		}
-
 		MainGameState->MonsterCharacter = Cast<AMonsterCharacter>(
 			UGameplayStatics::GetActorOfClass(GetWorld(), AMonsterCharacter::StaticClass()));
 		MainGameState->GridManager = Cast<AGridManager>(
@@ -92,5 +87,12 @@ void AWatLevelScriptActor::PostInitializeComponents()
 		{
 			MainGameState->bIsInTutorialMode = GameInstance->bIsInTutorialMode;
 		}
+	}
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
+	if(FoundActors.Num() > 0)
+	{
+		MainGameState->Gas = FoundActors[0];
 	}
 }
