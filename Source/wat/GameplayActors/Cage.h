@@ -31,7 +31,7 @@ public:
 	class AWatGameState* GameState;
 	
 	UPROPERTY()
-	AActor* Gas;
+	TArray<AActor*> Gas;
 	
 	UPROPERTY(EditAnywhere, Category="WAT EndGame")
 	float DoorMovingSpeed = 175.f;
@@ -54,6 +54,8 @@ public:
 
 	void CloseDoors();
 
+	void ChangeGasVisibility(bool bVisible);
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:

@@ -70,14 +70,9 @@ void ACage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(!Gas)
+	if(!Gas.Num())
 	{
-		TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
-		if(FoundActors.Num() > 0)
-		{
-			Gas = FoundActors[0];
-		}
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", Gas);
 	}
 	
 	//DOWN
@@ -98,8 +93,7 @@ void ACage::Tick(float DeltaTime)
 			RelativeLocation.Z = 0;
 			LeftDoorMesh->SetRelativeLocation(RelativeLocation);
 			bShouldMove = false;
-			bIsDown = true;
-			Gas->GetRootComponent()->SetVisibility(true);
+			bIsDown = true;		
 		}
 		if(RightDoorMesh->GetRelativeLocation().Z <= 0.f)
 		{
@@ -108,12 +102,11 @@ void ACage::Tick(float DeltaTime)
 			RightDoorMesh->SetRelativeLocation(RelativeLocation);
 			bShouldMove = false;
 			bIsDown = true;
-			Gas->GetRootComponent()->SetVisibility(true);
 		}
 	}
 	else if(bIsDown && !bIsOverlappingWithMonster && !GameState->bGameEnded)
 	{
-		Gas->GetRootComponent()->SetVisibility(false);
+		ChangeGasVisibility(false);
 		//UP
 		if(LeftDoorMesh->GetRelativeLocation().Z < InitialZ)
 		{
@@ -139,8 +132,9 @@ void ACage::Tick(float DeltaTime)
 			bIsDown = false;
 		}
 	}
-	else if(bIsDown && bIsOverlappingWithMonster)
+	else if(bIsDown && bIsOverlappingWithMonster && !GameState->bGameEnded)
 	{
+		ChangeGasVisibility(true);
 		AccumulatedDeltaTime += DeltaTime;
 		if(AccumulatedDeltaTime >= MonsterDeathCooldown)
 		{
@@ -154,8 +148,11 @@ void ACage::Tick(float DeltaTime)
 					MaxObjective = Objective;
 				}
 			}
-			MaxObjective->bCompleted =true;
-			Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->NotifyObjectiveCompleted(MaxObjective);
+			if(HasAuthority())
+			{
+				MaxObjective->bCompleted =true;
+				Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->NotifyObjectiveCompleted(MaxObjective);
+			}
 		}
 	}
 }
@@ -163,6 +160,14 @@ void ACage::Tick(float DeltaTime)
 void ACage::CloseDoors()
 {
 	bShouldMove = true;
+}
+
+void ACage::ChangeGasVisibility(bool bVisible)
+{
+	for(auto GasInstance : Gas)
+	{
+		GasInstance->GetRootComponent()->SetVisibility(bVisible);
+	}
 }
 
 void ACage::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
