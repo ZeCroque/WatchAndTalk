@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundCue.h"
+
 #include "Cage.generated.h"
 
 UCLASS()
@@ -38,6 +40,31 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="WAT EndGame")
 	float MonsterDeathCooldown = 2.f;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentAB;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentAC;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentB;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComponentD;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorDownFromTop;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorDownFromNotTop;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorUpFromBottom;
+
+	UPROPERTY(EditAnywhere, Category="WAT - Sound")
+	USoundCue* DoorEnd;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -71,5 +98,7 @@ private:
 	float AccumulatedDeltaTime;
 	
 	float InitialZ;
+
+	void StopSound() const;
 
 };

@@ -4,7 +4,7 @@
 #include "Cage.h"
 
 
-
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatGameState.h"
@@ -13,171 +13,207 @@
 // Sets default values
 ACage::ACage()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
+    RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
 
-	CageMesh = CreateDefaultSubobject<UStaticMeshComponent>("Cage");
-	CageMesh->SetupAttachment(RootComponent);
-	
-	LeftDoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("LeftDoor");
-	LeftDoorMesh->SetupAttachment(RootComponent);
-	
-	RightDoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("RightDoor");
-	RightDoorMesh->SetupAttachment(RootComponent);
+    CageMesh = CreateDefaultSubobject<UStaticMeshComponent>("Cage");
+    CageMesh->SetupAttachment(RootComponent);
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
-	BoxCollision->SetupAttachment(RootComponent);
+    LeftDoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("LeftDoor");
+    LeftDoorMesh->SetupAttachment(RootComponent);
 
-	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ACage::OnOverlapBegin);
-	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &ACage::OnOverlapEnd);
+    RightDoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("RightDoor");
+    RightDoorMesh->SetupAttachment(RootComponent);
+
+    BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
+    BoxCollision->SetupAttachment(RootComponent);
+
+    BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ACage::OnOverlapBegin);
+    BoxCollision->OnComponentEndOverlap.AddDynamic(this, &ACage::OnOverlapEnd);
 }
 
 // Called when the game starts or when spawned
 void ACage::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
-	
-	InitialZ = RightDoorMesh->GetRelativeLocation().Z;
-	bShouldMove = false;
-	bIsDown = false;
-	AccumulatedDeltaTime = 0.f;
+    GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+
+    InitialZ = RightDoorMesh->GetRelativeLocation().Z;
+    bShouldMove = false;
+    bIsDown = false;
+    AccumulatedDeltaTime = 0.f;
 }
 
 void ACage::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                           int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor->IsA(AMonsterCharacter::StaticClass()))
-	{
-		bIsOverlappingWithMonster = true;
-	}
+    if (OtherActor->IsA(AMonsterCharacter::StaticClass()))
+    {
+        bIsOverlappingWithMonster = true;
+    }
 }
 
 void ACage::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex)
+                         int32 OtherBodyIndex)
 {
-	if(OtherActor->IsA(AMonsterCharacter::StaticClass()))
-	{
-		bIsOverlappingWithMonster = false;
-	}
+    if (OtherActor->IsA(AMonsterCharacter::StaticClass()))
+    {
+        bIsOverlappingWithMonster = false;
+    }
 }
 
 // Called every frame
 void ACage::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-	if(!Gas.Num())
-	{
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", Gas);
-	}
-	
-	//DOWN
-	if(bShouldMove)
-	{
-		if(LeftDoorMesh->GetRelativeLocation().Z > 0.f)
-		{
-			LeftDoorMesh->AddRelativeLocation(GetActorUpVector() * -1.f * DoorMovingSpeed * DeltaTime);
-		}
-		if(RightDoorMesh->GetRelativeLocation().Z > 0.f)
-		{
-			RightDoorMesh->AddRelativeLocation(GetActorUpVector() * -1.f * DoorMovingSpeed * DeltaTime);
-		}
+    if (!Gas.Num())
+    {
+        UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", Gas);
+    }
 
-		if(LeftDoorMesh->GetRelativeLocation().Z <= 0.f)
-		{
-			auto RelativeLocation = LeftDoorMesh->GetRelativeLocation();
-			RelativeLocation.Z = 0;
-			LeftDoorMesh->SetRelativeLocation(RelativeLocation);
-			bShouldMove = false;
-			bIsDown = true;		
-		}
-		if(RightDoorMesh->GetRelativeLocation().Z <= 0.f)
-		{
-			auto RelativeLocation = RightDoorMesh->GetRelativeLocation();
-			RelativeLocation.Z = 0;
-			RightDoorMesh->SetRelativeLocation(RelativeLocation);
-			bShouldMove = false;
-			bIsDown = true;
-		}
-	}
-	else if(bIsDown && !bIsOverlappingWithMonster && !GameState->bGameEnded)
-	{
-		ChangeGasVisibility(false);
-		//UP
-		if(LeftDoorMesh->GetRelativeLocation().Z < InitialZ)
-		{
-			LeftDoorMesh->AddRelativeLocation(GetActorUpVector() * DoorMovingSpeed * DeltaTime);
-		}
-		if(RightDoorMesh->GetRelativeLocation().Z < InitialZ)
-		{
-			RightDoorMesh->AddRelativeLocation(GetActorUpVector() * DoorMovingSpeed * DeltaTime);
-		}
+    //DOWN
+    if (bShouldMove)
+    {
+        if (LeftDoorMesh->GetRelativeLocation().Z > 0.f)
+        {
+            LeftDoorMesh->AddRelativeLocation(GetActorUpVector() * -1.f * DoorMovingSpeed * DeltaTime);
+        }
+        if (RightDoorMesh->GetRelativeLocation().Z > 0.f)
+        {
+            if (RightDoorMesh->GetRelativeLocation().Z == InitialZ)
+            {
+                AudioComponentAB = UGameplayStatics::SpawnSoundAtLocation(
+                    this, DoorDownFromTop, RightDoorMesh->GetComponentLocation());
+            }
+            else if (bIsDown && (!AudioComponentB || !AudioComponentB->IsPlaying()))
+            {
+                StopSound();
+                AudioComponentB = UGameplayStatics::SpawnSoundAtLocation(
+                    this, DoorDownFromNotTop, RightDoorMesh->GetComponentLocation());
+            }
 
-		if(LeftDoorMesh->GetRelativeLocation().Z >= InitialZ)
-		{
-			auto RelativeLocation = LeftDoorMesh->GetRelativeLocation();
-			RelativeLocation.Z = InitialZ;
-			LeftDoorMesh->SetRelativeLocation(RelativeLocation);
-			bIsDown = false;
-		}
-		if(RightDoorMesh->GetRelativeLocation().Z >= InitialZ)
-		{
-			auto RelativeLocation = RightDoorMesh->GetRelativeLocation();
-			RelativeLocation.Z = InitialZ;
-			RightDoorMesh->SetRelativeLocation(RelativeLocation);
-			bIsDown = false;
-		}
-	}
-	else if(bIsDown && bIsOverlappingWithMonster && !GameState->bGameEnded)
-	{
-		ChangeGasVisibility(true);
-		if(HasAuthority())
-		{
-			GameState->MonsterCharacter->bIsDying = true;
-			AccumulatedDeltaTime += DeltaTime;
-			if(AccumulatedDeltaTime >= MonsterDeathCooldown)
-			{
-				auto MaxIndex = 0;
-				AObjective* MaxObjective = nullptr;
-				for(auto* Objective : GameState->Objectives)
-				{
-					if(Objective && Objective->ObjectiveIndex >= MaxIndex)
-					{
-						MaxIndex = Objective->ObjectiveIndex;
-						MaxObjective = Objective;
-					}
-				}
+            RightDoorMesh->AddRelativeLocation(GetActorUpVector() * -1.f * DoorMovingSpeed * DeltaTime);
+        }
 
-				MaxObjective->bCompleted =true;
-				Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->NotifyObjectiveCompleted(MaxObjective);
-			}
-		}
-	}
+        if (LeftDoorMesh->GetRelativeLocation().Z <= 0.f)
+        {
+            auto RelativeLocation = LeftDoorMesh->GetRelativeLocation();
+            RelativeLocation.Z = 0;
+            LeftDoorMesh->SetRelativeLocation(RelativeLocation);
+            bShouldMove = false;
+            bIsDown = true;
+        }
+        if (RightDoorMesh->GetRelativeLocation().Z <= 0.f)
+        {
+            auto RelativeLocation = RightDoorMesh->GetRelativeLocation();
+            RelativeLocation.Z = 0;
+            RightDoorMesh->SetRelativeLocation(RelativeLocation);
+            bShouldMove = false;
+            bIsDown = true;
+
+            StopSound();
+            AudioComponentD =
+                UGameplayStatics::SpawnSoundAtLocation(this, DoorEnd, RightDoorMesh->GetComponentLocation());
+        }
+    }
+    else if (bIsDown && !bIsOverlappingWithMonster && !GameState->bGameEnded)
+    {
+        ChangeGasVisibility(false);
+        //UP
+        if (LeftDoorMesh->GetRelativeLocation().Z < InitialZ)
+        {
+            LeftDoorMesh->AddRelativeLocation(GetActorUpVector() * DoorMovingSpeed * DeltaTime);
+        }
+        if (RightDoorMesh->GetRelativeLocation().Z < InitialZ)
+        {
+            if (RightDoorMesh->GetRelativeLocation().Z == 0.f)
+            {
+                AudioComponentAC =
+                    UGameplayStatics::SpawnSoundAtLocation(this, DoorUpFromBottom,
+                                                           RightDoorMesh->GetComponentLocation());
+            }
+
+            RightDoorMesh->AddRelativeLocation(GetActorUpVector() * DoorMovingSpeed * DeltaTime);
+        }
+
+        if (LeftDoorMesh->GetRelativeLocation().Z >= InitialZ)
+        {
+            auto RelativeLocation = LeftDoorMesh->GetRelativeLocation();
+            RelativeLocation.Z = InitialZ;
+            LeftDoorMesh->SetRelativeLocation(RelativeLocation);
+            bIsDown = false;
+        }
+        if (RightDoorMesh->GetRelativeLocation().Z >= InitialZ)
+        {
+            auto RelativeLocation = RightDoorMesh->GetRelativeLocation();
+            RelativeLocation.Z = InitialZ;
+            RightDoorMesh->SetRelativeLocation(RelativeLocation);
+            bIsDown = false;
+
+            StopSound();
+            AudioComponentD =
+                UGameplayStatics::SpawnSoundAtLocation(this, DoorEnd, RightDoorMesh->GetComponentLocation());
+        }
+    }
+    else if (bIsDown && bIsOverlappingWithMonster && !GameState->bGameEnded)
+    {
+        ChangeGasVisibility(true);
+        if (HasAuthority())
+        {
+            AccumulatedDeltaTime += DeltaTime;
+            if (AccumulatedDeltaTime >= MonsterDeathCooldown)
+            {
+                auto MaxIndex = 0;
+                AObjective* MaxObjective = nullptr;
+                for (auto* Objective : GameState->Objectives)
+                {
+                    if (Objective && Objective->ObjectiveIndex >= MaxIndex)
+                    {
+                        MaxIndex = Objective->ObjectiveIndex;
+                        MaxObjective = Objective;
+                    }
+                }
+
+                MaxObjective->bCompleted = true;
+                Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->NotifyObjectiveCompleted(
+                    MaxObjective);
+            }
+        }
+    }
 }
 
 void ACage::CloseDoors()
 {
-	bShouldMove = true;
+    bShouldMove = true;
 }
 
 void ACage::ChangeGasVisibility(bool bVisible)
 {
-	for(auto GasInstance : Gas)
-	{
-		GasInstance->GetRootComponent()->SetVisibility(bVisible);
-	}
+    for (auto GasInstance : Gas)
+    {
+        GasInstance->GetRootComponent()->SetVisibility(bVisible);
+    }
 }
 
 void ACage::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	DOREPLIFETIME(ACage, bShouldMove);
-	DOREPLIFETIME(ACage, bIsDown);
-	DOREPLIFETIME(ACage, bIsOverlappingWithMonster);
+    DOREPLIFETIME(ACage, bShouldMove);
+    DOREPLIFETIME(ACage, bIsDown);
+    DOREPLIFETIME(ACage, bIsOverlappingWithMonster);
 }
 
+void ACage::StopSound() const
+{
+    if (AudioComponentAB)
+        AudioComponentAB->Stop();
+    if (AudioComponentAC)
+        AudioComponentAC->Stop();
+    if (AudioComponentB)
+        AudioComponentB->Stop();
+    if (AudioComponentC)
+        AudioComponentC->Stop();
+}
