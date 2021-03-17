@@ -18,13 +18,11 @@ class AWatGameState;
 void AWatLevelScriptActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	auto* GameState = GetWorld()->GetGameState();
-	AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
 	
 	if (GetWorld()->IsServer())
 	{
-
+		auto* GameState = GetWorld()->GetGameState();
+		AWatGameState* MainGameState = Cast<AWatGameState>(GameState);
 		
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), FoundActors);
@@ -86,16 +84,6 @@ void AWatLevelScriptActor::PostInitializeComponents()
 		if(GameInstance)
 		{
 			MainGameState->bIsInTutorialMode = GameInstance->bIsInTutorialMode;
-		}
-	}
-
-	if(MainGameState)
-	{
-		TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
-		if(FoundActors.Num() > 0)
-		{
-			MainGameState->Gas = FoundActors[0];
 		}
 	}
 }

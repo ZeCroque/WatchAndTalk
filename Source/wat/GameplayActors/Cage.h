@@ -30,6 +30,9 @@ public:
 	UPROPERTY()
 	class AWatGameState* GameState;
 	
+	UPROPERTY()
+	AActor* Gas;
+	
 	UPROPERTY(EditAnywhere, Category="WAT EndGame")
 	float DoorMovingSpeed = 175.f;
 

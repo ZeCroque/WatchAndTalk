@@ -53,9 +53,6 @@ public:
 
 	UPROPERTY()
 	class ACage* Cage;
-
-	UPROPERTY()
-	AActor* Gas;
 	
 	UPROPERTY()
 	TSet<uint32> PlayersReadyForRestartIds;

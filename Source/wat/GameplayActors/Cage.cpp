@@ -4,6 +4,8 @@
 #include "Cage.h"
 
 
+
+#include "Kismet/GameplayStatics.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatGameState.h"
 #include "wat/Core/WatPlayerController.h"
@@ -68,6 +70,16 @@ void ACage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(!Gas)
+	{
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), "Gas", FoundActors);
+		if(FoundActors.Num() > 0)
+		{
+			Gas = FoundActors[0];
+		}
+	}
+	
 	//DOWN
 	if(bShouldMove)
 	{
@@ -87,7 +99,7 @@ void ACage::Tick(float DeltaTime)
 			LeftDoorMesh->SetRelativeLocation(RelativeLocation);
 			bShouldMove = false;
 			bIsDown = true;
-			GameState->Gas->GetRootComponent()->SetVisibility(true);
+			Gas->GetRootComponent()->SetVisibility(true);
 		}
 		if(RightDoorMesh->GetRelativeLocation().Z <= 0.f)
 		{
@@ -96,12 +108,12 @@ void ACage::Tick(float DeltaTime)
 			RightDoorMesh->SetRelativeLocation(RelativeLocation);
 			bShouldMove = false;
 			bIsDown = true;
-			GameState->Gas->GetRootComponent()->SetVisibility(true);
+			Gas->GetRootComponent()->SetVisibility(true);
 		}
 	}
 	else if(bIsDown && !bIsOverlappingWithMonster && !GameState->bGameEnded)
 	{
-		GameState->Gas->GetRootComponent()->SetVisibility(false);
+		Gas->GetRootComponent()->SetVisibility(false);
 		//UP
 		if(LeftDoorMesh->GetRelativeLocation().Z < InitialZ)
 		{
