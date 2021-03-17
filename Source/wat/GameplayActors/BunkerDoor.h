@@ -4,45 +4,91 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundCue.h"
+
 #include "BunkerDoor.generated.h"
 
 UCLASS()
 class WAT_API ABunkerDoor : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
     float InitialZ;
-	float MeshHeight;
-	int OverlappingPlayerCount;
-	
-public:	
-	// Sets default values for this actor's properties
-	ABunkerDoor();
+    float MeshHeight;
+    int OverlappingPlayerCount;
 
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* DoorMesh;
+public:
+    // Sets default values for this actor's properties
+    ABunkerDoor();
 
-	UPROPERTY(VisibleAnywhere)
-	class UBoxComponent* DoorTrigger;
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* DoorMesh;
 
-	UPROPERTY(EditAnywhere, Category= "WAT Door")
-	float DoorMovingSpeed;
+    UPROPERTY(VisibleAnywhere)
+    class UBoxComponent* DoorTrigger;
 
-	UPROPERTY(EditAnywhere, Category="WAT Door")
-	float ZOffset = 1.f;
+    UPROPERTY(EditAnywhere, Category= "WAT Door")
+    float DoorMovingSpeed;
+
+    UPROPERTY(EditAnywhere, Category="WAT Door")
+    float ZOffset = 1.f;
+
+    UPROPERTY(VisibleAnywhere)
+    UAudioComponent* AudioComponentAB;
+
+    UPROPERTY(VisibleAnywhere)
+    UAudioComponent* AudioComponentAC;
+
+    UPROPERTY(VisibleAnywhere)
+    UAudioComponent* AudioComponentB;
+
+    UPROPERTY(VisibleAnywhere)
+    UAudioComponent* AudioComponentC;
+
+    UPROPERTY(VisibleAnywhere)
+    UAudioComponent* AudioComponentD;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* ButtonOn;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* ButtonOff;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* DoorDownFromTop;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* DoorDownFromNotTop;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* DoorUpFromBottom;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* DoorUpFromNotBottom;
+
+    UPROPERTY(EditAnywhere, Category="WAT - Sound")
+    USoundCue* DoorEnd;
+
+    bool bHasMove;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+public:
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION()
-	virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    UFUNCTION()
+    virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
+                                class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                const FHitResult& SweepResult);
 
-	UFUNCTION()
-	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+    UFUNCTION()
+    virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
+                              class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+private:
+    void StopSound() const;
 };

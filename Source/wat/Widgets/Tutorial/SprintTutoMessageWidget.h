@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Sound/SoundCue.h"
 #include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "SprintTutoMessageWidget.generated.h"
 
@@ -16,7 +17,7 @@ class WAT_API USprintTutoMessageWidget : public UTutoMessageWidget
 
 public:
 	UPROPERTY(EditAnywhere)
-	class USoundBase* MonsterScreamSound;
+	USoundCue* MonsterScreamSound;
 protected:	
 	virtual void Init() override;
 };

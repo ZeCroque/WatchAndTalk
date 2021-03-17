@@ -7,7 +7,7 @@
 
 void USprintTutoMessageWidget::Init()
 {
-	Super::Init();
-	UGameplayStatics::PlaySound2D(GetWorld(), MonsterScreamSound);
-	Character->bSprintEnabled = true;
+    Super::Init();
+    UGameplayStatics::PlaySound2D(GetWorld(), MonsterScreamSound);
+    Character->bSprintEnabled = true;
 }
