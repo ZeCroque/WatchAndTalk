@@ -199,6 +199,7 @@ void ACameraDesk::OnNotFinalBlend()
 		PlayerController->CameraDeskHUDWidget->Update(bIsOnMap, CurrentIndex, CurrentFloor == FirstFloor);
 		if(!bIsOnMap)
 		{
+			UGameplayStatics::SpawnSoundAtLocation(this, SnowNoise, GetMonitorByIndex(CurrentIndex)->GetActorLocation());
 			SetCurrentMonitorRenderingState(true);
 		}
 	}

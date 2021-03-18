@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT MonitorSettings")
 	float MapYOffset = 23.f;
 
+	UPROPERTY(EditAnywhere, Category= "WAT MonitorSettings")
+	class USoundCue* SnowNoise;
+
 	UPROPERTY(EditAnywhere, Category= "WAT HUDSettings")
 	TSubclassOf<UUserWidget> CameraDeskHUDWidgetClass;
 
