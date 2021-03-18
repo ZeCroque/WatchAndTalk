@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "wat/AI/GridClearComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "wat/Core/WatPlayerController.h"
 
 // Sets default values
 AMonsterCharacter::AMonsterCharacter()
@@ -60,11 +61,11 @@ void AMonsterCharacter::KillPlayer_Implementation(AWatPlayerCharacter* Player)
 	UE_LOG(LogTemp, Warning, TEXT("Player %s was kill"), *Player->GetName());
 	Player->Die();
 
-	auto* GameOverWidget = NewObject<UUserWidget>(this, GameOverWidgetTemplate);
-	if (GameOverWidget != nullptr)
+	auto* PlayerController = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+	if(!PlayerController->GameOverWidget)
 	{
-		GameOverWidget->AddToViewport();
-		auto* PlayerController = GetWorld()->GetFirstPlayerController();
+		PlayerController->GameOverWidget = NewObject<UUserWidget>(this, GameOverWidgetTemplate);
+		PlayerController->GameOverWidget->AddToViewport();
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;
 	}

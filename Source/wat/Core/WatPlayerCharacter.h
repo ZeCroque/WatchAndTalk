@@ -53,13 +53,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void SwitchStartMode();
 	
-private:
-	UFUNCTION(BlueprintCallable, Category = "WAT Network")
-	void SetPlayerAsReadyForRestart();
-
-	UFUNCTION(Server, Reliable)
-	void RestartGame(uint32 PlayerId);
-
 //GAMEPLAY
 //========
 public:

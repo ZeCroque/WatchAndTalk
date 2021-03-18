@@ -243,6 +243,8 @@ void UWatGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
                 auto* World = GetWorld();
             	if(World)
                 {
+					bIsInTutorialMode = false;
+					bHostIsScientist = false;
             		Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ShowLoadingWidget();
             		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
 				    UGameplayStatics::OpenLevel(World, *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);

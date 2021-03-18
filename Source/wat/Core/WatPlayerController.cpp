@@ -10,6 +10,7 @@
 #include "WatSettings.h"
 #include "WatStaticUtils.h"
 #include "Components/HorizontalBox.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/GameplayActors/Cage.h"
@@ -142,6 +143,48 @@ void AWatPlayerController::ShowLoadingWidget_Implementation()
 			MainHUDWidget->RemoveFromParent();
 			MainHUDWidget = nullptr;
 		}
+
+		if(TutoMessageWidget)
+		{
+			TutoMessageWidget->RemoveFromParent();
+			TutoMessageWidget = nullptr;
+		}
+
+		if(MiniGameWidget)
+		{
+			MiniGameWidget->RemoveFromParent();
+			MiniGameWidget = nullptr;
+		}
+
+		if(CameraDeskHUDWidget)
+		{
+			CameraDeskHUDWidget->RemoveFromParent();
+			CameraDeskHUDWidget = nullptr;
+		}
+
+		if(PauseWidget)
+		{
+			PauseWidget->RemoveFromParent();
+			PauseWidget = nullptr;
+		}
+
+		if(ObjectivesHUDWidget)
+		{
+			ObjectivesHUDWidget->RemoveFromParent();
+			ObjectivesHUDWidget = nullptr;
+		}
+
+		if(EndGameWidget)
+		{
+			EndGameWidget->RemoveFromParent();
+			EndGameWidget = nullptr;
+		}
+
+		if(GameOverWidget)
+		{
+			GameOverWidget->RemoveFromParent();
+			GameOverWidget = nullptr;
+		}
 		
 		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
 		if(GameInstance)
@@ -156,6 +199,31 @@ void AWatPlayerController::CloseCage_Implementation()
 {
 	auto GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
 	GameState->Cage->CloseDoors();
+}
+
+void AWatPlayerController::SetPlayerAsReadyForRestart()
+{
+	RestartGame(GetUniqueID());
+}
+
+void AWatPlayerController::RestartGame_Implementation(const uint32 PlayerId)
+{
+	auto* GameState = Cast<AWatGameState>(GetWorld()->GetGameState());
+	GameState->PlayersReadyForRestartIds.Add(PlayerId);
+
+
+	if (GameState->PlayersReadyForRestartIds.Num() ==GetWorld()->GetNumPlayerControllers())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
+		auto* GameInstance = Cast<UWatGameInstance>(GetWorld()->GetGameInstance());
+		GameInstance->bIsInTutorialMode = false;
+		GameInstance->bHostIsScientist = false;
+		
+		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+		UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
+		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
+		GameState->PlayersReadyForRestartIds.Empty();
+	}
 }
 
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
