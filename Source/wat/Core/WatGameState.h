@@ -84,6 +84,9 @@ public:
 	UPROPERTY(EditAnywhere, Category="WAT Objectives")
 	class UDataTable* ObjectiveDataTable;
 
+	UPROPERTY(EditAnywhere, Category="WAT Sound")
+	class USoundCue* VictorySound;
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> EndGameWidgetTemplate;
 
