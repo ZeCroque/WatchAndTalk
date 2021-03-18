@@ -9,10 +9,12 @@
 #include "WatPlayerCharacter.h"
 #include "WatSettings.h"
 #include "WatStaticUtils.h"
+#include "Components/HorizontalBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/GameplayActors/Cage.h"
 #include "wat/GameplayActors/Interactables/Desk/CameraDesk.h"
+#include "wat/Widgets/CameraDeskHUDWidget.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 #include "wat/Widgets/Tutorial/TutoMessageWidget.h"
 #include "wat/Widgets/MiniGames/QTEWidget.h"
@@ -48,7 +50,7 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		GameState->ObjectiveIndex++;
 	}
 
-	if(HasAuthority())
+	if(GameState->bGameStarted)
 	{
 		auto MaxIndex = 0;
 		for(auto* LocalObjective : GameState->Objectives)
@@ -62,6 +64,16 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		{
 			auto* CameraDesk = Cast<ACameraDesk>(UGameplayStatics::GetActorOfClass(GetWorld(), ACameraDesk::StaticClass()));
 			CameraDesk->bShouldShowEndGameInteraction = true;
+
+			for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+			{
+				auto* PlayerController = Cast<AWatPlayerController>(*Iterator);
+				if (PlayerController)
+				{
+					PlayerController->ShowCameraDeskHUDEndGameInteraction();
+				}
+			}
+
 		}
 	}
 
@@ -69,12 +81,10 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	{
 		if(GameState->ObjectiveIndex == 1)
 		{
-			if(HasAuthority())
-			{
-				UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
-				const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
-				GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
-			}
+
+			UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
+			const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
+			GetWorld()->ServerTravel(*NetworkSettingsWat->MainLevel.GetAssetName());
 			return;
 		}
 		Objective->bIsOnlyForMechanist = false;
@@ -91,7 +101,7 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 		}
 	}
 	
-	if (HasAuthority() && !GameState->bIsInTutorialMode && GameState->AreAllObjectivesCompleted() == true)
+	if (GameState->bGameStarted && GameState->AreAllObjectivesCompleted() == true)
 	{
 		GameState->bGameEnded = true;
 		GameState->EndGame();
@@ -99,6 +109,19 @@ void AWatPlayerController::NotifyObjectiveCompleted_Implementation(
 	}
 
 	Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ObjectivesHUDWidget->UpdateObjectiveList();
+}
+
+void AWatPlayerController::ShowCameraDeskHUDEndGameInteraction_Implementation()
+{
+	if(IsLocalController() && CameraDeskHUDWidget)
+	{
+		CameraDeskHUDWidget->EndGameHBox->SetVisibility(ESlateVisibility::Visible);
+		if(CameraDeskHUDWidget->IsInViewport())
+		{
+			CameraDeskHUDWidget->RemoveFromParent();
+			CameraDeskHUDWidget->AddToViewport();
+		}
+	}
 }
 
 void AWatPlayerController::PossessRPC_Implementation(APawn* PawnToPossess, bool bEnableInput)

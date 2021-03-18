@@ -42,6 +42,7 @@ void AWatGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWatGameState, ObjectiveIndex);
 	DOREPLIFETIME(AWatGameState, bScientistTurn);
 	DOREPLIFETIME(AWatGameState, bGameStarted);
+	DOREPLIFETIME(AWatGameState, bGameEnded);
 	DOREPLIFETIME(AWatGameState, bIsInLobby);
 	DOREPLIFETIME(AWatGameState, bIsInTutorialMode);
 }

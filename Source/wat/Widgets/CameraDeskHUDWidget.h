@@ -13,9 +13,6 @@ UCLASS()
 class WAT_API UCameraDeskHUDWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
-	UPROPERTY(meta=(BindWidget))
-    class UHorizontalBox* EndGameHBox;
 	
 	UPROPERTY(meta=(BindWidget))
     class UKeyIconWidget* ReturnKeyIcon;
@@ -45,6 +42,9 @@ class WAT_API UCameraDeskHUDWidget : public UUserWidget
 	UTexture2D* SecondFloorIcon;
 
 public:
+	UPROPERTY(meta=(BindWidget))
+    class UHorizontalBox* EndGameHBox;
+	
 	UPROPERTY()
 	class ACameraDesk* Parent;
 

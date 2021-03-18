@@ -14,6 +14,7 @@
 #include "wat/AI/GridManager.h"
 #include "wat/Core/WatGameState.h"
 #include "wat/Widgets/CameraDeskHUDWidget.h"
+#include "wat/Widgets/Tutorial/CameraDeskTutoMessageWidget.h"
 
 // Sets default values
 ACameraDesk::ACameraDesk()
@@ -299,7 +300,15 @@ void ACameraDesk::OnSnowTransitionEnd(bool bWasOn)
 
 void ACameraDesk::CloseCage()
 {
-	PlayerController->CloseCage();
+	if(!PlayerController->TutoMessageWidget || !PlayerController->TutoMessageWidget->IsA(UCameraDeskTutoMessageWidget::StaticClass()))
+	{		
+		PlayerController->CloseCage();
+	}
+	else
+	{
+		PlayerController->TutoMessageWidget->RemoveFromParent();
+		PlayerController->TutoMessageWidget = nullptr;	
+	}
 }
 
 void ACameraDesk::MoveForward(float Value)

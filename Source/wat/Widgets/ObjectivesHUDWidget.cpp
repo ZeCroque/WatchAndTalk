@@ -9,6 +9,7 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Engine/DataTable.h"
+#include "Tutorial/TutoMessageWidget.h"
 #include "wat/Core/WatGameState.h"
 #include "wat/Core/WatObjectivesTableRow.h"
 #include "wat/Core/WatPlayerController.h"
@@ -23,7 +24,37 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 	TArray<FWatObjectivesTableRow*> Rows;
 	GameState->ObjectiveDataTable->GetAllRows<FWatObjectivesTableRow>(ContextString, Rows);
 
-	if(GameState->bScientistTurn == Parent->IsMechanist())
+	auto MaxIndex = 0;
+	for(auto* Objective : GameState->Objectives)
+	{
+		if(Objective && Objective->ObjectiveIndex >= MaxIndex)
+		{
+			MaxIndex = Objective->ObjectiveIndex;
+		}
+	}
+	
+	if(GameState->ObjectiveIndex == MaxIndex && GameState->bGameStarted && !GameState->bGameEnded)
+	{
+		ObjectivesList->ClearChildren();
+		for(auto& Row : Rows)
+		{
+			if(Row->Index == MaxIndex)
+			{
+				auto* ObjectiveRow = CreateWidget<UObjectiveHUDRowWidget>(Controller, RowClass);
+				ObjectiveRow->ObjectiveDescription->SetText(FText::FromString(Row->ObjectiveDesc));
+				ObjectivesList->AddChildToVerticalBox(ObjectiveRow);
+				break;
+			}
+		}
+
+		if(GameState->bIsInTutorialMode)
+		{
+			Controller->TutoMessageWidget = CreateWidget<UTutoMessageWidget>(Controller, Controller->EndGameTutoWidgetClass);
+			Controller->TutoMessageWidget->AddToViewport();
+			Controller->TutoMessageWidget->Controller = Controller;
+		}
+	}
+	else if(GameState->bScientistTurn == Parent->IsMechanist())
 	{
 		if(Objectives.Num())
 		{
