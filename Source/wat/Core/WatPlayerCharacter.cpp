@@ -230,7 +230,7 @@ void AWatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	//Actions
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AWatPlayerCharacter::Interact);
-	PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
+	//PlayerInputComponent->BindAction("Distract", IE_Pressed, this, &AWatPlayerCharacter::OnDistract);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AWatPlayerCharacter::NotifyWantsToSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AWatPlayerCharacter::StopSprinting);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AWatPlayerCharacter::ToggleCrouch);
