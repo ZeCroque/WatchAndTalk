@@ -48,7 +48,7 @@ public:
 	UPROPERTY(Replicated)
 	class AGridManager* GridManager;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	class ABunkerTriggerBox* BunkerTriggerBox;
 
 	UPROPERTY()

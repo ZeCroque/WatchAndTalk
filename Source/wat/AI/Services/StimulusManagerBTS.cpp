@@ -10,6 +10,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatPlayerCharacter.h"
 #include "Perception/AISense_Sight.h"
 #include "wat/AI/MonsterCharacter.h"
@@ -114,6 +115,11 @@ void UStimulusManagerBTS::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		{
 			Blackboard->SetValueAsBool(HasSightStimulus.SelectedKeyName, false);
 			Blackboard->ClearValue(LastSeenLocation.SelectedKeyName);
+		}
+
+		if (!Blackboard->IsVectorValueSet(NoiseLocation.SelectedKeyName))
+		{
+			Blackboard->ClearValue(NoiseLocation.SelectedKeyName);
 		}
 	}
 }
