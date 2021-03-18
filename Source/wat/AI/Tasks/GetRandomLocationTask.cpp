@@ -12,65 +12,72 @@
 
 UGetRandomLocationTask::UGetRandomLocationTask(const FObjectInitializer& ObjectInitializer)
 {
-	NodeName = TEXT("Find Random Location");
+    NodeName = TEXT("Find Random Location");
 }
 
 EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (!GridManager)
-	{
-		WatGameState = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()));
-		GridManager = WatGameState->GridManager;
-	}
+    if (!GridManager)
+    {
+        WatGameState = Cast<AWatGameState>(UGameplayStatics::GetGameState(GetWorld()));
+        GridManager = WatGameState->GridManager;
+    }
 
-	if (!Controller)
-	{
-		Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
-	}
+    if (!Controller)
+    {
+        Controller = Cast<AMonsterAIController>(OwnerComp.GetAIOwner());
+    }
 
-	if (GridManager && Controller)
-	{
-		FVector Location;
-		if (!GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight))
-		{
-			auto const NPC = Controller->GetPawn();
-			FVector const Origin = WatGameState->NumberOfActorInBunker != 1 && WatGameState->NumberOfActorInBunker != 3
-				                       ? WatGameState->BunkerTriggerBox->GetActorLocation()
-				                       : NPC->GetActorLocation();
-			const auto Radius = WatGameState->NumberOfActorInBunker != 1 && WatGameState->NumberOfActorInBunker != 3
-				                    ? WatGameState->BunkerTriggerBox->GridDrawRay
-				                    : DefaultFillRadius;
+    if (GridManager && Controller)
+    {
+        FVector Location;
+        if (!GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight))
+        {
+            auto i = 0;
+            for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+            {
+                if ((*Iterator)->GetPawn()->IsOverlappingActor(WatGameState->BunkerTriggerBox))
+                    i++;
+            }
 
-			GridManager->SetValueAround(Origin, Radius);
-			GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight);
-		}
+            auto const NPC = Controller->GetPawn();
+            FVector const Origin = i == 2
+                                       ? WatGameState->BunkerTriggerBox->GetActorLocation()
+                                       : NPC->GetActorLocation();
+            const auto Radius = i == 2
+                                    ? WatGameState->BunkerTriggerBox->GridDrawRay
+                                    : DefaultFillRadius;
+
+            GridManager->SetValueAround(Origin, Radius);
+            GridManager->SmartRandomHotWorldCoordinate(Location, TryForBestWeight, RadiusForBestWeight);
+        }
 #if WITH_EDITOR
-		GridManager->PickedHotPointCoordinate = GridManager->GetGridCoordinate(Location);
+        GridManager->PickedHotPointCoordinate = GridManager->GetGridCoordinate(Location);
 #endif
-		FVector NavLocation;
-		UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+        FVector NavLocation;
+        UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 
-		auto i = 0;
-		do
-		{
-			++i;
-			NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation,
-			                                           FMath::Max(GridManager->CellHeight, GridManager->CellWidth) +
-			                                           RandomPointInNavmeshRadiusOffset);
-		}
-		while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
-			&& i < 100);
+        auto i = 0;
+        do
+        {
+            ++i;
+            NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), Location, NavLocation,
+                                                       FMath::Max(GridManager->CellHeight, GridManager->CellWidth) +
+                                                       RandomPointInNavmeshRadiusOffset);
+        }
+        while (FVector::Dist(FVector(0.f, 0.f, Location.Z), FVector(0.f, 0.f, (NavLocation.Z))) > 300
+            && i < 100);
 #if WITH_EDITOR
-		GridManager->PickedNavMeshCoordinate = GridManager->GetGridCoordinate(NavLocation);
+        GridManager->PickedNavMeshCoordinate = GridManager->GetGridCoordinate(NavLocation);
 #endif
 
-		Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
+        Controller->GetBlackboard()->SetValueAsVector(BlackboardKey.SelectedKeyName, NavLocation);
 
-		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		return EBTNodeResult::Succeeded;
-	}
+        FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+        return EBTNodeResult::Succeeded;
+    }
 
 
-	FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-	return EBTNodeResult::Failed;
+    FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+    return EBTNodeResult::Failed;
 }
