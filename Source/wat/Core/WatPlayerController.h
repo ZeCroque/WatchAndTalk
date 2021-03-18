@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "WatPlayerController.generated.h"
 
+class UTutoMessageWidget;
 /**
  * 
  */
@@ -29,6 +30,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void NotifyObjectiveCompleted(class AObjective* Objective);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void ShowCameraDeskHUDEndGameInteraction();
+	
 	UFUNCTION(Server,Reliable)
 	void UpdateBunkerPlayerCount(const int Value);
 
@@ -42,6 +46,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> LoadingScreenClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UTutoMessageWidget> EndGameTutoWidgetClass;
 	
 	bool bIsInMiniGame;
 

@@ -71,7 +71,8 @@ public:
 	
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool bIsInLobby;
-	
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool bGameEnded;
 
 	UPROPERTY(Replicated)
