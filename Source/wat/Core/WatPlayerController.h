@@ -42,6 +42,12 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void ShowLoadingWidget();
 
+	UFUNCTION(BlueprintCallable, Category = "WAT Network")
+	void SetPlayerAsReadyForRestart();
+
+	UFUNCTION(Server, Reliable)
+	void RestartGame(const uint32 PlayerId);
+	
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 
 	UPROPERTY(EditAnywhere)
@@ -66,6 +72,12 @@ public:
 
 	UPROPERTY()
 	class UMainHUDWidget* MainHUDWidget;
+
+	UPROPERTY()
+	UUserWidget* EndGameWidget;
+
+	UPROPERTY()
+	UUserWidget* GameOverWidget;
 	
 	UPROPERTY()
 	UUserWidget* DebugGridWidget;

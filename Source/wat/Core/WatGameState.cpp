@@ -16,14 +16,14 @@ AWatGameState::AWatGameState()
 
 void AWatGameState::EndGame_Implementation()
 {
-        auto* EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
-        if (EndGameWidget != nullptr && !EndGameWidget->GetIsVisible())
-        {
-                EndGameWidget->AddToViewport();
-                auto* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
-                PC->SetInputMode(FInputModeUIOnly());
-                PC->bShowMouseCursor = true;
-        }
+	auto* PC = Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController());
+	if(!PC->EndGameWidget)
+	{
+		PC->EndGameWidget = NewObject<UUserWidget>(this, EndGameWidgetTemplate);
+		PC->EndGameWidget->AddToViewport();	       
+		PC->SetInputMode(FInputModeUIOnly());
+		PC->bShowMouseCursor = true;
+	}
 }
 
 void AWatGameState::UpdateObjective()
