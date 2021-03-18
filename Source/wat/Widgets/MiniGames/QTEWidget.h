@@ -27,7 +27,7 @@ public:
     UPROPERTY(meta=(BindWidget))
     class UKeyIconWidget* KeyIconWidget;
 
-    virtual bool OnInput(FKey PressedInput) override;
+    virtual bool OnInput(FKey PressedInput, EInputEvent EventType) override;
 
     virtual void Start() override;
 

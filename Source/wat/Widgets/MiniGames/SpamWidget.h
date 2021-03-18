@@ -25,7 +25,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	int CurrentPressNumber = 0;
 
-	virtual bool OnInput(FKey PressedInput) override;
+	virtual bool OnInput(FKey PressedInput, EInputEvent EventType) override;
 
 	virtual void Start() override;
 

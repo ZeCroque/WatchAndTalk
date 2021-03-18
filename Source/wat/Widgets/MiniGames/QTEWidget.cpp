@@ -9,9 +9,9 @@
 #include "wat/Widgets/KeyIconWidget.h"
 #include "wat/Core/WatStaticUtils.h"
 
-bool UQTEWidget::OnInput(FKey PressedInput)
+bool UQTEWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 {
-	if(!Super::OnInput(PressedInput))
+	if(!Super::OnInput(PressedInput,EventType) && EventType == IE_Pressed)
 	{
 	    if (PressedInput == InputList[CurrentIndex])
 	    {

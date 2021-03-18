@@ -93,6 +93,24 @@ int AObjective::GetStencilIndex()
     return 2;
 }
 
+void AObjective::SetupPlayerInputComponent(UInputComponent* DeskInputComponent)
+{
+	Super::SetupPlayerInputComponent(DeskInputComponent);
+
+	DeskInputComponent->BindAxis("MoveRight", this, &AObjective::AddXVelocity);
+	DeskInputComponent->BindAxis("MoveForward", this, &AObjective::AddYVelocity);
+}
+
+void AObjective::AddXVelocity(float Value)
+{
+	XVelocity = Value;
+}
+
+void AObjective::AddYVelocity(float Value)
+{
+	YVelocity = Value;
+}
+
 void AObjective::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);

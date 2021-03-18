@@ -9,12 +9,12 @@
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 #include "wat/Widgets/KeyIconWidget.h"
 
-bool USimonMiniGameWidget::OnInput(FKey PressedInput)
+bool USimonMiniGameWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 {
     TArray<FKey> Keys;
     PossibleInputs.GetKeys(Keys);
 
-    if (!Super::OnInput(PressedInput))
+    if (!Super::OnInput(PressedInput,EventType) && EventType == IE_Pressed)
     {
         if (PressedInput == SimonStepKeyArray[SimonStepIndex])
         {

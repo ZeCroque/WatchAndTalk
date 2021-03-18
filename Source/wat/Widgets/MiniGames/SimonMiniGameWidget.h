@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	UTexture2D* EmptyButtonTexture;
 	
-	virtual bool OnInput(FKey PressedInput) override;
+	virtual bool OnInput(FKey PressedInput, EInputEvent EventType) override;
 
 	virtual void Start() override;
 

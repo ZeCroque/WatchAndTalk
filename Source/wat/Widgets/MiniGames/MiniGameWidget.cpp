@@ -20,9 +20,9 @@ void UMiniGameWidget::Stop()
 	ParentInteractable->PlayerController->MiniGameWidget = nullptr;
 }
 
-bool UMiniGameWidget::OnInput(FKey PressedInput)
+bool UMiniGameWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 {
-	if(PressedInput == UWatStaticUtils::GetKeyForDevice("Return", ParentInteractable->PlayerController->bIsUsingController))
+	if(EventType == EInputEvent::IE_Pressed && PressedInput == UWatStaticUtils::GetKeyForDevice("Return", ParentInteractable->PlayerController->bIsUsingController))
     {
     	OnCancel();
 		return true;

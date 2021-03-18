@@ -30,5 +30,5 @@ public:
 
 	virtual void Init();
 	
-	virtual void OnInput(FKey PressedInput);
+	virtual void OnInput(FKey PressedInput, EInputEvent EventType);
 };

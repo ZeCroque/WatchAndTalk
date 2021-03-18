@@ -34,6 +34,8 @@ void UMiniGameMouseWidgetAdn::Start()
 
 void UMiniGameMouseWidgetAdn::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
+    Super::NativeTick(MyGeometry, InDeltaTime);
+	
     auto TmpWeldingGunOffset = ToolTextureOffset;
     if (bIsClicking)
     {

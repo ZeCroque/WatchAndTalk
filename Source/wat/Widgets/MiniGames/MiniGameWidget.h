@@ -23,7 +23,7 @@ public:
 
 	virtual void Start();
 	virtual void Stop();
-	virtual bool OnInput(FKey PressedInput);
+	virtual bool OnInput(FKey PressedInput, EInputEvent EventType);
 
 	virtual void OnComplete();
 	virtual void OnCancel();

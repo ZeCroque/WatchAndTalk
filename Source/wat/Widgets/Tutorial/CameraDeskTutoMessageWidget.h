@@ -14,5 +14,5 @@ class WAT_API UCameraDeskTutoMessageWidget : public UTutoMessageWidget
 {
 	GENERATED_BODY()
 
-	virtual void OnInput(FKey PressedInput);
+	virtual void OnInput(FKey PressedInput, EInputEvent EventType);
 };

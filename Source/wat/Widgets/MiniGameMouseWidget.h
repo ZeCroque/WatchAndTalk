@@ -58,6 +58,10 @@ protected:
 
 	bool bIsClicking;
 
+	bool bIsAButtonPressed;
+
+	virtual bool OnInput(FKey PressedInput, EInputEvent EventType) override;
+
 public:
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	UTexture* BackGround;
@@ -76,4 +80,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WAT - Setup")
 	FVector2D ToolTextureOffset = FVector2D(0, 100);
+
+	UPROPERTY(EditAnywhere, Category="WAT - Setup")
+	float SpeedMult = 2.f;
 };

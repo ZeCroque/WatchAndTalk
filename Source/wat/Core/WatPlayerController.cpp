@@ -229,15 +229,15 @@ void AWatPlayerController::RestartGame_Implementation(const uint32 PlayerId)
 bool AWatPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
 	bIsUsingController = bGamepad;
-	if (MiniGameWidget && EventType == EInputEvent::IE_Pressed)
+	if (MiniGameWidget)
 	{
-		MiniGameWidget->OnInput(Key);
+		MiniGameWidget->OnInput(Key,EventType);
 		return true;
 	}
 
 	if(TutoMessageWidget && EventType == EInputEvent::IE_Pressed)
 	{
-		TutoMessageWidget->OnInput(Key);
+		TutoMessageWidget->OnInput(Key, EventType);
 	}
 	return Super::InputKey(Key, EventType, AmountDepressed, bGamepad);
 }

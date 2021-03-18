@@ -46,7 +46,18 @@ public:
 	virtual void OnFinalBlend() override;
 
 	virtual int GetStencilIndex() override;
+	
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* DeskInputComponent) override;
 
+	float XVelocity;
+
+	float YVelocity;
+	
 private:
+	void AddXVelocity(float Value);
+
+	void AddYVelocity(float Value);
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

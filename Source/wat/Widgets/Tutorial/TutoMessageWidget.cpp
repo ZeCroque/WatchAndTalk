@@ -11,7 +11,7 @@ void UTutoMessageWidget::Init()
 	TutoKeyIcon->SetBrushTexture(UWatStaticUtils::GetKeyIcon(ActionName, Controller->bIsUsingController));
 }
 
-void UTutoMessageWidget::OnInput(FKey PressedInput)
+void UTutoMessageWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 {
 	if(PressedInput == UWatStaticUtils::GetKeyForDevice(ActionName, Controller->bIsUsingController))
     {
