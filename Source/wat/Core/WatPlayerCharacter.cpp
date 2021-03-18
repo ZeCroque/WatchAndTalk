@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "wat/Core/WatPlayerCharacter.h"
-
-#include "WatStaticUtils.h"
 #include "wat/GameplayActors/Laser.h"
 #include "wat/GameplayActors/Interactables/Interactable.h"
 #include "Camera/CameraComponent.h"
@@ -14,12 +12,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
 #include "wat/Core/WatGameState.h"
-#include "wat/Core/WatSettings.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "GameFramework/PlayerController.h"
-#include "GameFramework/PlayerState.h"
 #include "wat/Widgets/PauseWidget.h"
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
@@ -259,38 +255,6 @@ void AWatPlayerCharacter::SwitchStartMode_Implementation()
 	if(GameInstance)
 	{
 		GameInstance->bIsInTutorialMode = !GameInstance->bIsInTutorialMode;
-	}
-}
-
-void AWatPlayerCharacter::SetPlayerAsReadyForRestart()
-{
-	RestartGame(GetPlayerState()->GetPlayerId());
-}
-
-void AWatPlayerCharacter::RestartGame_Implementation(const uint32 PlayerId)
-{
-	GameState->PlayersReadyForRestartIds.Add(PlayerId);
-
-	int MatchingPlayersIdsCount = 0;
-	for (auto CurrentPlayerState : GameState->PlayerArray)
-	{
-		for (auto& ReadyPlayerId : GameState->PlayersReadyForRestartIds)
-		{
-			if (ReadyPlayerId == CurrentPlayerState->GetPlayerId())
-			{
-				++MatchingPlayersIdsCount;
-				break;
-			}
-		}
-	}
-
-	if (MatchingPlayersIdsCount == GameState->PlayerArray.Num())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("All players are ready to restart, moving to lobby level"));
-		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();
-		UWatStaticUtils::ShowLoadingScreenOnAllPlayers(GetWorld());
-		GetWorld()->ServerTravel(*NetworkSettingsWat->LobbyLevel.GetAssetName());
-		GameState->PlayersReadyForRestartIds.Empty();
 	}
 }
 
