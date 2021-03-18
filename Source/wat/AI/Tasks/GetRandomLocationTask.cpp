@@ -36,7 +36,8 @@ EBTNodeResult::Type UGetRandomLocationTask::ExecuteTask(UBehaviorTreeComponent& 
             auto i = 0;
             for (auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
             {
-                if ((*Iterator)->GetPawn()->IsOverlappingActor(WatGameState->BunkerTriggerBox))
+            	auto* Pawn = (*Iterator)->GetPawn();
+                if (Pawn && WatGameState && WatGameState->BunkerTriggerBox && Pawn->IsOverlappingActor(WatGameState->BunkerTriggerBox))
                     i++;
             }
 
