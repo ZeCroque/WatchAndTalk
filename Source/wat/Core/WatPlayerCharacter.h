@@ -88,10 +88,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "WAT Camera")
 	float BaseLookUpRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT Gameplay Options")
+	UPROPERTY(BlueprintReadWrite)
 	bool bInvertYAxis;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WAT Gameplay Options")
+	UPROPERTY(BlueprintReadWrite)
 	float SensibilityModifier;
 private:
 	void TurnAtRate(float Rate);
