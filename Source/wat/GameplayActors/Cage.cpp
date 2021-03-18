@@ -201,6 +201,8 @@ void ACage::ChangeGasVisibility(bool bVisible)
 
 void ACage::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
     DOREPLIFETIME(ACage, bShouldMove);
     DOREPLIFETIME(ACage, bIsDown);
     DOREPLIFETIME(ACage, bIsOverlappingWithMonster);
