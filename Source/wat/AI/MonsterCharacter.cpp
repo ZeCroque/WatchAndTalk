@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "wat/AI/GridClearComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 #include "wat/Core/WatPlayerController.h"
 
 // Sets default values
@@ -68,6 +69,7 @@ void AMonsterCharacter::KillPlayer_Implementation(AWatPlayerCharacter* Player)
 		PlayerController->GameOverWidget->AddToViewport();
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;
+		UGameplayStatics::SpawnSoundAtLocation(this, DefeatSound, PlayerController->GetPawn()->GetActorLocation());
 	}
 }
 

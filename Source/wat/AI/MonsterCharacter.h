@@ -58,6 +58,9 @@ public:
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "OnEventMonsterAttackNow"))
 	FOnEventMonsterAttackNow OnEventAttackDispatcher;
 
+	UPROPERTY(EditAnywhere, Category="WAT Sound")
+	class USoundCue* DefeatSound;
+
 	UPROPERTY()
 	AWatPlayerCharacter* PlayerToChase;
 

@@ -4,6 +4,7 @@
 #include "wat/Core/WatGameState.h"
 
 #include "WatPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
 AWatGameState::AWatGameState()
@@ -23,6 +24,8 @@ void AWatGameState::EndGame_Implementation()
 		PC->EndGameWidget->AddToViewport();	       
 		PC->SetInputMode(FInputModeUIOnly());
 		PC->bShowMouseCursor = true;
+		
+		UGameplayStatics::SpawnSoundAtLocation(this, VictorySound, PC->GetPawn()->GetActorLocation());
 	}
 }
 
