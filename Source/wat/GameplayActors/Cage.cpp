@@ -164,6 +164,7 @@ void ACage::Tick(float DeltaTime)
         ChangeGasVisibility(true);
         if (HasAuthority())
         {
+        	GameState->MonsterCharacter->bIsDying = true;
             AccumulatedDeltaTime += DeltaTime;
             if (AccumulatedDeltaTime >= MonsterDeathCooldown)
             {
