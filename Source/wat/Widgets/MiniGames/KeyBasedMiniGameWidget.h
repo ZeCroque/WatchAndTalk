@@ -17,4 +17,7 @@ class WAT_API UKeyBasedMiniGameWidget : public UMiniGameWidget
 public:
 	UPROPERTY(EditAnywhere, Category= "WAT KeyBasedMinigame")
     TArray<FName> PossibleActionsName;
+
+	UPROPERTY(EditAnywhere, Category= "WAT KeyBasedMinigame")
+    class USoundCue* KeySound;
 };

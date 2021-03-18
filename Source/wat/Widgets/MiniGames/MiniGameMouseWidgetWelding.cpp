@@ -3,8 +3,12 @@
 
 #include "MiniGameMouseWidgetWelding.h"
 
+
+#include "Components/AudioComponent.h"
 #include "Engine/Canvas.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "wat/GameplayActors/Interactables/Objectives/Objective.h"
 
 
 void UMiniGameMouseWidgetWelding::Start()
@@ -66,9 +70,17 @@ void UMiniGameMouseWidgetWelding::NativeTick(const FGeometry& MyGeometry, float 
 	auto TmpWeldingGunOffset = ToolTextureOffset;
 	if (bIsClicking)
 	{
+		if(!ClickDownComponent || !ClickDownComponent->IsPlaying())
+		{
+			ClickDownComponent = UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, MouseDownSound, ParentInteractable->GetActorLocation());
+		}
 		TmpWeldingGunOffset = FVector2D(0, 0);
 		DrawPointList.Add(OldMouseMove + LastMouseMove);
 		OldMouseMove = OldMouseMove + LastMouseMove;
+	}
+	else if(ClickDownComponent && ClickDownComponent->IsPlaying())
+	{
+		ClickDownComponent->Stop();
 	}
 
 	auto* Canvas = GetWorld()->GetCanvasForDrawMaterialToRenderTarget();

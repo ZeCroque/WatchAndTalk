@@ -4,6 +4,8 @@
 #include "SpamWidget.h"
 
 
+
+#include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Core/WatStaticUtils.h"
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
@@ -18,14 +20,16 @@ bool USpamWidget::OnInput(FKey PressedInput, EInputEvent EventType)
     {
         if (PressedInput == Keys[0])
         {
+			UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, KeySound, ParentInteractable->GetActorLocation());
             if (CurrentPressNumber < PressNumberNeeded)
             {
                 ++CurrentPressNumber;
             }else
             {
+            	UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, SuccessSound, ParentInteractable->GetActorLocation());
                 OnComplete();
             }
-        } 
+        }
     }
     return true;
 }

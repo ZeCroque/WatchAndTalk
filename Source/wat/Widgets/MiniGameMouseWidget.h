@@ -17,8 +17,14 @@ class WAT_API UMiniGameMouseWidget : public UMiniGameWidget
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY()
+	UAudioComponent* ClickDownComponent;
+	
 	UPROPERTY(meta = (BindWidget))
 	class UImage* Image;
+
+	UPROPERTY(EditAnywhere, Category= "WAT MouseMinigame")
+    class USoundCue* MouseDownSound;
 
 	UPROPERTY()
 	class UTextureRenderTarget2D* RenderTarget;

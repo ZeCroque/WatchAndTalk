@@ -4,6 +4,8 @@
 #include "MiniGameWidget.h"
 
 
+
+#include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Core/WatStaticUtils.h"
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
@@ -33,6 +35,7 @@ bool UMiniGameWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 void UMiniGameWidget::OnComplete()
 {
     ParentInteractable->EndInteraction(true, true);
+	UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, SuccessSound, ParentInteractable->GetActorLocation());
 }
 
 void UMiniGameWidget::OnCancel()
@@ -43,4 +46,5 @@ void UMiniGameWidget::OnCancel()
 void UMiniGameWidget::OnFail()
 {
     ParentInteractable->EndInteraction(false, true);
+	UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, FailSound, ParentInteractable->GetActorLocation());
 }

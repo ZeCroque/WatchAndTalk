@@ -6,6 +6,7 @@
 #include "wat/Core/WatPlayerController.h"
 #include "GameFramework/InputSettings.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "Kismet/GameplayStatics.h"
 #include "wat/Widgets/KeyIconWidget.h"
 #include "wat/Core/WatStaticUtils.h"
 
@@ -18,7 +19,8 @@ bool UQTEWidget::OnInput(FKey PressedInput, EInputEvent EventType)
 	        if (CurrentIndex < InputList.Num()-1)
 	        {  	
 	            CurrentIndex++;
-        		KeyIconWidget->SetBrushTexture(*PossibleInputs.Find(InputList[CurrentIndex])); 
+        		KeyIconWidget->SetBrushTexture(*PossibleInputs.Find(InputList[CurrentIndex]));
+	        	UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, KeySound, ParentInteractable->GetActorLocation());
 	        }
 	        else
 	        {

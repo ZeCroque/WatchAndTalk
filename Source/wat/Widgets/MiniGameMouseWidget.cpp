@@ -3,6 +3,8 @@
 
 #include "MiniGameMouseWidget.h"
 
+
+#include "Components/AudioComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/Canvas.h"
 #include "Components/Image.h"
@@ -16,6 +18,7 @@ void UMiniGameMouseWidget::Start()
 {
 	Super::Start();
 
+	ClickDownComponent = nullptr;
 	PointList.Empty();
 	LocalSize = Image->Brush.ImageSize;
 	RenderTarget = NewObject<UTextureRenderTarget2D>(this);
@@ -28,6 +31,10 @@ void UMiniGameMouseWidget::Start()
 
 void UMiniGameMouseWidget::Stop()
 {
+	if(ClickDownComponent && ClickDownComponent->IsPlaying())
+	{
+		ClickDownComponent->Stop();
+	}
 	ParentInteractable->PlayerController->bShowMouseCursor = false;
 	const FInputModeGameAndUI InputGameAndUI;
 	ParentInteractable->PlayerController->SetInputMode(InputGameAndUI);

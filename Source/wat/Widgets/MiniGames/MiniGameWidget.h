@@ -21,6 +21,12 @@ public:
 	UPROPERTY(meta=(BindWidget))
     class UKeyIconWidget* ReturnIcon;
 
+	UPROPERTY(EditAnywhere, Category= "WAT Minigame")
+    class USoundCue* SuccessSound;
+
+	UPROPERTY(EditAnywhere, Category= "WAT Minigame")
+    class USoundCue* FailSound;
+
 	virtual void Start();
 	virtual void Stop();
 	virtual bool OnInput(FKey PressedInput, EInputEvent EventType);

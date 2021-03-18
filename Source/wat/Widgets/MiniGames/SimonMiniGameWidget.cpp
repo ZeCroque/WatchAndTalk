@@ -4,6 +4,8 @@
 #include "SimonMiniGameWidget.h"
 
 
+
+#include "Kismet/GameplayStatics.h"
 #include "wat/Core/WatPlayerController.h"
 #include "wat/Core/WatStaticUtils.h"
 #include "wat/GameplayActors/Interactables/Objectives/Objective.h"
@@ -18,6 +20,7 @@ bool USimonMiniGameWidget::OnInput(FKey PressedInput, EInputEvent EventType)
     {
         if (PressedInput == SimonStepKeyArray[SimonStepIndex])
         {
+        	UGameplayStatics::SpawnSoundAtLocation(ParentInteractable, KeySound, ParentInteractable->GetActorLocation());
             ++SimonStepIndex;
             if (SimonStepIndex > SimonStepKeyArray.Num()-1)
             {
