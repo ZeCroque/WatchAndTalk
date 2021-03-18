@@ -244,7 +244,7 @@ void UWatGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
             	if(World)
                 {
 					bIsInTutorialMode = false;
-					bHostIsScientist = false;
+					bHostIsScientist = false;		
             		Cast<AWatPlayerController>(GetWorld()->GetFirstPlayerController())->ShowLoadingWidget();
             		const auto* NetworkSettingsWat = GetDefault<UWatSettings>();				
 				    UGameplayStatics::OpenLevel(World, *NetworkSettingsWat->MainMenuLevel.GetAssetName(), true);
@@ -276,6 +276,11 @@ void UWatGameInstance::FindOnlineGames(bool bIsLAN)
 
     ULocalPlayer* const Player = GetFirstGamePlayer();
     FindSessions(Player->GetPreferredUniqueNetId()->AsShared(), bIsLAN, true);
+}
+
+void UWatGameInstance::DestroyOnlineSubsystem()
+{
+	IOnlineSubsystem::Destroy(SubsystemName);
 }
 
 TArray<FBlueprintSessionResult> UWatGameInstance::GetActiveSession()

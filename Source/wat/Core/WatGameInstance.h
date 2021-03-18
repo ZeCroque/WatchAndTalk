@@ -61,6 +61,10 @@ public:
 	bool StartOnlineGame(FName GameSessionName, bool bIsLan);
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	void FindOnlineGames(bool bIsLAN);
+
+	UFUNCTION(BlueprintCallable, Category= "Network|Test")
+	void DestroyOnlineSubsystem();
+	
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 	TArray<FBlueprintSessionResult> GetActiveSession();
 	UPROPERTY(BlueprintAssignable, Category = "Network|Test")
