@@ -20,6 +20,7 @@
 #include "wat/AI/GridManager.h"
 #include "wat/AI/MonsterCharacter.h"
 #include "wat/Core/WatPlayerController.h"
+#include "wat/GameplayActors/Interactables/OctoInteractable.h"
 #include "wat/Widgets/MainHUDWidget.h"
 #include "wat/Widgets/ObjectivesHUDWidget.h"
 
@@ -246,6 +247,11 @@ void AWatPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(AWatPlayerCharacter, bIsMechanist);
 	DOREPLIFETIME(AWatPlayerCharacter, bIsSprinting);
 	DOREPLIFETIME(AWatPlayerCharacter, LaserPointer);
+}
+
+void AWatPlayerCharacter::SetOctoActivated_Implementation(AOctoInteractable* Octo)
+{
+	Octo->bActivated = true;
 }
 
 void AWatPlayerCharacter::SwitchStartMode_Implementation()

@@ -29,4 +29,7 @@ public:
 
 	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
 	FSoftObjectPath MainMenuLevel;
+
+	UPROPERTY(config, Category=NetworkSettings, EditAnywhere, meta=(AllowedClasses="World"))
+	FSoftObjectPath EasterEggLevel;
 };

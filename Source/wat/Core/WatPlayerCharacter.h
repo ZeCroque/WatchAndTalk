@@ -50,6 +50,9 @@ private:
 //NETWORK
 //=======
 public:
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void SetOctoActivated(class AOctoInteractable* Octo);
+	
 	UFUNCTION(Server, Reliable)
 	void SwitchStartMode();
 	

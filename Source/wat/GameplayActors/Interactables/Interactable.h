@@ -16,7 +16,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionBox;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(VisibleAnywhere)
