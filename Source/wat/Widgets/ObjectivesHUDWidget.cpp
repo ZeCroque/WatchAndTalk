@@ -52,6 +52,7 @@ void UObjectivesHUDWidget::UpdateObjectiveList()
 			Controller->TutoMessageWidget = CreateWidget<UTutoMessageWidget>(Controller, Controller->EndGameTutoWidgetClass);
 			Controller->TutoMessageWidget->AddToViewport();
 			Controller->TutoMessageWidget->Controller = Controller;
+			Controller->TutoMessageWidget->Init();
 		}
 	}
 	else if(GameState->bScientistTurn == Parent->IsMechanist())
